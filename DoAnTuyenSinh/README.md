@@ -520,9 +520,8 @@ pm2 save
 
 ## 📞 Liên hệ & Hỗ trợ
 
-**Phát triển bởi:** Cursor AI Assistant  
-**Ngôn ngữ:** Vietnamese  
-**License:** MIT  
+**Phát triển bởi:** VÕ TIẾN KHOA 
+**Ngôn ngữ:** Tiếng Việt
 
 ---
 

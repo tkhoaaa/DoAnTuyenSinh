@@ -14,6 +14,8 @@ import DangKyTaiKhoanAdmin from "./accounts/DangKyTaiKhoanAdmin";
 import QuenMatKhau from "./accounts/QuenMatKhau";
 import FAQ from "./pages/FAQ";
 import { UserContextProvider } from "./accounts/UserContext";
+import DangKyHocBong from "./pages/DangKyHocBong";
+import DangKyTuVan from "./pages/DangKyTuVan";
 
 // Admin Components
 import AdminLayout from "./admin/components/AdminLayout";
@@ -59,6 +61,8 @@ function App() {
                   <Route path="/accounts/dang-ky-admin" element={<DangKyTaiKhoanAdmin />} />
                   <Route path="/accounts/quen-mat-khau" element={<QuenMatKhau />} />
                   <Route path="/faq" element={<FAQ />} />
+                  <Route path="/dang-ky-hoc-bong" element={<DangKyHocBong />} />
+                  <Route path="/dang-ky-tu-van" element={<DangKyTuVan />} />
                 </Routes>
                 <ChanTrang />
               </>

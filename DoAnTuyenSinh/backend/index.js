@@ -4,6 +4,9 @@ import { testConnection } from './config/database.js';
 import bcrypt from 'bcryptjs';
 import { body, validationResult } from 'express-validator';
 import pool from './config/database.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 const app = express();
 const PORT = 3001;
@@ -41,7 +44,7 @@ app.get(`${authPrefix}/health`, (req, res) => {
 
 // Đăng nhập
 app.post(`${authPrefix}/login`, [
-    body('email').isEmail().withMessage('Email không hợp lệ'),
+    body('identifier').notEmpty().withMessage('Email hoặc tên đăng nhập không được để trống'),
     body('password').isLength({ min: 1 }).withMessage('Mật khẩu không được để trống'),
 ], async(req, res) => {
     try {
@@ -53,14 +56,25 @@ app.post(`${authPrefix}/login`, [
                 errors: errors.array()
             });
         }
-        const { email, password } = req.body;
-        const [users] = await pool.execute(
-            'SELECT * FROM users WHERE email = ? AND is_active = true', [email]
-        );
+        const { identifier, password } = req.body;
+
+        // Kiểm tra xem identifier là email hay username
+        const isEmail = identifier.includes('@');
+        let query, params;
+
+        if (isEmail) {
+            query = 'SELECT * FROM users WHERE email = ? AND is_active = true';
+            params = [identifier];
+        } else {
+            query = 'SELECT * FROM users WHERE username = ? AND is_active = true';
+            params = [identifier];
+        }
+
+        const [users] = await pool.execute(query, params);
         if (users.length === 0) {
             return res.status(401).json({
                 success: false,
-                message: 'Email hoặc mật khẩu không đúng'
+                message: 'Tài khoản hoặc mật khẩu không đúng'
             });
         }
         const user = users[0];
@@ -68,7 +82,7 @@ app.post(`${authPrefix}/login`, [
         if (!isValidPassword) {
             return res.status(401).json({
                 success: false,
-                message: 'Email hoặc mật khẩu không đúng'
+                message: 'Tài khoản hoặc mật khẩu không đúng'
             });
         }
         delete user.password;
@@ -247,6 +261,115 @@ app.get(`${authPrefix}/majors`, async(req, res) => {
 });
 
 // ========== END AUTH & USER ROUTES ========== //
+
+// Multer config for scholarship attachments
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/scholarship');
+    },
+    filename: (req, file, cb) => {
+        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, unique + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage });
+
+// Ensure upload dir exists
+if (!fs.existsSync('uploads/scholarship')) fs.mkdirSync('uploads/scholarship', { recursive: true });
+
+// Nộp đơn học bổng (có upload file)
+app.post('/api/scholarship/apply', upload.array('attachments', 5), async(req, res) => {
+    try {
+        const {
+            ho_ten,
+            ngay_sinh,
+            gioi_tinh,
+            cccd,
+            dia_chi,
+            phone,
+            email,
+            nganh,
+            lop,
+            khoa,
+            diem_tb,
+            hoc_bong,
+            thanh_tich,
+            kinh_te,
+            so_thanh_vien,
+            ly_do,
+            nguon_thong_tin
+        } = req.body;
+        let attachments = null;
+        if (req.files && req.files.length > 0) {
+            attachments = JSON.stringify(req.files.map(f => f.filename));
+        }
+        await pool.execute(
+            `INSERT INTO scholarship_applications
+      (ho_ten, ngay_sinh, gioi_tinh, cccd, dia_chi, phone, email, nganh, lop, khoa, diem_tb, hoc_bong, thanh_tich, kinh_te, so_thanh_vien, ly_do, nguon_thong_tin, attachments)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [ho_ten, ngay_sinh, gioi_tinh, cccd, dia_chi, phone, email, nganh, lop, khoa, diem_tb, hoc_bong, thanh_tich, kinh_te, so_thanh_vien, ly_do, nguon_thong_tin, attachments]
+        );
+        res.json({ success: true, message: "Nộp đơn học bổng thành công!" });
+    } catch (error) {
+        console.error('Scholarship apply error:', error);
+        res.status(500).json({ success: false, message: "Lỗi server khi nộp đơn học bổng" });
+    }
+});
+
+// Danh sách đơn học bổng theo email
+app.get('/api/scholarship/list', async(req, res) => {
+    try {
+        const { email } = req.query;
+        if (!email) return res.status(400).json({ success: false, message: 'Thiếu email' });
+        const [rows] = await pool.execute(
+            'SELECT * FROM scholarship_applications WHERE email = ? ORDER BY created_at DESC', [email]
+        );
+        res.json({ success: true, data: rows });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi server khi lấy danh sách học bổng' });
+    }
+});
+
+// Danh sách đơn tư vấn theo email
+app.get('/api/consult/list', async(req, res) => {
+    try {
+        const { email } = req.query;
+        if (!email) return res.status(400).json({ success: false, message: 'Thiếu email' });
+        const [rows] = await pool.execute(
+            'SELECT * FROM consult_requests WHERE email = ? ORDER BY created_at DESC', [email]
+        );
+        res.json({ success: true, data: rows });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi server khi lấy danh sách tư vấn' });
+    }
+});
+
+// Nộp đơn tư vấn
+app.post('/api/consult/apply', async(req, res) => {
+    try {
+        const {
+            ho_ten,
+            phone,
+            email,
+            dia_chi,
+            van_de,
+            nganh_quan_tam,
+            thoi_gian,
+            phuong_thuc,
+            ghi_chu
+        } = req.body;
+
+        await pool.execute(
+            `INSERT INTO consult_requests
+      (ho_ten, phone, email, dia_chi, van_de, nganh_quan_tam, thoi_gian, phuong_thuc, ghi_chu)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, [ho_ten, phone, email, dia_chi, van_de, nganh_quan_tam, thoi_gian, phuong_thuc, ghi_chu]
+        );
+
+        res.json({ success: true, message: "Gửi yêu cầu tư vấn thành công!" });
+    } catch (error) {
+        console.error('Consult apply error:', error);
+        res.status(500).json({ success: false, message: "Lỗi server khi gửi yêu cầu tư vấn" });
+    }
+});
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));

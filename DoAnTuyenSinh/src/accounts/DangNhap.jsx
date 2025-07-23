@@ -1,15 +1,18 @@
 import React, { useState, useContext } from "react";
 import axios from "axios";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
-import { FaUser, FaLock, FaEnvelope } from "react-icons/fa";
+import { FaUser, FaLock, FaEnvelope, FaEye, FaEyeSlash } from "react-icons/fa";
 import { UserContext } from "./UserContext";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
 
 function DangNhap() {
   const [form, setForm] = useState({ identifier: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { login, user, role } = useContext(UserContext);
 
@@ -22,10 +25,13 @@ function DangNhap() {
     setSuccess("");
     setLoading(true);
     try {
+      console.log('Đang gửi request đăng nhập:', { identifier: form.identifier, password: form.password });
       const res = await axios.post("http://localhost:3001/api/auth/login", {
-        email: form.identifier,
+        identifier: form.identifier,
         password: form.password
       });
+
+      console.log('Response từ server:', res.data);
 
       // Lấy thông tin user từ response
       if (res.data.success) {
@@ -37,16 +43,26 @@ function DangNhap() {
 
         // Lưu thông tin đăng nhập vào localStorage đơn giản (không cần JWT)
         login(user.id, role, username, user);
+        setSuccess("Đăng nhập thành công!");
+        if (role === "admin") navigate("/admin");
+        else navigate("/");
       } else {
         throw new Error(res.data.message || 'Đăng nhập thất bại');
       }
-      setSuccess("Đăng nhập thành công!");
-      if (role === "admin") navigate("/admin");
-      else navigate("/");
     } catch (err) {
       console.error("Login error:", err);
       console.error("Error response:", err.response?.data);
-      setError("Đăng nhập thất bại! Sai tài khoản/email hoặc mật khẩu.");
+      
+      // Hiển thị lỗi chi tiết hơn
+      if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
+        setError(err.response.data.errors.map(e => e.msg).join(' | '));
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.code === 'ECONNREFUSED') {
+        setError("Không thể kết nối đến server. Vui lòng kiểm tra server có đang chạy không.");
+      } else {
+        setError("Đăng nhập thất bại! Sai tài khoản hoặc mật khẩu.");
+      }
     } finally {
       setLoading(false);
     }
@@ -54,118 +70,179 @@ function DangNhap() {
 
   return (
     <motion.div
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-yellow-100"
+      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
     >
-      <motion.form
-        className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md space-y-6"
-        initial={{ y: 40, opacity: 0 }}
+      <motion.div
+        className="relative w-full max-w-md"
+        initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.7, type: "spring" }}
-        onSubmit={handleSubmit}
+        transition={{ duration: 0.6, delay: 0.1 }}
       >
-        <h2 className="text-2xl font-bold text-blue-800 text-center mb-2">
-          Đăng nhập
-        </h2>
-        {/* Hiển thị trạng thái đăng nhập */}
-        {user && (
-          <motion.div
-            className="mb-2 p-2 bg-green-100 text-green-700 rounded text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            Đã đăng nhập với token: {user.token}
-            <br />
-            Vai trò: {role}
-          </motion.div>
-        )}
-        {success && (
-          <motion.div
-            className="mb-2 p-2 bg-green-100 text-green-700 rounded text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            {success}
-          </motion.div>
-        )}
-        <div className="space-y-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <label className="block font-medium mb-1 flex items-center gap-2">
-              <FaUser className="text-blue-600" />
-              Tên đăng nhập hoặc Email
-            </label>
-            <input
-              name="identifier"
-              value={form.identifier}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border-b-2 border-gray-300 focus:border-blue-600 outline-none transition bg-transparent"
-              placeholder="Nhập tên đăng nhập hoặc email"
-            />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-          >
-            <label className="block font-medium mb-1 flex items-center gap-2">
-              <FaLock className="text-blue-600" />
-              Mật khẩu
-            </label>
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border-b-2 border-gray-300 focus:border-blue-600 outline-none transition bg-transparent"
-            />
-          </motion.div>
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-2 mt-4 bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-blue-500 text-white font-bold rounded-full shadow-lg transition-all duration-200 text-lg flex items-center justify-center gap-2"
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl blur-xl opacity-20"></div>
+        
+        <motion.form
+          className="relative bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-white/20"
+          onSubmit={handleSubmit}
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
         >
-          {loading && (
-            <span className="loader border-white border-t-blue-600 animate-spin rounded-full w-5 h-5 border-2"></span>
-          )}
-          Đăng nhập
-        </button>
-        {error && (
+          {/* Header */}
           <motion.div
-            className="mt-2 p-2 bg-red-100 text-red-700 rounded text-center"
+            className="text-center mb-8"
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FaUser className="text-white text-2xl" />
+            </div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">
+              Đăng nhập
+            </h2>
+            <p className="text-gray-600">
+              Chào mừng bạn quay trở lại!
+            </p>
+          </motion.div>
+
+          {/* Status messages */}
+          <AnimatePresence>
+            {user && (
+              <motion.div
+                className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                Đã đăng nhập với tài khoản: {user.email}
+                <br />
+                Vai trò: {role}
+              </motion.div>
+            )}
+            {success && (
+              <motion.div
+                className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+              >
+                {success}
+              </motion.div>
+            )}
+            {error && (
+              <motion.div
+                className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Form fields */}
+          <div className="space-y-6">
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.4, delay: 0.4 }}
+            >
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Email hoặc Tên đăng nhập
+              </label>
+              <Input
+                name="identifier"
+                type="text"
+                value={form.identifier}
+                onChange={handleChange}
+                placeholder="Nhập email hoặc tên đăng nhập"
+                icon={FaEnvelope}
+                required
+                className="w-full"
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.4, delay: 0.5 }}
+            >
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Mật khẩu
+              </label>
+              <div className="relative">
+                <Input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="Nhập mật khẩu"
+                  icon={FaLock}
+                  required
+                  className="w-full pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <FaEyeSlash className="h-4 w-4" /> : <FaEye className="h-4 w-4" />}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Submit button */}
+          <motion.div
+            className="mt-8"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.6 }}
+          >
+            <Button
+              type="submit"
+              variant="gradient"
+              size="lg"
+              loading={loading}
+              disabled={loading}
+              className="w-full text-lg font-semibold"
+            >
+              {loading ? "Đang xử lý..." : "Đăng nhập"}
+            </Button>
+          </motion.div>
+
+          {/* Links */}
+          <motion.div
+            className="mt-6 text-center space-y-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.7 }}
           >
-            {error}
+            <p className="text-sm text-gray-600">
+              Chưa có tài khoản?{" "}
+              <Link
+                to="/accounts/dang-ky"
+                className="text-blue-600 hover:text-blue-800 font-semibold transition-colors"
+              >
+                Đăng ký ngay
+              </Link>
+            </p>
+            <p className="text-sm text-gray-600">
+              <Link
+                to="/accounts/quen-mat-khau"
+                className="text-blue-600 hover:text-blue-800 font-semibold transition-colors"
+              >
+                Quên mật khẩu?
+              </Link>
+            </p>
           </motion.div>
-        )}
-        <div className="mt-6 flex flex-col items-center gap-2 text-sm">
-          <span>
-            Chưa có tài khoản?{" "}
-            <Link
-              to="/accounts/dang-ky"
-              className="text-blue-600 hover:underline font-semibold"
-            >
-              Đăng ký ngay
-            </Link>
-          </span>
-          <span>
-            <Link
-              to="/accounts/quen-mat-khau"
-              className="text-blue-600 hover:underline font-semibold"
-            >
-              Quên mật khẩu?
-            </Link>
-          </span>
-        </div>
-      </motion.form>
+        </motion.form>
+      </motion.div>
     </motion.div>
   );
 }

@@ -11,6 +11,7 @@ import {
   FaUserEdit,
   FaSignOutAlt,
   FaCog,
+  FaChevronDown,
 } from "react-icons/fa";
 import { UserContext } from "../accounts/UserContext";
 
@@ -22,11 +23,6 @@ const menu = [
     icon: <FaUserPlus />,
   },
   { label: "Tra cứu hồ sơ", path: "/tra-cuu-ket-qua", icon: <FaSearch /> },
-  {
-    label: "Tư vấn & Học bổng",
-    path: "/tu-van-hoc-bong",
-    icon: <FaHandshake />,
-  },
   { label: "FAQ", path: "/faq", icon: <FaQuestionCircle /> },
   { label: "Liên hệ", path: "/lien-he", icon: <FaEnvelope /> },
 ];
@@ -34,6 +30,7 @@ const menu = [
 function ThanhHeader() {
   const location = useLocation();
   const { user, username, role, logout } = useContext(UserContext);
+  const [showDropdown, setShowDropdown] = React.useState(false);
 
   // Debug: log để kiểm tra giá trị
   console.log("User context:", { user, username, role });
@@ -73,6 +70,38 @@ function ThanhHeader() {
               <span className="hidden sm:inline">{item.label}</span>
             </Link>
           ))}
+          {/* Dropdown Tư vấn & Học bổng */}
+          <div className="relative">
+            <button
+              className="flex items-center gap-1 px-3 py-2 rounded-md font-semibold transition text-white hover:bg-blue-800 hover:text-yellow-400"
+              onClick={() => setShowDropdown((v) => !v)}
+              onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+            >
+              <span className="text-lg">
+                <FaQuestionCircle />
+              </span>
+              <span className="hidden sm:inline">Tư vấn & Học bổng</span>
+              <FaChevronDown className="ml-1 text-xs" />
+            </button>
+            {showDropdown && (
+              <div className="absolute left-0 mt-2 w-56 bg-white rounded shadow-lg z-50">
+                <Link
+                  to="/dang-ky-tu-van"
+                  className="block px-4 py-2 text-blue-700 hover:bg-blue-50 hover:text-blue-900"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  Đăng ký tư vấn
+                </Link>
+                <Link
+                  to="/dang-ky-hoc-bong"
+                  className="block px-4 py-2 text-blue-700 hover:bg-blue-50 hover:text-blue-900"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  Đăng ký học bổng
+                </Link>
+              </div>
+            )}
+          </div>
         </nav>
         {/* Auth */}
         <div className="flex items-center gap-2">
