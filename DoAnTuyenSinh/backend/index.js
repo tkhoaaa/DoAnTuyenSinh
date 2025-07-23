@@ -1,316 +1,313 @@
-const express = require("express");
-const cors = require("cors");
-const mysql = require("mysql2");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const multer = require("multer");
-const upload = multer({ dest: "uploads/" }); // Thư mục lưu file
-const path = require("path");
+import express from 'express';
+import cors from 'cors';
+import { testConnection } from './config/database.js';
+import bcrypt from 'bcryptjs';
+import { body, validationResult } from 'express-validator';
+import pool from './config/database.js';
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+const PORT = 3001;
 
-// Cấu hình kết nối
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root", // hoặc user bạn đã tạo
-  password: "16012005@", // thay bằng mật khẩu thật
-  database: "tuyensinh",
+// CORS configuration
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true
+}));
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({
+        success: true,
+        message: 'HUTECHS Simple API Server is running',
+        timestamp: new Date().toISOString()
+    });
 });
 
-// Đảm bảo thư mục uploads tồn tại
-const fs = require("fs");
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-}
-// API lấy danh sách ngành
-app.get("/api/nganh", (req, res) => {
-  db.query("SELECT * FROM nganh", (err, results) => {
-    if (err) return res.status(500).json({ error: err });
-    res.json(results);
-  });
+// ========== AUTH & USER ROUTES ========== //
+const authPrefix = '/api/auth';
+
+// Health check (auth)
+app.get(`${authPrefix}/health`, (req, res) => {
+    res.json({
+        success: true,
+        message: 'Simple Auth API is working',
+        timestamp: new Date().toISOString()
+    });
 });
 
-// API đăng ký tài khoản
-app.post("/api/register", async (req, res) => {
-  const { username, email, password, role } = req.body;
-
-  // Validate input
-  if (!username || !email || !password) {
-    return res
-      .status(400)
-      .json({ error: "Username, email và password là bắt buộc" });
-  }
-
-  try {
-    // Kiểm tra username/email đã tồn tại
-    db.query(
-      "SELECT username, email FROM users WHERE username = ? OR email = ?",
-      [username, email],
-      (err, results) => {
-        if (err) {
-          console.error("Lỗi kiểm tra user/email đã tồn tại:", err);
-          return res
-            .status(500)
-            .json({ error: "Lỗi server khi kiểm tra tài khoản" });
+// Đăng nhập
+app.post(`${authPrefix}/login`, [
+    body('email').isEmail().withMessage('Email không hợp lệ'),
+    body('password').isLength({ min: 1 }).withMessage('Mật khẩu không được để trống'),
+], async(req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Dữ liệu đầu vào không hợp lệ',
+                errors: errors.array()
+            });
         }
-        if (results.length > 0) {
-          let msg = "";
-          if (results[0].username === username) msg += "Username đã tồn tại. ";
-          if (results[0].email === email) msg += "Email đã tồn tại.";
-          return res.status(400).json({ error: msg.trim() });
+        const { email, password } = req.body;
+        const [users] = await pool.execute(
+            'SELECT * FROM users WHERE email = ? AND is_active = true', [email]
+        );
+        if (users.length === 0) {
+            return res.status(401).json({
+                success: false,
+                message: 'Email hoặc mật khẩu không đúng'
+            });
         }
-        // Hash password và tạo user mới
-        bcrypt.hash(password, 10, (hashErr, hash) => {
-          if (hashErr) {
-            console.error("Lỗi hash password:", hashErr);
-            return res.status(500).json({ error: "Lỗi server khi đăng ký" });
-          }
-          db.query(
-            "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)",
-            [username, email, hash, role || "user"],
-            (insertErr) => {
-              if (insertErr) {
-                console.error("Lỗi đăng ký user:", insertErr);
-                return res
-                  .status(500)
-                  .json({ error: "Lỗi server khi đăng ký" });
-              }
-              res.json({ message: "Đăng ký thành công!" });
+        const user = users[0];
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            return res.status(401).json({
+                success: false,
+                message: 'Email hoặc mật khẩu không đúng'
+            });
+        }
+        delete user.password;
+        res.json({
+            success: true,
+            message: 'Đăng nhập thành công',
+            data: {
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    full_name: user.full_name || user.username,
+                    username: user.username,
+                    role: user.role,
+                    phone: user.phone
+                }
             }
-          );
         });
-      }
-    );
-  } catch (err) {
-    console.error("Lỗi đăng ký:", err);
-    res.status(500).json({ error: "Lỗi server khi đăng ký" });
-  }
-});
-
-// API đăng nhập
-app.post("/api/login", async (req, res) => {
-  const { identifier, password } = req.body;
-
-  if (!identifier || !password) {
-    return res
-      .status(400)
-      .json({ error: "Tên đăng nhập/email và mật khẩu là bắt buộc" });
-  }
-
-  try {
-    db.query(
-      "SELECT * FROM users WHERE username = ? OR email = ?",
-      [identifier, identifier],
-      (err, results) => {
-        if (err) {
-          console.error("Lỗi đăng nhập:", err);
-          return res.status(500).json({ error: "Lỗi server khi đăng nhập" });
-        }
-
-        if (results.length === 0) {
-          return res
-            .status(401)
-            .json({ error: "Sai tài khoản/email hoặc mật khẩu" });
-        }
-
-        const user = results[0];
-        bcrypt.compare(password, user.password, (compareErr, match) => {
-          if (compareErr) {
-            console.error("Lỗi so sánh mật khẩu:", compareErr);
-            return res.status(500).json({ error: "Lỗi server khi đăng nhập" });
-          }
-
-          if (!match) {
-            return res
-              .status(401)
-              .json({ error: "Sai tài khoản/email hoặc mật khẩu" });
-          }
-
-          const token = jwt.sign(
-            {
-              id: user.id,
-              role: user.role,
-              username: user.username, // Thêm username vào token
-            },
-            "secret_key_change_this_in_production",
-            { expiresIn: "1d" }
-          );
-
-          // Trả về thông tin đầy đủ
-          res.json({
-            token,
-            role: user.role,
-            username: user.username,
-            message: "Đăng nhập thành công",
-          });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server nội bộ'
         });
-      }
-    );
-  } catch (err) {
-    console.error("Lỗi đăng nhập:", err);
-    res.status(500).json({ error: "Lỗi server khi đăng nhập" });
-  }
+    }
 });
 
-// Middleware xác thực token và phân quyền
-function auth(requiredRole = "user") {
-  return (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    const token = authHeader ? authHeader.split(" ")[1] : null;
-
-    if (!token) {
-      return res.status(401).json({ error: "Chưa đăng nhập" });
+// Đăng ký user
+app.post(`${authPrefix}/register`, [
+    body('email').isEmail().withMessage('Email không hợp lệ'),
+    body('password').isLength({ min: 6 }).withMessage('Mật khẩu tối thiểu 6 ký tự'),
+    body('username').notEmpty().withMessage('Tên đăng nhập không được để trống'),
+    body('phone').notEmpty().withMessage('Số điện thoại không được để trống'),
+], async(req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Dữ liệu đầu vào không hợp lệ',
+                errors: errors.array()
+            });
+        }
+        const { email, password, username, phone } = req.body;
+        const [existingUsers] = await pool.execute(
+            'SELECT id FROM users WHERE email = ?', [email]
+        );
+        if (existingUsers.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email đã được sử dụng'
+            });
+        }
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        const [result] = await pool.execute(
+            'INSERT INTO users (email, password, username, phone, role) VALUES (?, ?, ?, ?, ?)', [email, hashedPassword, username, phone, 'user']
+        );
+        res.status(201).json({
+            success: true,
+            message: 'Đăng ký thành công',
+            data: {
+                user: {
+                    id: result.insertId,
+                    email,
+                    username,
+                    phone,
+                    role: 'user'
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Register error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server nội bộ'
+        });
     }
+});
 
-    jwt.verify(
-      token,
-      "secret_key_change_this_in_production",
-      (err, decoded) => {
-        if (err) {
-          return res.status(403).json({ error: "Token không hợp lệ" });
+// Đăng ký admin
+app.post(`${authPrefix}/register-admin`, [
+    body('email').isEmail().withMessage('Email không hợp lệ'),
+    body('password').isLength({ min: 6 }).withMessage('Mật khẩu tối thiểu 6 ký tự'),
+    body('username').notEmpty().withMessage('Tên đăng nhập không được để trống'),
+    body('phone').notEmpty().withMessage('Số điện thoại không được để trống'),
+], async(req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Dữ liệu đầu vào không hợp lệ',
+                errors: errors.array()
+            });
         }
-
-        // Kiểm tra quyền truy cập
-        if (requiredRole === "admin" && decoded.role !== "admin") {
-          return res.status(403).json({ error: "Không đủ quyền truy cập" });
+        const { email, password, username, phone } = req.body;
+        const [existingUsers] = await pool.execute(
+            'SELECT id FROM users WHERE email = ?', [email]
+        );
+        if (existingUsers.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email đã được sử dụng'
+            });
         }
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        const [result] = await pool.execute(
+            'INSERT INTO users (email, password, username, phone, role) VALUES (?, ?, ?, ?, ?)', [email, hashedPassword, username, phone, 'admin']
+        );
+        res.status(201).json({
+            success: true,
+            message: 'Đăng ký admin thành công',
+            data: {
+                user: {
+                    id: result.insertId,
+                    email,
+                    username,
+                    phone,
+                    role: 'admin'
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Admin register error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server nội bộ'
+        });
+    }
+});
 
-        req.user = decoded;
-        next();
-      }
-    );
-  };
-}
+// Lấy thông tin user theo ID
+app.get(`${authPrefix}/user/:id`, async(req, res) => {
+    try {
+        const { id } = req.params;
+        const [users] = await pool.execute(
+            'SELECT id, username, email, full_name, phone, role, created_at FROM users WHERE id = ? AND is_active = true', [id]
+        );
+        if (users.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Người dùng không tồn tại'
+            });
+        }
+        res.json({
+            success: true,
+            data: users[0]
+        });
+    } catch (error) {
+        console.error('Get user error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server nội bộ'
+        });
+    }
+});
 
-// API cho admin - xem tất cả hồ sơ
-app.get("/api/admin/hoso", auth("admin"), async (req, res) => {
-  try {
-    db.query("SELECT * FROM hoso", (err, results) => {
-      if (err) {
-        console.error("Lỗi API admin/hoso:", err);
-        return res.status(500).json({ error: "Lỗi server" });
-      }
-      res.json(results);
+// Lấy danh sách ngành học
+app.get(`${authPrefix}/majors`, async(req, res) => {
+    try {
+        const [majors] = await pool.execute(
+            'SELECT id, ten_nganh as name, ma_nganh as code, TRUE as is_active FROM nganh ORDER BY ten_nganh ASC'
+        );
+        res.json({
+            success: true,
+            data: majors
+        });
+    } catch (error) {
+        console.error('Get majors error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server nội bộ'
+        });
+    }
+});
+
+// ========== END AUTH & USER ROUTES ========== //
+
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
+// 404 handler
+app.use('*', (req, res) => {
+    res.status(404).json({
+        success: false,
+        message: 'API endpoint not found'
     });
-  } catch (err) {
-    console.error("Lỗi API admin/hoso:", err);
-    res.status(500).json({ error: "Lỗi server" });
-  }
 });
 
-// API lấy thông tin user hiện tại
-app.get("/api/me", auth(), async (req, res) => {
-  try {
-    db.query(
-      "SELECT id, username, role FROM users WHERE id = ?",
-      [req.user.id],
-      (err, results) => {
-        if (err) {
-          console.error("Lỗi API me:", err);
-          return res.status(500).json({ error: "Lỗi server" });
-        }
-
-        if (results.length === 0) {
-          return res.status(404).json({ error: "User không tìm thấy" });
-        }
-
-        res.json(results[0]);
-      }
-    );
-  } catch (err) {
-    console.error("Lỗi API me:", err);
-    res.status(500).json({ error: "Lỗi server" });
-  }
-});
-
-// API tạo hồ sơ tuyển sinh
-app.post("/api/hoso", upload.single("file_ho_so"), (req, res) => {
-  const {
-    ho_ten,
-    ngay_sinh,
-    cccd,
-    sdt,
-    email,
-    noi_hoc_12,
-    truong_thpt,
-    ten_lop_12,
-    dia_chi,
-    nganh_id,
-    diem_hk1,
-    diem_ca_nam,
-  } = req.body;
-  const file_ho_so = req.file ? req.file.filename : null;
-
-  db.query(
-    `INSERT INTO hoso (ho_ten, ngay_sinh, cccd, sdt, email, noi_hoc_12, truong_thpt, ten_lop_12, dia_chi, nganh_id, diem_hk1, diem_ca_nam, file_ho_so)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      ho_ten,
-      ngay_sinh,
-      cccd,
-      sdt,
-      email,
-      noi_hoc_12,
-      truong_thpt,
-      ten_lop_12,
-      dia_chi,
-      nganh_id,
-      diem_hk1,
-      diem_ca_nam,
-      file_ho_so,
-    ],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: err });
-      res.json({ message: "Đăng ký thành công!" });
-    }
-  );
-});
-
-// Xử lý graceful shutdown
-process.on("SIGINT", async () => {
-  console.log("\nĐang đóng kết nối database...");
-  if (db) {
-    db.end();
-    console.log("✓ Đã đóng kết nối database");
-  }
-  process.exit(0);
-});
-
-// Khởi tạo database và start server
-async function startServer() {
-  db.connect((err) => {
-    if (err) {
-      console.error("Lỗi kết nối database:", err);
-      process.exit(1);
-    }
-    console.log("✓ Kết nối database thành công!");
-
-    // Test query để kiểm tra
-    db.query("SELECT DATABASE() as DatabaseName", (err, results) => {
-      if (err) {
-        console.error("Lỗi test kết nối:", err);
-      } else {
-        console.log("✓ Đang sử dụng database:", results[0].DatabaseName);
-      }
+// Global error handler
+app.use((error, req, res, next) => {
+    console.error('Global error handler:', error);
+    res.status(error.status || 500).json({
+        success: false,
+        message: error.message || 'Internal server error'
     });
-  });
-
-  app.listen(5000, () => {
-    console.log("🚀 Backend chạy ở http://localhost:5000");
-    console.log("📁 API endpoints:");
-    console.log("   GET  /api/nganh");
-    console.log("   POST /api/register");
-    console.log("   POST /api/login");
-    console.log("   GET  /api/me");
-    console.log("   POST /api/hoso");
-    console.log("   GET  /api/admin/hoso (admin only)");
-  });
-}
-
-startServer().catch((err) => {
-  console.error("Lỗi khởi động server:", err);
-  process.exit(1);
 });
+
+// Start server
+const startServer = async() => {
+    try {
+        // Test database connection
+        await testConnection();
+        // Start HTTP server
+        const server = app.listen(PORT, () => {
+            console.log('\n🚀 HUTECHS Simple Backend API Server Started!');
+            console.log(`📡 Server: http://localhost:${PORT}`);
+            console.log('📋 Available API endpoints:');
+            console.log('   POST /api/auth/login - User login');
+            console.log('   POST /api/auth/register - User registration');
+            console.log('   POST /api/auth/register-admin - Admin registration');
+            console.log('   GET  /api/auth/user/:id - Get user info');
+            console.log('   GET  /api/auth/majors - Get all majors');
+            console.log('   GET  /api/auth/admission-methods - Get admission methods');
+            console.log('   POST /api/auth/apply - Submit application');
+            console.log('   GET  /api/auth/applications/:userId - Get user applications');
+            console.log('   POST /api/auth/contact - Submit contact form');
+            console.log('   GET  /api/auth/faqs - Get FAQs');
+            console.log('   GET  /api/auth/health - Auth health check');
+            console.log('   GET  /health - Server health check');
+            console.log('\n✅ Ready to accept connections!');
+        });
+    } catch (error) {
+        console.error('❌ Failed to start server:', error);
+        process.exit(1);
+    }
+};
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('❌ Uncaught Exception:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
+});
+
+// Start the server
+startServer();

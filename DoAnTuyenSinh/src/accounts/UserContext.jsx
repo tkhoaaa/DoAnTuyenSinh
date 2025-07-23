@@ -5,51 +5,51 @@ export const UserContext = createContext();
 export function UserContextProvider({ children }) {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [userId, setUserId] = useState(localStorage.getItem("userId") || "");
   const [username, setUsername] = useState(
     localStorage.getItem("username") || ""
   );
 
   useEffect(() => {
-    if (token) {
+    if (userId) {
       const storedRole = localStorage.getItem("role");
       const storedUsername = localStorage.getItem("username");
+      const storedUserData = localStorage.getItem("userData");
 
-      // Debug logs
-      console.log("Token found:", token);
+      console.log("User ID found:", userId);
       console.log("Stored username:", storedUsername);
       console.log("Stored role:", storedRole);
 
       setRole(storedRole);
       setUsername(storedUsername || "");
-      setUser({ token, username: storedUsername });
+      setUser(storedUserData ? JSON.parse(storedUserData) : { id: userId, username: storedUsername });
     } else {
       setUser(null);
       setRole(null);
       setUsername("");
     }
-  }, [token]);
+  }, [userId]);
 
-  const login = (token, role, username) => {
+  const login = (id, role, username, userData) => {
     // Debug logs
-    console.log("Login called with:", { token, role, username });
+    console.log("Login called with:", { id, role, username, userData });
 
     // Xử lý trường hợp username undefined/null
     const validUsername = username || "Người dùng";
 
-    setToken(token);
+    setUserId(id);
     setRole(role);
     setUsername(validUsername);
+    setUser(userData || { id, username: validUsername });
 
-    // Chỉ lưu vào localStorage nếu giá trị hợp lệ
-    if (token) localStorage.setItem("token", token);
-    if (role) localStorage.setItem("role", role);
-    if (validUsername) localStorage.setItem("username", validUsername);
-
-    setUser({ token, username: validUsername });
+    // Lưu vào localStorage
+    localStorage.setItem("userId", id);
+    localStorage.setItem("role", role);
+    localStorage.setItem("username", validUsername);
+    if (userData) localStorage.setItem("userData", JSON.stringify(userData));
 
     console.log("Login completed. New state:", {
-      token,
+      id,
       role,
       username: validUsername,
     });
@@ -58,12 +58,13 @@ export function UserContextProvider({ children }) {
   const logout = () => {
     console.log("Logout called");
 
-    setToken("");
+    setUserId("");
     setRole(null);
     setUsername("");
-    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
     localStorage.removeItem("role");
     localStorage.removeItem("username");
+    localStorage.removeItem("userData");
     setUser(null);
   };
 

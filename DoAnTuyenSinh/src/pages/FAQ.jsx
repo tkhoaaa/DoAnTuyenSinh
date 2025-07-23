@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import SEO from "../components/SEO";
+import StructuredData, { faqData as faqStructuredData } from "../components/StructuredData";
 import { FaQuestionCircle, FaSearch, FaMeh } from "react-icons/fa";
 
 const categories = [
@@ -56,7 +58,15 @@ function FAQ() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-yellow-50 pb-10">
+    <>
+      <SEO 
+        title="Câu hỏi thường gặp (FAQ)"
+        description="Câu hỏi thường gặp về HUTECHS - Tuyển sinh, học phí, học bổng, chương trình đào tạo và các thông tin hữu ích khác."
+        keywords="FAQ HUTECHS, câu hỏi thường gặp, tuyển sinh, học phí, học bổng, chương trình đào tạo"
+        canonical="/faq"
+      />
+      <StructuredData data={faqStructuredData} />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-yellow-50 pb-10">
       {/* Header & Search */}
       <motion.section
         className="py-10 bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-lg mb-8"
@@ -224,6 +234,7 @@ function FAQ() {
         )}
       </div>
     </div>
+    </>
   );
 }
 

@@ -9,6 +9,7 @@ function DangKyTaiKhoanAdmin() {
     email: "",
     password: "",
     confirm: "",
+    phone: ""
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
@@ -27,17 +28,30 @@ function DangKyTaiKhoanAdmin() {
       setLoading(false);
       return;
     }
+    if (!form.phone) {
+      setError("Số điện thoại không được để trống!");
+      setLoading(false);
+      return;
+    }
     try {
-      const res = await axios.post("http://localhost:5000/api/register", {
-        username: form.username,
+      const res = await axios.post("http://localhost:3001/api/auth/register-admin", {
         email: form.email,
         password: form.password,
-        role: "admin",
+        username: form.username,
+        phone: form.phone
       });
       setSuccess("Đăng ký thành công!");
       setError("");
     } catch (err) {
-      setError(err.response?.data?.error || "Đăng ký thất bại!");
+      const errors = err.response?.data?.errors;
+      if (Array.isArray(errors) && errors.length > 0) {
+        setError(errors.map(e => e.msg).join(' | '));
+      } else {
+        setError(
+          err.response?.data?.message ||
+          "Đăng ký thất bại!"
+        );
+      }
       setSuccess("");
     }
     setLoading(false);
@@ -126,6 +140,24 @@ function DangKyTaiKhoanAdmin() {
               name="confirm"
               type="password"
               value={form.confirm}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border-b-2 border-gray-300 focus:border-blue-600 outline-none transition bg-transparent"
+            />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.18 }}
+          >
+            <label className="block font-medium mb-1 flex items-center gap-2">
+              <FaUser className="text-blue-600" />
+              Số điện thoại
+            </label>
+            <input
+              name="phone"
+              type="text"
+              value={form.phone}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border-b-2 border-gray-300 focus:border-blue-600 outline-none transition bg-transparent"

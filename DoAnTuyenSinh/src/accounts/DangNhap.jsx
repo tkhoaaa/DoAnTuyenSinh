@@ -22,43 +22,24 @@ function DangNhap() {
     setSuccess("");
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/api/login", form);
+      const res = await axios.post("http://localhost:3001/api/auth/login", {
+        email: form.identifier,
+        password: form.password
+      });
 
-      // DEBUG: Log toàn bộ response từ backend
-      console.log("=== LOGIN DEBUG ===");
-      console.log("Full response:", res);
-      console.log("Response data:", res.data);
-      console.log("Available fields:", Object.keys(res.data));
+      // Lấy thông tin user từ response
+      if (res.data.success) {
+        const user = res.data.data.user;
+        const role = user.role;
+        const username = user.full_name || user.username || user.email;
 
-      // Kiểm tra các field có thể chứa username
-      console.log("token:", res.data.token);
-      console.log("role:", res.data.role);
-      console.log("username:", res.data.username);
-      console.log("name:", res.data.name);
-      console.log("full_name:", res.data.full_name);
-      console.log("displayName:", res.data.displayName);
-      console.log("user object:", res.data.user);
+        console.log("Login success:", { user, role, username });
 
-      // Thử nhiều cách để lấy username
-      const token = res.data.token;
-      const role = res.data.role;
-      const username =
-        res.data.username ||
-        res.data.name ||
-        res.data.full_name ||
-        res.data.displayName ||
-        res.data.user?.username ||
-        res.data.user?.name ||
-        res.data.user?.full_name ||
-        form.identifier || // Fallback: dùng identifier đã nhập
-        "Người dùng";
-
-      console.log("Final values to pass to login:");
-      console.log({ token, role, username });
-      console.log("===================");
-
-      // Đảm bảo backend trả về res.data.username
-      login(token, role, username);
+        // Lưu thông tin đăng nhập vào localStorage đơn giản (không cần JWT)
+        login(user.id, role, username, user);
+      } else {
+        throw new Error(res.data.message || 'Đăng nhập thất bại');
+      }
       setSuccess("Đăng nhập thành công!");
       if (role === "admin") navigate("/admin");
       else navigate("/");

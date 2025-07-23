@@ -1,5 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
+import SEO from "../components/SEO";
+import StructuredData, { organizationData, websiteData } from "../components/StructuredData";
+import OptimizedImage from "../components/OptimizedImage";
 
 const bannerUrl = "https://file1.hutech.edu.vn/file/editor/homepage1/792764-xep-hang-scimago-2025-713x475.jpg";
 
@@ -14,18 +17,32 @@ const sectionFade = {
 
 function TrangChu() {
   return (
-    <div className="bg-gradient-to-b from-blue-50 to-white min-h-screen">
+    <>
+      <SEO 
+        title="Trang chủ"
+        description="HUTECHS - Trường Đại học Công nghệ TP.HCM. Tuyển sinh 2025 với nhiều ngành học hiện đại, học bổng hấp dẫn, môi trường giáo dục chất lượng cao."
+        keywords="HUTECHS, tuyển sinh 2025, đại học công nghệ, TP.HCM, QS Stars, học bổng, ngành học"
+        canonical="/"
+      />
+      <StructuredData data={organizationData} />
+      <StructuredData data={websiteData} />
+      <div className="bg-gradient-to-b from-blue-50 to-white min-h-screen">
       {/* Banner */}
       <motion.section initial="hidden" whileInView="visible" viewport={{ once: true }} variants={sectionFade} className="py-8 bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-lg">
         <div className="container mx-auto flex flex-col md:flex-row items-center gap-8 px-4">
-          <motion.img
-            src={bannerUrl}
-            alt="Xếp hạng HUTECH"
-            className="rounded-2xl shadow-2xl w-full md:w-2/3 object-cover animate-fade-in"
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1 }}
-          />
+                      <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 1 }}
+              className="w-full md:w-2/3"
+            >
+              <OptimizedImage
+                src={bannerUrl}
+                alt="HUTECHS đạt xếp hạng QS Stars 4 sao - Minh chứng cho chất lượng giáo dục hàng đầu"
+                className="rounded-2xl shadow-2xl w-full object-cover animate-fade-in"
+                loading="eager"
+              />
+            </motion.div>
           <div className="flex-1 flex flex-col items-center md:items-start mt-6 md:mt-0">
             <motion.h1 className="text-4xl md:text-5xl font-extrabold mb-4 drop-shadow-lg text-yellow-300 animate-fade-in-up" initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
               HUTECHS - Tuyển sinh 2025
@@ -60,14 +77,19 @@ function TrangChu() {
               title: "Top 11 trường đại học hàng đầu Việt Nam",
               desc: "HUTECH xếp thứ 11 trong số 53 trường đại học và viện nghiên cứu hàng đầu Việt Nam.",
               link: "https://www.facebook.com/share/p/1W74ULtPFd/"
-            }].map((item, i) => (
-              <motion.div key={i} className="bg-white rounded-2xl shadow-xl p-6 text-center hover:scale-105 hover:shadow-2xl transition-transform duration-300 animate-fade-in-up flex flex-col items-center" custom={i} variants={sectionFade}>
-                <img src={item.img} alt={item.title} className="rounded-xl mb-4 mx-auto h-40 object-cover shadow-md" />
-                <div className="font-bold text-lg mb-2 text-blue-800">{item.title}</div>
-                <div className="text-gray-600 mb-3">{item.desc}</div>
-                <a href={item.link} target="_blank" rel="noopener noreferrer" className="inline-block bg-yellow-400 text-blue-900 font-bold py-2 px-4 rounded-lg shadow hover:bg-yellow-300 transition mt-auto">Xem chi tiết →</a>
-              </motion.div>
-            ))}
+                          }].map((item, i) => (
+                <motion.div key={i} className="bg-white rounded-2xl shadow-xl p-6 text-center hover:scale-105 hover:shadow-2xl transition-transform duration-300 animate-fade-in-up flex flex-col items-center" custom={i} variants={sectionFade}>
+                  <OptimizedImage 
+                    src={item.img} 
+                    alt={`${item.title} - Thành tựu nổi bật của HUTECHS`}
+                    className="rounded-xl mb-4 mx-auto h-40 object-cover shadow-md" 
+                    height="160"
+                  />
+                  <div className="font-bold text-lg mb-2 text-blue-800">{item.title}</div>
+                  <div className="text-gray-600 mb-3">{item.desc}</div>
+                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="inline-block bg-yellow-400 text-blue-900 font-bold py-2 px-4 rounded-lg shadow hover:bg-yellow-300 transition mt-auto">Xem chi tiết →</a>
+                </motion.div>
+              ))}
           </div>
         </div>
       </motion.section>
@@ -125,18 +147,24 @@ function TrangChu() {
               title: "Hội nghị Sinh viên Nghiên cứu Khoa học HUTECH 2025 sẽ diễn ra vào 18/6 tới",
               desc: "Sự kiện Khoa",
               link: "https://www.hutech.edu.vn/homepage/tin-hutech/14626009-hoi-nghi-sinh-vien-nghien-cuu-khoa-hoc-hutech-2025-se-dien-ra-vao-186-toi#:~:text=18/6%20t%E1%BB%9Bi-,H%E1%BB%99i%20ngh%E1%BB%8B%20Sinh%20vi%C3%AAn%20Nghi%C3%AAn%20c%E1%BB%A9u%20Khoa%20h%E1%BB%8Dc%20HUTECH%202025,ra%20v%C3%A0o%2018/6%20t%E1%BB%9Bi&text=Ng%C3%A0y%2018/6%20s%E1%BA%AFp%20t%E1%BB%9Bi,l%E1%BA%ADp%20cho%20th%E1%BA%BF%20h%E1%BB%87%20tr%E1%BA%BB." 
-            }].map((item, i) => (
-              <motion.div key={i} className="bg-white rounded-2xl shadow-lg p-5 hover:scale-105 hover:shadow-2xl transition-transform duration-300 animate-fade-in-up flex flex-col items-center" custom={i} variants={sectionFade}>
-                <img src={item.img} alt={item.title} className="rounded-xl mb-3 w-full h-40 object-cover" />
-                <div className="font-bold text-lg mb-2 text-blue-800">{item.title}</div>
-                <div className="text-gray-600 mb-2">{item.desc}</div>
-                <a href={item.link} target="_blank" rel="noopener noreferrer" className="inline-block mt-auto font-bold text-black border-2 border-black px-5 py-2 rounded-md bg-yellow-100 hover:bg-yellow-300 transition">Tìm hiểu <span className="ml-1">→</span></a>
-              </motion.div>
-            ))}
+                          }].map((item, i) => (
+                <motion.div key={i} className="bg-white rounded-2xl shadow-lg p-5 hover:scale-105 hover:shadow-2xl transition-transform duration-300 animate-fade-in-up flex flex-col items-center" custom={i} variants={sectionFade}>
+                  <OptimizedImage 
+                    src={item.img} 
+                    alt={`${item.title} - Tin tức và sự kiện nổi bật tại HUTECHS`}
+                    className="rounded-xl mb-3 w-full h-40 object-cover" 
+                    height="160"
+                  />
+                  <div className="font-bold text-lg mb-2 text-blue-800">{item.title}</div>
+                  <div className="text-gray-600 mb-2">{item.desc}</div>
+                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="inline-block mt-auto font-bold text-black border-2 border-black px-5 py-2 rounded-md bg-yellow-100 hover:bg-yellow-300 transition">Tìm hiểu <span className="ml-1">→</span></a>
+                </motion.div>
+              ))}
           </div>
         </div>
       </motion.section>
-    </div>
+      </div>
+    </>
   );
 }
 

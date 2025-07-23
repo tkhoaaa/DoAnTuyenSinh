@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import SEO from "../components/SEO";
 import {
   FaUser,
   FaEnvelope,
@@ -34,7 +35,14 @@ function LienHe() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-yellow-50 pb-10">
+    <>
+      <SEO 
+        title="Liên hệ"
+        description="Liên hệ với HUTECHS - Địa chỉ, số điện thoại, email và form liên hệ trực tuyến. Hỗ trợ tư vấn tuyển sinh và giải đáp thắc mắc."
+        keywords="liên hệ HUTECHS, địa chỉ trường, số điện thoại, email, tư vấn tuyển sinh"
+        canonical="/lien-he"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-yellow-50 pb-10">
       {/* Hero Section */}
       <motion.section
         className="py-10 bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-lg mb-8"
@@ -256,6 +264,7 @@ function LienHe() {
         ></iframe>
       </motion.section>
     </div>
+    </>
   );
 }
 

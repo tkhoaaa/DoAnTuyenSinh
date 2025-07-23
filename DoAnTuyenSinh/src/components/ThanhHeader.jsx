@@ -10,6 +10,7 @@ import {
   FaSignInAlt,
   FaUserEdit,
   FaSignOutAlt,
+  FaCog,
 } from "react-icons/fa";
 import { UserContext } from "../accounts/UserContext";
 
@@ -80,6 +81,16 @@ function ThanhHeader() {
               <span className="text-white font-semibold px-2">
                 Xin chào, {displayName}
               </span>
+              {/* Admin Dashboard Button */}
+              {role === 'admin' && (
+                <Link
+                  to="/admin/tong-quan"
+                  className="flex items-center gap-1 px-3 py-2 rounded-md font-semibold transition text-white hover:bg-green-500 hover:text-white bg-green-600"
+                >
+                  <FaCog />
+                  <span className="hidden sm:inline">Admin</span>
+                </Link>
+              )}
               <button
                 onClick={logout}
                 className="flex items-center gap-1 px-3 py-2 rounded-md font-semibold transition text-white hover:bg-yellow-400 hover:text-blue-800"

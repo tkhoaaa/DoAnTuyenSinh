@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
+import SEO from "../components/SEO";
 
 function DangKyXetTuyen() {
   const [nganhList, setNganhList] = useState([]);
@@ -39,9 +40,19 @@ function DangKyXetTuyen() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/nganh")
-      .then((res) => setNganhList(res.data))
-      .catch(() => setNganhList([]));
+      .get("http://localhost:3001/api/auth/majors")
+      .then((res) => {
+        console.log("Majors API response:", res.data);
+        if (res.data.success) {
+          setNganhList(res.data.data);
+        } else {
+          setNganhList([]);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching majors:", error);
+        setNganhList([]);
+      });
   }, []);
 
   const handleNganhChange = (idx, value) => {
@@ -75,45 +86,62 @@ function DangKyXetTuyen() {
     setSuccess("");
     setError("");
     try {
-      const formData = new FormData();
-      Object.entries(form).forEach(([k, v]) => formData.append(k, v));
-      formData.append("nganh_id", nganhIds[0] || "");
-      formData.append("nganh_ids", JSON.stringify(nganhIds.filter(Boolean)));
-      formData.append("diem_hk1", JSON.stringify(diemHK1));
-      formData.append("diem_ca_nam", JSON.stringify(diemCaNam));
-      if (fileHoSo) formData.append("file_ho_so", fileHoSo);
-      await axios.post("http://localhost:5000/api/hoso", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const applicationData = {
+        ...form,
+        nganh_id: parseInt(nganhIds[0]) || null,
+        nganh_ids: nganhIds.filter(Boolean).map(id => parseInt(id)),
+        diem_hk1: JSON.stringify(diemHK1),
+        diem_ca_nam: JSON.stringify(diemCaNam),
+        user_id: localStorage.getItem("userId") || null,
+      };
+
+      console.log("Submitting application:", applicationData);
+
+      const response = await axios.post("http://localhost:3001/api/auth/apply", applicationData, {
+        headers: { "Content-Type": "application/json" },
       });
-      setSuccess("Đăng ký thành công!");
-      setForm({
-        ho_ten: "",
-        ngay_sinh: "",
-        cccd: "",
-        sdt: "",
-        email: "",
-        noi_hoc_12: "",
-        truong_thpt: "",
-        ten_lop_12: "",
-        dia_chi: "",
-      });
-      setNganhIds([""]);
-      setDiemHK1({});
-      setDiemCaNam({});
-      setFileHoSo(null);
+
+      if (response.data.success) {
+        setSuccess("Đăng ký thành công! Mã hồ sơ: " + response.data.data.application_code);
+        setForm({
+          ho_ten: "",
+          ngay_sinh: "",
+          cccd: "",
+          sdt: "",
+          email: "",
+          noi_hoc_12: "",
+          truong_thpt: "",
+          ten_lop_12: "",
+          dia_chi: "",
+        });
+        setNganhIds([""]);
+        setDiemHK1({});
+        setDiemCaNam({});
+        setFileHoSo(null);
+      } else {
+        setError(response.data.message || "Đăng ký thất bại!");
+      }
     } catch (err) {
-      setError("Đăng ký thất bại. Vui lòng kiểm tra lại thông tin!");
+      console.error("Submit error:", err);
+      setError(err.response?.data?.message || "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin!");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <motion.div
-      className="min-h-screen bg-gradient-to-b from-blue-50 to-white pb-10"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
+    <>
+      <SEO 
+        title="Đăng ký xét tuyển"
+        description="Đăng ký xét tuyển HUTECHS 2025 - Nộp hồ sơ trực tuyến, chọn ngành học, xét tuyển theo nhiều phương thức. Quy trình đơn giản, nhanh chóng."
+        keywords="đăng ký xét tuyển, HUTECHS, nộp hồ sơ, xét tuyển online, tuyển sinh 2025"
+        canonical="/dang-ky-xet-tuyen"
+      />
+      <motion.div
+        className="min-h-screen bg-gradient-to-b from-blue-50 to-white pb-10"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
       <motion.div className="max-w-4xl mx-auto bg-white mt-8 p-10 rounded-3xl shadow-2xl">
         <motion.h2
           className="text-4xl font-extrabold text-blue-900 mb-8 text-center uppercase tracking-wide animate-fade-in-up"
@@ -277,7 +305,7 @@ function DangKyXetTuyen() {
                   <option value="">--Chọn ngành--</option>
                   {nganhList.map((nganh) => (
                     <option key={nganh.id} value={nganh.id}>
-                      {nganh.ten_nganh} ({nganh.ma_nganh})
+                      {nganh.name} ({nganh.code})
                     </option>
                   ))}
                 </select>
@@ -487,6 +515,7 @@ function DangKyXetTuyen() {
         </form>
       </motion.div>
     </motion.div>
+    </>
   );
 }
 
