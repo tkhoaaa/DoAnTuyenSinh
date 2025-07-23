@@ -1,6 +1,6 @@
 # 🎓 Hệ thống Tuyển sinh HUTECHS
 
-Một hệ thống quản lý tuyển sinh trực tuyến hoàn chỉnh cho trường Đại học Công nghệ TP.HCM (HUTECHS), xây dựng bằng **React.js** và **Node.js**.
+Một hệ thống quản lý tuyển sinh trực tuyến hoàn chỉnh cho trường Đại học Công nghệ TP.HCM (HUTECHS), xây dựng bằng **React.js** và **Node.js** với **UI/UX hiện đại** và **animations mượt mà**.
 
 ## 📋 Mục lục
 
@@ -11,6 +11,7 @@ Một hệ thống quản lý tuyển sinh trực tuyến hoàn chỉnh cho trư
 - [⚙️ Cài đặt và chạy](#️-cài-đặt-và-chạy)
 - [🔧 Cấu hình Database](#-cấu-hình-database)
 - [📊 Chức năng chính](#-chức-năng-chính)
+- [🎨 UI/UX & Animations](#-uiux--animations)
 - [🔐 Hệ thống Authentication](#-hệ-thống-authentication)
 - [📱 API Endpoints](#-api-endpoints)
 - [🎨 Frontend Components](#-frontend-components)
@@ -20,41 +21,43 @@ Một hệ thống quản lý tuyển sinh trực tuyến hoàn chỉnh cho trư
 
 ## 🎯 Giới thiệu
 
-Hệ thống Tuyển sinh HUTECHS là một ứng dụng web full-stack cho phép:
+Hệ thống Tuyển sinh HUTECHS là một ứng dụng web full-stack hiện đại cho phép:
 
-- **Thí sinh**: Đăng ký xét tuyển, theo dõi hồ sơ, xem thông tin tuyển sinh
-- **Admin**: Quản lý hồ sơ, FAQ, thông tin tuyển sinh, báo cáo thống kê
-- **Công chúng**: Xem thông tin tuyển sinh, FAQ, liên hệ
+- **Thí sinh**: Đăng ký xét tuyển, theo dõi hồ sơ, xem thông tin tuyển sinh với trải nghiệm mượt mà
+- **Admin**: Quản lý hồ sơ, FAQ, thông tin tuyển sinh, báo cáo thống kê với dashboard hiện đại
+- **Công chúng**: Xem thông tin tuyển sinh, FAQ, liên hệ với giao diện responsive
 
 ## 🛠️ Công nghệ sử dụng
 
 ### Frontend
-- **React.js 18** - UI Framework
+- **React.js 18** - UI Framework với Hooks
 - **Vite** - Build tool & Development server
 - **React Router DOM** - Client-side routing
-- **Framer Motion** - Animations
-- **Tailwind CSS** - Styling framework
-- **Axios** - HTTP client
+- **Framer Motion** - Advanced animations & transitions
+- **Tailwind CSS** - Utility-first CSS framework
+- **Axios** - HTTP client với interceptors
 - **React Helmet Async** - SEO management
-- **React Icons** - Icon library
+- **React Icons** - Comprehensive icon library
+- **PostCSS** - CSS processing & optimization
 
 ### Backend
 - **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **MySQL2** - Database driver
-- **bcrypt** - Password hashing
-- **express-validator** - Input validation
+- **Express.js** - Web framework với middleware
+- **MySQL2** - Database driver với prepared statements
+- **bcrypt** - Password hashing với salt rounds
+- **express-validator** - Input validation & sanitization
 - **cors** - Cross-origin resource sharing
-- **multer** - File upload handling
+- **multer** - File upload handling với validation
 
 ### Database
 - **MySQL 8.0** - Relational database
 - **MySQL Workbench** - Database management
 
 ### Development Tools
-- **ESLint** - Code linting
+- **ESLint** - Code linting & quality
 - **PostCSS** - CSS processing
 - **Cursor AI** - AI-powered code editor
+- **Vite** - Fast development & build tool
 
 ## 🏗️ Kiến trúc hệ thống
 
@@ -64,6 +67,8 @@ Hệ thống Tuyển sinh HUTECHS là một ứng dụng web full-stack cho phé
 │   React.js      │                     │   Express.js    │
 │   Frontend      │                     │   Backend       │
 │   (Port 5173)   │                     │   (Port 3001)   │
+│   + Framer      │                     │   + MySQL2      │
+│   Motion        │                     │   + bcrypt      │
 └─────────────────┘                     └─────────────────┘
                                                  │
                                                  │ MySQL2
@@ -76,7 +81,7 @@ Hệ thống Tuyển sinh HUTECHS là một ứng dụng web full-stack cho phé
                                         └─────────────────┘
 ```
 
-**Mô hình:** 3-tier Architecture (Presentation - Logic - Data)
+**Mô hình:** 3-tier Architecture (Presentation - Logic - Data) với **Modern UI/UX**
 
 ## 📁 Cấu trúc thư mục
 
@@ -84,47 +89,52 @@ Hệ thống Tuyển sinh HUTECHS là một ứng dụng web full-stack cho phé
 DoAnTuyenSinh/
 ├── 📁 backend/                    # Backend Node.js
 │   ├── 📁 config/
-│   │   └── database.js           # Cấu hình MySQL connection
+│   │   ├── database.js           # Cấu hình MySQL connection
+│   │   └── env.example           # Environment variables template
 │   ├── 📁 database/
 │   │   ├── safe_migration.sql    # Script migration an toàn
 │   │   └── cleanup_roles.sql     # Script cleanup roles table
-│   ├── 📁 routes/
-│   │   └── simple_auth.js        # Authentication routes
 │   ├── 📁 uploads/               # Thư mục upload files
+│   │   └── scholarship/          # Upload học bổng
 │   ├── index.js                  # Entry point server
 │   ├── package.json              # Dependencies backend
 │   └── .env                      # Environment variables
 │
 ├── 📁 src/                       # Frontend React
 │   ├── 📁 accounts/              # Authentication components
-│   │   ├── DangNhap.jsx         # Login page
-│   │   ├── DangKyTaiKhoan.jsx   # User registration
+│   │   ├── DangNhap.jsx         # Login page với modern UI
+│   │   ├── DangKyTaiKhoan.jsx   # User registration với validation
 │   │   ├── DangKyTaiKhoanAdmin.jsx # Admin registration
-│   │   ├── QuenMatKhau.jsx      # Forgot password
+│   │   ├── QuenMatKhau.jsx      # Forgot password với animations
 │   │   └── UserContext.jsx      # Authentication context
 │   │
 │   ├── 📁 admin/                 # Admin dashboard
 │   │   ├── 📁 components/
-│   │   │   └── AdminLayout.jsx   # Admin layout wrapper
+│   │   │   └── AdminLayout.jsx   # Admin layout với sidebar
 │   │   └── 📁 pages/
-│   │       ├── TongQuan.jsx      # Overview dashboard
-│   │       ├── QuanLyHoSo.jsx    # Application management
-│   │       └── QuanLyFAQ.jsx     # FAQ management
+│   │       ├── TongQuan.jsx      # Overview dashboard với stats
+│   │       ├── QuanLyHoSo.jsx    # Application management với filters
+│   │       └── QuanLyFAQ.jsx     # FAQ management với CRUD
 │   │
 │   ├── 📁 components/            # Shared components
-│   │   ├── ThanhHeader.jsx       # Main header
-│   │   ├── ChanTrang.jsx         # Footer
+│   │   ├── ThanhHeader.jsx       # Modern header với animations
+│   │   ├── ChanTrang.jsx         # Footer với social links
 │   │   ├── SEO.jsx               # SEO component
 │   │   ├── StructuredData.jsx    # Schema markup
-│   │   └── OptimizedImage.jsx    # Optimized images
+│   │   ├── OptimizedImage.jsx    # Optimized images
+│   │   └── 📁 ui/                # Reusable UI components
+│   │       ├── Button.jsx        # Button component với variants
+│   │       └── Input.jsx         # Input component với validation
 │   │
 │   ├── 📁 pages/                 # Public pages
-│   │   ├── TrangChu.jsx          # Homepage
-│   │   ├── DangKyXetTuyen.jsx    # Application form
-│   │   ├── TraCuuKetQua.jsx      # Result lookup
+│   │   ├── TrangChu.jsx          # Homepage với hero section và animations
+│   │   ├── DangKyXetTuyen.jsx    # Multi-step application form với validation
+│   │   ├── DangKyTuVan.jsx       # Consultation registration với tabbed interface
+│   │   ├── DangKyHocBong.jsx     # Scholarship application với modern form
+│   │   ├── TraCuuKetQua.jsx      # Result lookup với search và filters
 │   │   ├── ThongTinTuyenSinh.jsx # Admission info
-│   │   ├── FAQ.jsx               # FAQ page
-│   │   └── LienHe.jsx            # Contact page
+│   │   ├── FAQ.jsx               # Searchable FAQ page với categories
+│   │   └── LienHe.jsx            # Contact page với form
 │   │
 │   ├── 📁 config/
 │   │   └── siteConfig.js         # Site configuration
@@ -138,6 +148,7 @@ DoAnTuyenSinh/
 ├── package.json                  # Frontend dependencies
 ├── vite.config.js               # Vite configuration
 ├── tailwind.config.js           # Tailwind configuration
+├── postcss.config.js            # PostCSS configuration
 └── README.md                    # This file
 ```
 
@@ -256,30 +267,69 @@ CREATE TABLE hoso (
 ## 📊 Chức năng chính
 
 ### 🎯 Cho thí sinh (User)
-- ✅ Đăng ký tài khoản
-- ✅ Đăng nhập/Đăng xuất
+- ✅ Đăng ký tài khoản với validation
+- ✅ Đăng nhập/Đăng xuất với animations
 - ✅ Đăng ký xét tuyển (chọn tối đa 5 ngành)
-- ✅ Nhập điểm học bạ (HK1, Cả năm)
-- ✅ Upload hồ sơ (học bạ, CCCD)
-- ✅ Tra cứu kết quả
+- ✅ Nhập điểm học bạ (HK1, Cả năm) với bảng động
+- ✅ Upload hồ sơ (học bạ, CCCD) với preview
+- ✅ Đăng ký tư vấn với form chi tiết
+- ✅ Đăng ký học bổng với validation
+- ✅ Tra cứu kết quả với search
 - ✅ Xem thông tin tuyển sinh
-- ✅ Đọc FAQ
-- ✅ Liên hệ hỗ trợ
+- ✅ Đọc FAQ với search và filter
+- ✅ Liên hệ hỗ trợ với form validation
 
 ### 👑 Cho Admin
-- ✅ Dashboard tổng quan
-- ✅ Quản lý hồ sơ xét tuyển
-- ✅ Quản lý FAQ
+- ✅ Dashboard tổng quan với statistics cards
+- ✅ Quản lý hồ sơ xét tuyển với filters và search
+- ✅ Quản lý FAQ với CRUD operations
 - ✅ Quản lý thông tin tuyển sinh
-- ✅ Thống kê báo cáo
+- ✅ Thống kê báo cáo với charts
 - ✅ Role-based access control
+- ✅ Modern admin layout với sidebar
 
 ### 🌐 Cho công chúng
 - ✅ Xem thông tin tuyển sinh
-- ✅ Đọc FAQ
-- ✅ Liên hệ
-- ✅ SEO optimized
-- ✅ Responsive design
+- ✅ Đọc FAQ với search
+- ✅ Liên hệ với form validation
+- ✅ SEO optimized với meta tags
+- ✅ Responsive design cho all devices
+- ✅ Modern UI/UX với animations
+
+## 🎨 UI/UX & Animations
+
+### 🎭 Framer Motion Integration
+- **Page Transitions**: Smooth entrance animations
+- **Component Animations**: Hover effects, scale transforms
+- **Staggered Animations**: Sequential element reveals
+- **AnimatePresence**: Mount/unmount animations
+- **Motion Variants**: Reusable animation states
+
+### 🎨 Modern Design System
+- **Gradient Backgrounds**: Blue to indigo gradients
+- **Glassmorphism Effects**: Backdrop blur với transparency
+- **Rounded Corners**: Consistent border-radius
+- **Shadow System**: Layered shadows cho depth
+- **Color Palette**: Blue, yellow, white theme
+
+### 📱 Responsive Design
+- **Mobile-First**: Optimized cho mobile devices
+- **Breakpoint System**: Tailwind responsive classes
+- **Touch-Friendly**: Proper button sizes và spacing
+- **Flexible Layouts**: Grid và flexbox systems
+
+### 🎯 Interactive Elements
+- **Hover Effects**: Scale, color, và shadow transitions
+- **Loading States**: Skeleton loading, spinners
+- **Form Validation**: Real-time feedback với animations
+- **Modal Dialogs**: Smooth open/close transitions
+- **Dropdown Menus**: Animated dropdowns với backdrop
+
+### 🎨 Component Library
+- **Button Component**: Variants, icons, loading states
+- **Input Component**: Validation, icons, error states
+- **Card Components**: Gradient backgrounds, hover effects
+- **Navigation**: Animated headers, mobile menus
 
 ## 🔐 Hệ thống Authentication
 
@@ -319,6 +369,8 @@ GET  /api/auth/majors             # Danh sách ngành học
 GET  /api/auth/admission-methods  # Phương thức xét tuyển
 POST /api/auth/apply              # Đăng ký xét tuyển
 GET  /api/auth/applications/:userId # Hồ sơ của user
+POST /api/auth/consultation       # Đăng ký tư vấn
+POST /api/auth/scholarship        # Đăng ký học bổng
 ```
 
 ### ❓ FAQ & Support
@@ -338,38 +390,57 @@ GET  /health                      # Kiểm tra server
 ### 🔧 Core Components
 - **`App.jsx`**: Main router với public/admin routes
 - **`UserContext.jsx`**: Global authentication state
-- **`ThanhHeader.jsx`**: Navigation header với role-based menu
-- **`ChanTrang.jsx`**: Footer component
+- **`ThanhHeader.jsx`**: Modern navigation header với animations
+- **`ChanTrang.jsx`**: Footer với social links và contact info
 
 ### 📄 Page Components
-- **`TrangChu.jsx`**: Homepage với hero section
-- **`DangKyXetTuyen.jsx`**: Multi-step application form
-- **`TraCuuKetQua.jsx`**: Result lookup with search
-- **`FAQ.jsx`**: Searchable FAQ page
-- **`LienHe.jsx`**: Contact form
+- **`TrangChu.jsx`**: Homepage với hero section và animations
+- **`DangKyXetTuyen.jsx`**: Multi-step application form với validation
+- **`DangKyTuVan.jsx`**: Consultation registration với tabbed interface
+- **`DangKyHocBong.jsx`**: Scholarship application với modern form
+- **`TraCuuKetQua.jsx`**: Result lookup với search và filters
+- **`FAQ.jsx`**: Searchable FAQ page với categories
+- **`LienHe.jsx`**: Contact page với form
 
 ### 🎭 Animation & UX
-- **Framer Motion**: Page transitions, hover effects
-- **Loading states**: Skeleton loading, spinners
-- **Form validation**: Real-time validation feedback
-- **Responsive design**: Mobile-first approach
+- **Framer Motion**: Page transitions, hover effects, staggered animations
+- **Loading states**: Skeleton loading, spinners, progress bars
+- **Form validation**: Real-time validation feedback với animations
+- **Responsive design**: Mobile-first approach với breakpoints
+- **Interactive feedback**: Success/error messages với animations
+
+### 🎨 UI Components
+- **`Button.jsx`**: Reusable button với variants, icons, loading states
+- **`Input.jsx`**: Input component với validation, icons, error states
+- **`OptimizedImage.jsx`**: Image component với lazy loading
+- **`SEO.jsx`**: SEO component với meta tags
+- **`StructuredData.jsx`**: Schema markup cho search engines
 
 ## 🏛️ Admin Dashboard
 
-### 🎨 Design Pattern: Sidebar Layout
-- **`AdminLayout.jsx`**: Main layout wrapper
+### 🎨 Design Pattern: Modern Sidebar Layout
+- **`AdminLayout.jsx`**: Main layout wrapper với responsive sidebar
 - **Role protection**: Tự động redirect nếu không phải admin
-- **Responsive sidebar**: Collapsible trên mobile
+- **Responsive sidebar**: Collapsible trên mobile với animations
+- **Notification system**: Dropdown notifications với indicators
 
 ### 📊 Dashboard Pages
-- **`TongQuan.jsx`**: Overview với statistics cards
-- **`QuanLyHoSo.jsx`**: Application management table
-- **`QuanLyFAQ.jsx`**: FAQ CRUD interface
+- **`TongQuan.jsx`**: Overview với statistics cards và charts
+- **`QuanLyHoSo.jsx`**: Application management với filters, search, và modals
+- **`QuanLyFAQ.jsx`**: FAQ CRUD interface với categories và search
 
 ### 🛡️ Security Features
 - **Route protection**: `useEffect` kiểm tra role
 - **Auto logout**: Khi role thay đổi
 - **Access denial**: UI thông báo khi không có quyền
+- **Session management**: Proper session handling
+
+### 🎯 Admin Features
+- **Statistics Cards**: Real-time data với animations
+- **Search & Filters**: Advanced filtering với debounced search
+- **Modal Dialogs**: Add/edit forms với validation
+- **Status Management**: Status updates với visual indicators
+- **Export Functions**: Data export capabilities
 
 ## 🗄️ Database Schema
 
@@ -434,9 +505,36 @@ GET  /health                      # Kiểm tra server
 - created_at
 ```
 
+**7. `consultations` - Đăng ký tư vấn**
+```sql
+- id (PK)
+- user_id (FK → users.id)
+- ho_ten, email, phone
+- nganh_quan_tam
+- thoi_gian_tu_van
+- noi_dung_tu_van
+- status
+- created_at
+```
+
+**8. `scholarships` - Đăng ký học bổng**
+```sql
+- id (PK)
+- user_id (FK → users.id)
+- ho_ten, email, phone
+- nganh_dang_ky
+- diem_tb_lop_12
+- hoan_canh_gia_dinh
+- ly_do_xin_hoc_bong
+- status
+- created_at
+```
+
 ### 🔗 Relationships
 ```
 users (1) ←→ (n) hoso
+users (1) ←→ (n) consultations
+users (1) ←→ (n) scholarships
 nganh (1) ←→ (n) hoso
 ```
 
@@ -468,61 +566,70 @@ pm2 save
 ## 📈 Performance & SEO
 
 ### ⚡ Frontend Optimization
-- **Code splitting**: Dynamic imports
-- **Image optimization**: WebP, lazy loading
+- **Code splitting**: Dynamic imports với React.lazy
+- **Image optimization**: WebP, lazy loading với Intersection Observer
 - **Bundle analysis**: Vite bundle analyzer
 - **Caching**: Browser caching headers
+- **Animation optimization**: Framer Motion với reduced motion support
 
 ### 🔍 SEO Features
-- **React Helmet**: Dynamic meta tags
-- **Structured Data**: JSON-LD schema
+- **React Helmet**: Dynamic meta tags cho all pages
+- **Structured Data**: JSON-LD schema cho search engines
 - **Sitemap**: Auto-generated XML sitemap
 - **Robots.txt**: Search engine directives
+- **Open Graph**: Social media meta tags
 
 ## 🔒 Security
 
 ### 🛡️ Backend Security
 - **Password hashing**: bcrypt với salt rounds 10
-- **Input validation**: express-validator
+- **Input validation**: express-validator với sanitization
 - **CORS**: Configured cho frontend domain
 - **SQL Injection**: Prepared statements với MySQL2
+- **File upload security**: Multer với file type validation
 
 ### 🔐 Frontend Security
 - **XSS Prevention**: React built-in protection
 - **HTTPS**: Force SSL trên production
 - **Secure Storage**: localStorage với validation
+- **Input sanitization**: Client-side validation
 
 ## 🧪 Testing & Quality
 
 ### ✅ Code Quality
-- **ESLint**: JavaScript linting
+- **ESLint**: JavaScript linting với strict rules
 - **Prettier**: Code formatting
 - **Error Handling**: Try-catch, error boundaries
+- **Type checking**: PropTypes cho component validation
 
 ### 🔍 Monitoring
-- **Console Logging**: Structured logging
+- **Console Logging**: Structured logging với levels
 - **Error Tracking**: Client-side error logging
 - **Health Checks**: API health endpoints
+- **Performance monitoring**: Bundle size tracking
 
 ## 👥 Đóng góp
 
 ### 📝 Development Workflow
 1. Fork repository
 2. Tạo feature branch
-3. Commit changes
+3. Commit changes với conventional commits
 4. Push và tạo Pull Request
 
 ### 📋 Coding Standards
-- **JavaScript**: ES6+ features
+- **JavaScript**: ES6+ features với modern syntax
 - **React**: Functional components + Hooks
 - **CSS**: Tailwind utility classes
-- **Database**: Normalized schema
+- **Database**: Normalized schema với proper relationships
+- **Animations**: Framer Motion với performance optimization
 
 ## 📞 Liên hệ & Hỗ trợ
 
 **Phát triển bởi:** VÕ TIẾN KHOA 
 **Ngôn ngữ:** Tiếng Việt
+**Framework:** React.js + Node.js + MySQL
+**UI/UX:** Modern design với Framer Motion animations
 
 ---
 
-*Hệ thống Tuyển sinh HUTECHS - Giải pháp tuyển sinh trực tuyến hoàn chỉnh 🎓* 
+*Hệ thống Tuyển sinh HUTECHS - Giải pháp tuyển sinh trực tuyến hoàn chỉnh với UI/UX hiện đại 🎓✨* 

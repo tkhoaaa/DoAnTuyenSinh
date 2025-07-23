@@ -1,5 +1,6 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaHome,
   FaUserPlus,
@@ -12,6 +13,10 @@ import {
   FaSignOutAlt,
   FaCog,
   FaChevronDown,
+  FaBars,
+  FaTimes,
+  FaGraduationCap,
+  FaTrophy
 } from "react-icons/fa";
 import { UserContext } from "../accounts/UserContext";
 
@@ -30,7 +35,8 @@ const menu = [
 function ThanhHeader() {
   const location = useLocation();
   const { user, username, role, logout } = useContext(UserContext);
-  const [showDropdown, setShowDropdown] = React.useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Debug: log để kiểm tra giá trị
   console.log("User context:", { user, username, role });
@@ -40,119 +46,286 @@ function ThanhHeader() {
     username || user?.username || user?.name || user?.email || "Người dùng";
 
   return (
-    <header className="bg-blue-700 shadow sticky top-0 z-50">
-      <div className="container mx-auto flex items-center justify-between px-2 md:px-6 py-2">
+    <motion.header 
+      className="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 shadow-2xl sticky top-0 z-50 backdrop-blur-sm"
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+    >
+      <div className="container mx-auto flex items-center justify-between px-4 md:px-6 py-3">
         {/* Logo */}
-        <div className="flex items-center gap-2">
-          <img
-            src="https://media.loveitopcdn.com/3807/logo-hutech-1.png"
-            alt="Logo HUTECH"
-            className="h-10 w-10 object-contain rounded-full border-2 border-white shadow bg-white"
-            style={{ minWidth: 40, minHeight: 40 }}
-          />
-          <span className="text-white font-bold text-xl tracking-wide">
-            HUTECH-S
-          </span>
-        </div>
-        {/* Menu */}
-        <nav className="flex-1 flex items-center justify-center gap-1 md:gap-2 lg:gap-4">
-          {menu.map((item) => (
-            <Link
+        <motion.div 
+          className="flex items-center gap-3"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <motion.div
+            className="relative"
+            whileHover={{ rotate: 360 }}
+            transition={{ duration: 0.6 }}
+          >
+            <img
+              src="https://media.loveitopcdn.com/3807/logo-hutech-1.png"
+              alt="Logo HUTECH"
+              className="h-12 w-12 object-contain rounded-2xl border-2 border-white/20 shadow-lg bg-white/10 backdrop-blur-sm"
+              style={{ minWidth: 48, minHeight: 48 }}
+            />
+          </motion.div>
+          <div className="flex flex-col">
+            <span className="text-white font-bold text-xl tracking-wide">
+              HUTECH-S
+            </span>
+            <span className="text-blue-200 text-xs font-medium">
+              Tuyển sinh 2025
+            </span>
+          </div>
+        </motion.div>
+
+        {/* Desktop Menu */}
+        <nav className="hidden lg:flex items-center justify-center gap-1">
+          {menu.map((item, index) => (
+            <motion.div
               key={item.path}
-              to={item.path}
-              className={`flex items-center gap-1 px-3 py-2 rounded-md font-semibold transition text-white hover:bg-blue-800 hover:text-yellow-400 ${
-                location.pathname === item.path
-                  ? "bg-blue-800 text-yellow-400"
-                  : ""
-              }`}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
             >
-              <span className="text-lg">{item.icon}</span>
-              <span className="hidden sm:inline">{item.label}</span>
-            </Link>
+              <Link
+                to={item.path}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300 ${
+                  location.pathname === item.path
+                    ? "bg-white/20 text-yellow-300 shadow-lg"
+                    : ""
+                }`}
+              >
+                <span className="text-lg">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            </motion.div>
           ))}
+          
           {/* Dropdown Tư vấn & Học bổng */}
-          <div className="relative">
-            <button
-              className="flex items-center gap-1 px-3 py-2 rounded-md font-semibold transition text-white hover:bg-blue-800 hover:text-yellow-400"
+          <motion.div 
+            className="relative"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <motion.button
+              className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300"
               onClick={() => setShowDropdown((v) => !v)}
               onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <span className="text-lg">
                 <FaQuestionCircle />
               </span>
-              <span className="hidden sm:inline">Tư vấn & Học bổng</span>
-              <FaChevronDown className="ml-1 text-xs" />
-            </button>
-            {showDropdown && (
-              <div className="absolute left-0 mt-2 w-56 bg-white rounded shadow-lg z-50">
-                <Link
-                  to="/dang-ky-tu-van"
-                  className="block px-4 py-2 text-blue-700 hover:bg-blue-50 hover:text-blue-900"
-                  onClick={() => setShowDropdown(false)}
+              <span>Tư vấn & Học bổng</span>
+              <motion.div
+                animate={{ rotate: showDropdown ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <FaChevronDown className="ml-1 text-xs" />
+              </motion.div>
+            </motion.button>
+            
+            <AnimatePresence>
+              {showDropdown && (
+                <motion.div 
+                  className="absolute left-0 mt-2 w-64 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 z-50 overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 >
-                  Đăng ký tư vấn
-                </Link>
-                <Link
-                  to="/dang-ky-hoc-bong"
-                  className="block px-4 py-2 text-blue-700 hover:bg-blue-50 hover:text-blue-900"
-                  onClick={() => setShowDropdown(false)}
-                >
-                  Đăng ký học bổng
-                </Link>
-              </div>
-            )}
-          </div>
+                  <Link
+                    to="/dang-ky-tu-van"
+                    className="flex items-center gap-3 px-4 py-3 text-blue-700 hover:bg-blue-50 hover:text-blue-900 transition-all duration-200"
+                    onClick={() => setShowDropdown(false)}
+                  >
+                    <FaQuestionCircle className="text-blue-500" />
+                    <div>
+                      <div className="font-semibold">Đăng ký tư vấn</div>
+                      <div className="text-xs text-gray-500">Hỗ trợ tư vấn tuyển sinh</div>
+                    </div>
+                  </Link>
+                  <Link
+                    to="/dang-ky-hoc-bong"
+                    className="flex items-center gap-3 px-4 py-3 text-blue-700 hover:bg-blue-50 hover:text-blue-900 transition-all duration-200"
+                    onClick={() => setShowDropdown(false)}
+                  >
+                    <FaTrophy className="text-yellow-500" />
+                    <div>
+                      <div className="font-semibold">Đăng ký học bổng</div>
+                      <div className="text-xs text-gray-500">Cơ hội nhận học bổng</div>
+                    </div>
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         </nav>
-        {/* Auth */}
-        <div className="flex items-center gap-2">
+
+        {/* Auth Section */}
+        <div className="flex items-center gap-3">
           {user ? (
             <>
-              <span className="text-white font-semibold px-2">
+              <motion.span 
+                className="text-white font-semibold px-3 py-2 bg-white/10 rounded-xl backdrop-blur-sm"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 }}
+              >
                 Xin chào, {displayName}
-              </span>
+              </motion.span>
+              
               {/* Admin Dashboard Button */}
               {role === 'admin' && (
-                <Link
-                  to="/admin/tong-quan"
-                  className="flex items-center gap-1 px-3 py-2 rounded-md font-semibold transition text-white hover:bg-green-500 hover:text-white bg-green-600"
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.7 }}
                 >
-                  <FaCog />
-                  <span className="hidden sm:inline">Admin</span>
-                </Link>
+                  <Link
+                    to="/admin/tong-quan"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <FaCog />
+                    <span>Admin</span>
+                  </Link>
+                </motion.div>
               )}
-              <button
+              
+              <motion.button
                 onClick={logout}
-                className="flex items-center gap-1 px-3 py-2 rounded-md font-semibold transition text-white hover:bg-yellow-400 hover:text-blue-800"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-yellow-400 hover:text-blue-800 shadow-lg"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.8 }}
               >
                 <FaSignOutAlt />
-                <span className="hidden sm:inline">Đăng xuất</span>
-              </button>
+                <span>Đăng xuất</span>
+              </motion.button>
             </>
           ) : (
             <>
-              <Link
-                to="/accounts/dang-nhap"
-                className="flex items-center gap-1 px-3 py-2 rounded-md font-semibold transition text-white hover:bg-yellow-400 hover:text-blue-800"
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 }}
               >
-                <span className="text-lg">
-                  <FaSignInAlt />
-                </span>
-                <span className="hidden sm:inline">Đăng nhập</span>
-              </Link>
-              <Link
-                to="/accounts/dang-ky"
-                className="flex items-center gap-1 px-3 py-2 rounded-md font-semibold transition text-white hover:bg-yellow-400 hover:text-blue-800"
+                <Link
+                  to="/accounts/dang-nhap"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <span className="text-lg">
+                    <FaSignInAlt />
+                  </span>
+                  <span>Đăng nhập</span>
+                </Link>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.7 }}
               >
-                <span className="text-lg">
-                  <FaUserEdit />
-                </span>
-                <span className="hidden sm:inline">Đăng ký</span>
-              </Link>
+                <Link
+                  to="/accounts/dang-ky"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <span className="text-lg">
+                    <FaUserEdit />
+                  </span>
+                  <span>Đăng ký</span>
+                </Link>
+              </motion.div>
             </>
           )}
+
+          {/* Mobile Menu Button */}
+          <motion.button
+            className="lg:hidden p-2 text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            {mobileMenuOpen ? <FaTimes /> : <FaBars />}
+          </motion.button>
         </div>
       </div>
-    </header>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            className="lg:hidden bg-white/95 backdrop-blur-sm border-t border-white/20"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="container mx-auto px-4 py-4 space-y-2">
+              {menu.map((item, index) => (
+                <motion.div
+                  key={item.path}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Link
+                    to={item.path}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                      location.pathname === item.path
+                        ? "bg-blue-600 text-white"
+                        : "text-blue-700 hover:bg-blue-50"
+                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                </motion.div>
+              ))}
+              
+              {/* Mobile Dropdown Items */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+                className="space-y-2"
+              >
+                <Link
+                  to="/dang-ky-tu-van"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-blue-700 hover:bg-blue-50 transition-all duration-200"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <FaQuestionCircle />
+                  <span>Đăng ký tư vấn</span>
+                </Link>
+                <Link
+                  to="/dang-ky-hoc-bong"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-blue-700 hover:bg-blue-50 transition-all duration-200"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <FaTrophy />
+                  <span>Đăng ký học bổng</span>
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
   );
 }
 

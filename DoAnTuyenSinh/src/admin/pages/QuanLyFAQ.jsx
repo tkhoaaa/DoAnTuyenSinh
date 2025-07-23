@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaPlus,
   FaEdit,
@@ -9,7 +9,9 @@ import {
   FaEye,
   FaQuestionCircle,
   FaSave,
-  FaTimes
+  FaTimes,
+  FaCheckCircle,
+  FaExclamationTriangle
 } from 'react-icons/fa';
 
 const QuanLyFAQ = () => {
@@ -137,36 +139,48 @@ const QuanLyFAQ = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
       {/* Header */}
-      <div className="mb-6">
+      <motion.div 
+        className="mb-8"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Quản Lý FAQ</h1>
-            <p className="text-gray-600">Quản lý câu hỏi thường gặp trên website</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Quản Lý FAQ</h1>
+            <p className="text-gray-600 text-lg">Quản lý câu hỏi thường gặp trên website</p>
           </div>
-          <button
+          <motion.button
             onClick={handleAddNew}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <FaPlus className="mr-2" />
             Thêm câu hỏi mới
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <motion.div 
+        className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Search */}
           <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
             <input
               type="text"
               placeholder="Tìm kiếm câu hỏi..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             />
           </div>
 
@@ -174,7 +188,7 @@ const QuanLyFAQ = () => {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
           >
             <option value="all">Tất cả chủ đề</option>
             {categories.map(category => (
@@ -183,230 +197,292 @@ const QuanLyFAQ = () => {
           </select>
 
           {/* Stats */}
-          <div className="flex items-center text-sm text-gray-600">
-            <FaQuestionCircle className="mr-2" />
-            Tổng cộng: {faqs.length} câu hỏi
+          <div className="flex items-center text-lg text-gray-600 bg-gray-50 px-4 py-3 rounded-xl">
+            <FaQuestionCircle className="mr-3 text-blue-500" />
+            Tổng cộng: <span className="font-bold ml-1">{faqs.length}</span> câu hỏi
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* FAQ Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow-sm p-4">
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3 }}
+      >
+        <motion.div 
+          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300"
+          whileHover={{ scale: 1.02 }}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Tổng câu hỏi</p>
-              <p className="text-2xl font-bold text-gray-900">{faqs.length}</p>
+              <p className="text-3xl font-bold text-gray-900">{faqs.length}</p>
             </div>
-            <FaQuestionCircle className="text-blue-500 text-xl" />
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+              <FaQuestionCircle className="text-white text-xl" />
+            </div>
           </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        </motion.div>
+        <motion.div 
+          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300"
+          whileHover={{ scale: 1.02 }}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Đang hiển thị</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-3xl font-bold text-green-600">
                 {faqs.filter(faq => faq.isActive).length}
               </p>
             </div>
-            <FaEye className="text-green-500 text-xl" />
+            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+              <FaEye className="text-white text-xl" />
+            </div>
           </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        </motion.div>
+        <motion.div 
+          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300"
+          whileHover={{ scale: 1.02 }}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Tổng lượt xem</p>
-              <p className="text-2xl font-bold text-purple-600">
+              <p className="text-3xl font-bold text-purple-600">
                 {faqs.reduce((total, faq) => total + faq.views, 0)}
               </p>
             </div>
-            <FaEye className="text-purple-500 text-xl" />
+            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <FaEye className="text-white text-xl" />
+            </div>
           </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        </motion.div>
+        <motion.div 
+          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300"
+          whileHover={{ scale: 1.02 }}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Chủ đề</p>
-              <p className="text-2xl font-bold text-orange-600">{categories.length}</p>
+              <p className="text-3xl font-bold text-orange-600">{categories.length}</p>
             </div>
-            <FaFilter className="text-orange-500 text-xl" />
+            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+              <FaFilter className="text-white text-xl" />
+            </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* FAQ List */}
-      <div className="bg-white rounded-lg shadow-sm">
+      <motion.div 
+        className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
         <div className="divide-y divide-gray-200">
-          {filteredFAQs.map((faq) => (
+          {filteredFAQs.map((faq, index) => (
             <motion.div
               key={faq.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="p-6 hover:bg-gray-50"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="p-6 hover:bg-gray-50/50 transition-all duration-300"
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <div className="flex items-center mb-2">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full mr-3 ${
+                  <div className="flex items-center mb-3">
+                    <span className={`px-3 py-1 text-sm font-semibold rounded-full mr-3 ${
                       faq.isActive 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-gray-100 text-gray-800'
                     }`}>
                       {faq.isActive ? 'Hiển thị' : 'Ẩn'}
                     </span>
-                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                    <span className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full font-semibold">
                       {faq.category}
                     </span>
-                    <span className="ml-auto text-xs text-gray-500">
+                    <span className="ml-auto text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
                       {faq.views} lượt xem
                     </span>
                   </div>
                   
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">
                     {faq.question}
                   </h3>
                   
-                  <p className="text-gray-600 mb-3">
+                  <p className="text-gray-600 mb-4 leading-relaxed">
                     {faq.answer.length > 200 
                       ? `${faq.answer.substring(0, 200)}...` 
                       : faq.answer
                     }
                   </p>
                   
-                  <div className="text-xs text-gray-500">
+                  <div className="text-sm text-gray-500">
                     Tạo ngày: {faq.createdAt}
                   </div>
                 </div>
                 
-                <div className="flex space-x-2 ml-4">
-                  <button
+                <div className="flex space-x-2 ml-6">
+                  <motion.button
                     onClick={() => toggleActive(faq.id)}
-                    className={`p-2 rounded ${
+                    className={`p-3 rounded-xl transition-all duration-200 ${
                       faq.isActive 
                         ? 'text-green-600 hover:bg-green-100' 
                         : 'text-gray-600 hover:bg-gray-100'
                     }`}
                     title={faq.isActive ? 'Ẩn câu hỏi' : 'Hiển thị câu hỏi'}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                   >
                     <FaEye />
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     onClick={() => handleEdit(faq)}
-                    className="p-2 text-blue-600 hover:bg-blue-100 rounded"
+                    className="p-3 text-blue-600 hover:bg-blue-100 rounded-xl transition-all duration-200"
                     title="Chỉnh sửa"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                   >
                     <FaEdit />
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     onClick={() => handleDelete(faq.id)}
-                    className="p-2 text-red-600 hover:bg-red-100 rounded"
+                    className="p-3 text-red-600 hover:bg-red-100 rounded-xl transition-all duration-200"
                     title="Xóa"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                   >
                     <FaTrash />
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Add/Edit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-black opacity-50" onClick={() => setShowModal(false)}></div>
-            <div className="relative bg-white rounded-lg max-w-2xl w-full p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {editingFAQ ? 'Chỉnh sửa câu hỏi' : 'Thêm câu hỏi mới'}
-                </h3>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Câu hỏi
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.question}
-                    onChange={(e) => setFormData({...formData, question: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Nhập câu hỏi..."
-                  />
+      <AnimatePresence>
+        {showModal && (
+          <motion.div 
+            className="fixed inset-0 z-50 overflow-y-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="flex items-center justify-center min-h-screen px-4">
+              <motion.div 
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm" 
+                onClick={() => setShowModal(false)}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              ></motion.div>
+              <motion.div 
+                className="relative bg-white rounded-2xl max-w-2xl w-full p-8 shadow-2xl"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring" }}
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {editingFAQ ? 'Chỉnh sửa câu hỏi' : 'Thêm câu hỏi mới'}
+                  </h3>
+                  <motion.button
+                    onClick={() => setShowModal(false)}
+                    className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <FaTimes />
+                  </motion.button>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Câu trả lời
-                  </label>
-                  <textarea
-                    value={formData.answer}
-                    onChange={(e) => setFormData({...formData, answer: e.target.value})}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Nhập câu trả lời..."
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Chủ đề
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Câu hỏi
                     </label>
-                    <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({...formData, category: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      {categories.map(category => (
-                        <option key={category} value={category}>{category}</option>
-                      ))}
-                    </select>
+                    <input
+                      type="text"
+                      value={formData.question}
+                      onChange={(e) => setFormData({...formData, question: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      placeholder="Nhập câu hỏi..."
+                    />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Trạng thái
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Câu trả lời
                     </label>
-                    <select
-                      value={formData.isActive}
-                      onChange={(e) => setFormData({...formData, isActive: e.target.value === 'true'})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value={true}>Hiển thị</option>
-                      <option value={false}>Ẩn</option>
-                    </select>
+                    <textarea
+                      value={formData.answer}
+                      onChange={(e) => setFormData({...formData, answer: e.target.value})}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+                      placeholder="Nhập câu trả lời..."
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Chủ đề
+                      </label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({...formData, category: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      >
+                        {categories.map(category => (
+                          <option key={category} value={category}>{category}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Trạng thái
+                      </label>
+                      <select
+                        value={formData.isActive}
+                        onChange={(e) => setFormData({...formData, isActive: e.target.value === 'true'})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      >
+                        <option value={true}>Hiển thị</option>
+                        <option value={false}>Ẩn</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex justify-end space-x-3 pt-6">
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleSave}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  <FaSave className="mr-2" />
-                  {editingFAQ ? 'Cập nhật' : 'Thêm mới'}
-                </button>
-              </div>
+                
+                <div className="flex justify-end space-x-4 pt-8">
+                  <motion.button
+                    onClick={() => setShowModal(false)}
+                    className="px-6 py-3 text-gray-700 bg-gray-200 rounded-xl hover:bg-gray-300 transition-all duration-200 font-semibold"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Hủy
+                  </motion.button>
+                  <motion.button
+                    onClick={handleSave}
+                    className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <FaSave className="mr-2" />
+                    {editingFAQ ? 'Cập nhật' : 'Thêm mới'}
+                  </motion.button>
+                </div>
+              </motion.div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
