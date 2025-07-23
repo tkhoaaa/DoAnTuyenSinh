@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import {
   FaUsers,
   FaFileAlt,
@@ -16,7 +16,17 @@ import {
   FaMapMarkerAlt,
   FaStar,
   FaTrophy,
-  FaQuestionCircle
+  FaQuestionCircle,
+  FaEye,
+  FaEdit,
+  FaArrowUp,
+  FaArrowDown,
+  FaBolt,
+  FaGlobe,
+  FaRocket,
+  FaFire,
+  FaGem,
+  FaMagic
 } from 'react-icons/fa';
 
 const TongQuan = () => {
@@ -38,7 +48,8 @@ const TongQuan = () => {
       major: "Công nghệ Thông tin",
       submittedAt: "2025-01-23 14:30",
       status: "pending",
-      gpa: 8.5
+      gpa: 8.5,
+      avatar: "https://ui-avatars.com/api/?name=Nguyen+Van+An&background=3b82f6&color=fff"
     },
     {
       id: 2,
@@ -46,7 +57,8 @@ const TongQuan = () => {
       major: "Quản trị Kinh doanh",
       submittedAt: "2025-01-23 13:15",
       status: "approved",
-      gpa: 9.2
+      gpa: 9.2,
+      avatar: "https://ui-avatars.com/api/?name=Tran+Thi+Binh&background=10b981&color=fff"
     },
     {
       id: 3,
@@ -54,7 +66,8 @@ const TongQuan = () => {
       major: "Kỹ thuật Cơ khí",
       submittedAt: "2025-01-23 12:45",
       status: "pending",
-      gpa: 7.8
+      gpa: 7.8,
+      avatar: "https://ui-avatars.com/api/?name=Le+Minh+Cuong&background=f59e0b&color=fff"
     },
     {
       id: 4,
@@ -62,351 +75,658 @@ const TongQuan = () => {
       major: "Kế toán",
       submittedAt: "2025-01-23 11:20",
       status: "rejected",
-      gpa: 6.5
+      gpa: 6.5,
+      avatar: "https://ui-avatars.com/api/?name=Phan+Thi+Dung&background=ef4444&color=fff"
     }
   ]);
 
   const [topMajors, setTopMajors] = useState([
-    { name: "Công nghệ Thông tin", count: 245, percentage: 19.6 },
-    { name: "Quản trị Kinh doanh", count: 198, percentage: 15.9 },
-    { name: "Kỹ thuật Cơ khí", count: 156, percentage: 12.5 },
-    { name: "Kế toán", count: 134, percentage: 10.7 },
-    { name: "Tài chính - Ngân hàng", count: 112, percentage: 9.0 }
+    { name: "Công nghệ Thông tin", count: 245, percentage: 19.6, trend: "+12.3%", icon: "💻" },
+    { name: "Quản trị Kinh doanh", count: 198, percentage: 15.9, trend: "+8.7%", icon: "📊" },
+    { name: "Kỹ thuật Cơ khí", count: 156, percentage: 12.5, trend: "+5.2%", icon: "⚙️" },
+    { name: "Kế toán", count: 134, percentage: 10.7, trend: "+3.1%", icon: "💰" },
+    { name: "Tài chính - Ngân hàng", count: 112, percentage: 9.0, trend: "+7.8%", icon: "🏦" }
   ]);
 
-  const StatCard = ({ icon: Icon, title, value, color, subtitle, trend }) => (
-    <motion.div 
-      className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300"
-      whileHover={{ scale: 1.02 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-gray-600 mb-1">{title}</p>
-          <p className={`text-3xl font-bold ${color}`}>{value}</p>
-          {subtitle && (
-            <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
-          )}
-          {trend && (
-            <div className="flex items-center mt-2">
-              <span className={`text-xs font-semibold ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {trend > 0 ? '+' : ''}{trend}%
-              </span>
-              <span className="text-xs text-gray-500 ml-1">so với tháng trước</span>
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const StatCard = ({ icon: Icon, title, value, color, subtitle, trend, delay = 0 }) => {
+    return (
+      <div 
+        className="relative group cursor-pointer stat-card"
+        style={{ animationDelay: `${delay}s` }}
+      >
+        <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 overflow-hidden transition-all duration-300 hover:shadow-3xl hover:scale-105">
+          {/* Simple hover background */}
+          <div 
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-3xl"
+            style={{
+              background: `linear-gradient(135deg, ${color.replace('text-', '').replace('-600', '')}15, ${color.replace('text-', '').replace('-600', '')}05)`
+            }}
+          />
+
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm text-gray-600 mb-2 font-medium">{title}</p>
+              <p className={`text-4xl font-black ${color} mb-1 stat-number`}>
+                {typeof value === 'number' ? value.toLocaleString() : value}
+              </p>
+              {subtitle && <p className="text-xs text-gray-500 mb-3">{subtitle}</p>}
+              {trend && (
+                <div className="flex items-center gap-2 stat-trend">
+                  <span className={`text-xs font-bold flex items-center gap-1 ${
+                    parseFloat(trend.replace('%', '')) > 0 ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {parseFloat(trend.replace('%', '')) > 0 ? <FaArrowUp /> : <FaArrowDown />}
+                    {trend}
+                  </span>
+                  <span className="text-xs text-gray-500">so với tháng trước</span>
+                </div>
+              )}
             </div>
-          )}
+            
+            <div
+              className={`w-20 h-20 bg-gradient-to-br ${color.replace('text-', 'from-').replace('-600', '-400')} ${color.replace('text-', 'to-').replace('-600', '-600')} rounded-2xl flex items-center justify-center shadow-2xl stat-icon transition-all duration-300 group-hover:scale-110 group-hover:rotate-12`}
+            >
+              <Icon className="text-white text-2xl" />
+            </div>
+          </div>
         </div>
-        <div className={`w-12 h-12 bg-gradient-to-r ${color.replace('text-', 'from-').replace('-600', '-500 to-').replace('-500', '-600')} rounded-xl flex items-center justify-center`}>
-          <Icon className="text-white text-xl" />
-        </div>
+
+        <style jsx>{`
+          .stat-card {
+            animation: slideInUp 0.6s ease-out forwards;
+            opacity: 0;
+            transform: translateY(30px);
+          }
+
+          .stat-number {
+            animation: countUp 0.8s ease-out forwards;
+            animation-delay: calc(${delay}s + 0.3s);
+          }
+
+          .stat-trend {
+            animation: fadeInLeft 0.6s ease-out forwards;
+            animation-delay: calc(${delay}s + 0.5s);
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+
+          .stat-icon {
+            animation: iconBounce 0.6s ease-out forwards;
+            animation-delay: calc(${delay}s + 0.2s);
+            transform: scale(0.8);
+          }
+
+          @keyframes slideInUp {
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          @keyframes countUp {
+            from {
+              transform: scale(0.5);
+              opacity: 0;
+            }
+            to {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+
+          @keyframes fadeInLeft {
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
+          }
+
+          @keyframes iconBounce {
+            0% {
+              transform: scale(0.8);
+            }
+            50% {
+              transform: scale(1.1);
+            }
+            100% {
+              transform: scale(1);
+            }
+          }
+
+          .stat-card:hover .stat-icon {
+            animation: iconRotate 0.3s ease-in-out forwards;
+          }
+
+          @keyframes iconRotate {
+            to {
+              transform: scale(1.1) rotate(12deg);
+            }
+          }
+        `}</style>
       </div>
-    </motion.div>
-  );
+    );
+  };
 
   const getStatusBadge = (status) => {
-    const statusConfig = {
-      pending: { text: "Chờ xử lý", color: "bg-yellow-100 text-yellow-800", icon: FaClock },
-      approved: { text: "Đã duyệt", color: "bg-green-100 text-green-800", icon: FaCheckCircle },
-      rejected: { text: "Từ chối", color: "bg-red-100 text-red-800", icon: FaTimes }
+    const config = {
+      pending: { text: "Chờ xử lý", color: "bg-gradient-to-r from-yellow-400 to-orange-400 text-white", icon: FaClock },
+      approved: { text: "Đã duyệt", color: "bg-gradient-to-r from-green-400 to-emerald-400 text-white", icon: FaCheckCircle },
+      rejected: { text: "Từ chối", color: "bg-gradient-to-r from-red-400 to-pink-400 text-white", icon: FaTimes }
     };
-    const config = statusConfig[status];
-    const Icon = config.icon;
+    const { text, color, icon: Icon } = config[status];
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${config.color}`}>
-        <Icon className="text-xs" />
-        {config.text}
-      </span>
+      <motion.span 
+        className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 ${color} shadow-lg`}
+        whileHover={{ scale: 1.05 }}
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 300 }}
+      >
+        <Icon />
+        {text}
+      </motion.span>
     );
   };
 
   const getMajorColor = (index) => {
     const colors = [
-      "from-blue-500 to-blue-600",
-      "from-green-500 to-green-600",
-      "from-purple-500 to-purple-600",
-      "from-orange-500 to-orange-600",
-      "from-red-500 to-red-600"
+      "from-blue-500 to-cyan-400",
+      "from-green-500 to-emerald-400", 
+      "from-purple-500 to-pink-400",
+      "from-orange-500 to-yellow-400",
+      "from-red-500 to-pink-400"
     ];
     return colors[index % colors.length];
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      {/* Header */}
-      <motion.div 
-        className="mb-8"
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Tổng Quan Hệ Thống</h1>
-            <p className="text-gray-600 text-lg">Thống kê tổng quan về tuyển sinh HUTECH 2025</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <motion.div 
-              className="bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg"
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-            >
-              <span className="text-sm text-gray-600">Cập nhật: </span>
-              <span className="font-semibold text-blue-600">23/01/2025</span>
-            </motion.div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Statistics Cards */}
-      <motion.div 
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        <StatCard
-          icon={FaFileAlt}
-          title="Tổng hồ sơ"
-          value={stats.totalApplications.toLocaleString()}
-          color="text-blue-600"
-          subtitle="Hồ sơ đã nộp"
-          trend={12.5}
-        />
-        <StatCard
-          icon={FaClock}
-          title="Chờ xử lý"
-          value={stats.pendingApplications}
-          color="text-yellow-600"
-          subtitle="Cần duyệt"
-          trend={-5.2}
-        />
-        <StatCard
-          icon={FaCheckCircle}
-          title="Đã duyệt"
-          value={stats.approvedApplications.toLocaleString()}
-          color="text-green-600"
-          subtitle="Hồ sơ hợp lệ"
-          trend={8.7}
-        />
-        <StatCard
-          icon={FaTimes}
-          title="Từ chối"
-          value={stats.rejectedApplications}
-          color="text-red-600"
-          subtitle="Hồ sơ không hợp lệ"
-          trend={-2.1}
-        />
-      </motion.div>
-
-      {/* Additional Stats */}
-      <motion.div 
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3 }}
-      >
-        <StatCard
-          icon={FaUsers}
-          title="Sinh viên"
-          value={stats.totalStudents.toLocaleString()}
-          color="text-purple-600"
-          subtitle="Đã nhập học"
-        />
-        <StatCard
-          icon={FaGraduationCap}
-          title="Ngành học"
-          value={stats.totalMajors}
-          color="text-indigo-600"
-          subtitle="Chương trình đào tạo"
-        />
-        <StatCard
-          icon={FaStar}
-          title="GPA trung bình"
-          value={stats.averageGPA}
-          color="text-orange-600"
-          subtitle="Điểm trung bình"
-        />
-        <StatCard
-          icon={FaTrophy}
-          title="Tỷ lệ hoàn thành"
-          value={`${stats.completionRate}%`}
-          color="text-emerald-600"
-          subtitle="Hồ sơ hoàn chỉnh"
-        />
-      </motion.div>
-
-      {/* Charts and Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Top Majors Chart */}
-        <motion.div 
-          className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <FaChartBar className="text-blue-500" />
-              Top 5 Ngành Học Phổ Biến
-            </h3>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <FaChartPie className="text-purple-500" />
-              Thống kê theo ngành
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            {topMajors.map((major, index) => (
-              <motion.div
-                key={major.name}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 * index }}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 bg-gradient-to-r ${getMajorColor(index)} rounded-lg flex items-center justify-center`}>
-                    <span className="text-white font-bold text-sm">{index + 1}</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">{major.name}</h4>
-                    <p className="text-sm text-gray-600">{major.count} hồ sơ</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-gray-900">{major.percentage}%</div>
-                  <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <motion.div
-                      className={`h-full bg-gradient-to-r ${getMajorColor(index)}`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${major.percentage}%` }}
-                      transition={{ delay: 0.2 * index, duration: 0.8 }}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Recent Applications */}
-        <motion.div 
-          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <FaClock className="text-orange-500" />
-              Hồ Sơ Gần Đây
-            </h3>
-            <div className="text-sm text-gray-600">
-              {recentApplications.length} hồ sơ
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            {recentApplications.map((app, index) => (
-              <motion.div
-                key={app.id}
-                className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold text-gray-900">{app.studentName}</h4>
-                  {getStatusBadge(app.status)}
-                </div>
-                <div className="text-sm text-gray-600 mb-2">{app.major}</div>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <FaCalendarAlt />
-                    {app.submittedAt}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <FaStar className="text-yellow-500" />
-                    GPA: {app.gpa}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-          
-          <motion.button
-            className="w-full mt-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Xem tất cả hồ sơ
-          </motion.button>
-        </motion.div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-gradient-to-r from-blue-400/10 to-purple-400/10"
+            style={{
+              width: `${100 + i * 50}px`,
+              height: `${100 + i * 50}px`,
+              left: `${10 + i * 15}%`,
+              top: `${5 + i * 12}%`,
+            }}
+            animate={{
+              y: [0, -20, 0],
+              x: [0, 10, 0],
+              rotate: [0, 180, 360],
+            }}
+            transition={{
+              duration: 10 + i * 2,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+        ))}
       </div>
 
-      {/* Quick Actions */}
-      <motion.div 
-        className="mt-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6"
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.6 }}
-      >
-        <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <FaChartLine className="text-green-500" />
-          Thao Tác Nhanh
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <motion.button
-            className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center gap-3"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <FaFileAlt className="text-xl" />
-            <div className="text-left">
-              <div className="font-semibold">Xử lý hồ sơ</div>
-              <div className="text-sm opacity-90">Duyệt hồ sơ mới</div>
+      <div className="relative z-10 p-8">
+        {/* Header */}
+        <div className="mb-12">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+            <div className="header-content">
+              <h1 className="text-5xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4 relative">
+                Dashboard Tổng Quan
+                <span className="inline-block ml-3 text-yellow-500 sparkle-icon">
+                  <FaMagic />
+                </span>
+              </h1>
+              <p className="text-xl text-gray-600 flex items-center gap-2">
+                <span className="rocket-icon text-blue-500">
+                  <FaRocket />
+                </span>
+                Hệ thống quản lý tuyển sinh HUTECH 2025
+              </p>
             </div>
-          </motion.button>
-          
-          <motion.button
-            className="p-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 flex items-center gap-3"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <FaUsers className="text-xl" />
-            <div className="text-left">
-              <div className="font-semibold">Quản lý sinh viên</div>
-              <div className="text-sm opacity-90">Thông tin sinh viên</div>
+            
+            <div className="bg-white/80 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-xl border border-white/20 relative overflow-hidden clock-container">
+              {/* Static background with subtle gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl"></div>
+              
+              <div className="text-right relative z-10">
+                <p className="text-sm text-gray-600 mb-1 flex items-center justify-end gap-2">
+                  <span className="text-base clock-emoji">🕐</span>
+                  Thời gian thực
+                </p>
+                <div className="text-2xl font-bold text-blue-600 font-mono tracking-wider">
+                  {currentTime.toLocaleTimeString('vi-VN')}
+                </div>
+                <p className="text-sm text-gray-500 flex items-center justify-end gap-2 mt-1">
+                  <FaCalendarAlt className="text-blue-500" />
+                  {currentTime.toLocaleDateString('vi-VN')}
+                </p>
+              </div>
             </div>
-          </motion.button>
-          
-          <motion.button
-            className="p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 flex items-center gap-3"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <FaQuestionCircle className="text-xl" />
-            <div className="text-left">
-              <div className="font-semibold">Quản lý FAQ</div>
-              <div className="text-sm opacity-90">Câu hỏi thường gặp</div>
-            </div>
-          </motion.button>
-          
-          <motion.button
-            className="p-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 flex items-center gap-3"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <FaChartBar className="text-xl" />
-            <div className="text-left">
-              <div className="font-semibold">Báo cáo</div>
-              <div className="text-sm opacity-90">Thống kê chi tiết</div>
-            </div>
-          </motion.button>
+          </div>
         </div>
-      </motion.div>
+
+        <style jsx>{`
+          .header-content {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(30px);
+          }
+
+          .sparkle-icon {
+            animation: sparkleGlow 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 8px rgba(255, 193, 7, 0.3));
+          }
+
+          .rocket-icon {
+            animation: rocketFloat 6s ease-in-out infinite;
+            display: inline-block;
+          }
+
+          .clock-container {
+            animation: slideInRight 0.8s ease-out 0.3s forwards;
+            opacity: 0;
+            transform: translateX(30px);
+          }
+
+          .clock-emoji {
+            animation: clockTick 2s ease-in-out infinite;
+            display: inline-block;
+          }
+
+          @keyframes fadeInUp {
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          @keyframes slideInRight {
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
+          }
+
+          @keyframes sparkleGlow {
+            0%, 100% {
+              transform: scale(1);
+              opacity: 0.8;
+              filter: drop-shadow(0 0 8px rgba(255, 193, 7, 0.3));
+            }
+            50% {
+              transform: scale(1.1);
+              opacity: 1;
+              filter: drop-shadow(0 0 12px rgba(255, 193, 7, 0.6));
+            }
+          }
+
+          @keyframes rocketFloat {
+            0%, 100% {
+              transform: translateY(0px) rotate(0deg);
+            }
+            25% {
+              transform: translateY(-3px) rotate(2deg);
+            }
+            50% {
+              transform: translateY(-5px) rotate(0deg);
+            }
+            75% {
+              transform: translateY(-3px) rotate(-2deg);
+            }
+          }
+
+          @keyframes clockTick {
+            0%, 50%, 100% {
+              transform: scale(1);
+            }
+            25%, 75% {
+              transform: scale(1.05);
+            }
+          }
+        `}</style>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          <StatCard
+            icon={FaFileAlt}
+            title="Tổng hồ sơ"
+            value={stats.totalApplications}
+            color="text-blue-600"
+            subtitle="Hồ sơ đã nộp"
+            trend="+12.5%"
+            delay={0.1}
+          />
+          <StatCard
+            icon={FaClock}
+            title="Chờ xử lý"
+            value={stats.pendingApplications}
+            color="text-orange-600"
+            subtitle="Cần duyệt"
+            trend="-5.2%"
+            delay={0.2}
+          />
+          <StatCard
+            icon={FaCheckCircle}
+            title="Đã duyệt"
+            value={stats.approvedApplications}
+            color="text-green-600"
+            subtitle="Hồ sơ hợp lệ"
+            trend="+8.7%"
+            delay={0.3}
+          />
+          <StatCard
+            icon={FaTimes}
+            title="Từ chối"
+            value={stats.rejectedApplications}
+            color="text-red-600"
+            subtitle="Hồ sơ không hợp lệ"
+            trend="-2.1%"
+            delay={0.4}
+          />
+        </div>
+
+        {/* Additional Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          <StatCard
+            icon={FaUsers}
+            title="Sinh viên"
+            value={stats.totalStudents}
+            color="text-purple-600"
+            subtitle="Đã nhập học"
+            trend="+15.2%"
+            delay={0.5}
+          />
+          <StatCard
+            icon={FaGraduationCap}
+            title="Ngành học"
+            value={stats.totalMajors}
+            color="text-indigo-600"
+            subtitle="Chương trình đào tạo"
+            trend="+2.3%"
+            delay={0.6}
+          />
+          <StatCard
+            icon={FaStar}
+            title="GPA trung bình"
+            value={stats.averageGPA}
+            color="text-yellow-600"
+            subtitle="Điểm trung bình"
+            trend="+0.3%"
+            delay={0.7}
+          />
+          <StatCard
+            icon={FaTrophy}
+            title="Tỷ lệ hoàn thành"
+            value={`${stats.completionRate}%`}
+            color="text-emerald-600"
+            subtitle="Hồ sơ hoàn chỉnh"
+            trend="+4.2%"
+            delay={0.8}
+          />
+        </div>
+
+        {/* Charts and Recent Activity */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Top Majors Chart */}
+          <motion.div 
+            className="xl:col-span-2 bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 relative overflow-hidden"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
+          >
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-8">
+                <motion.h3 
+                  className="text-2xl font-bold text-gray-900 flex items-center gap-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                    <FaChartBar className="text-white text-lg" />
+                  </div>
+                  Top 5 Ngành Học Phổ Biến
+                </motion.h3>
+                <motion.div 
+                  className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 px-4 py-2 rounded-full"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <FaFire className="text-orange-500" />
+                  Hot trends
+                </motion.div>
+              </div>
+              
+              <div className="space-y-6">
+                {topMajors.map((major, index) => (
+                  <motion.div
+                    key={major.name}
+                    className="group relative"
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.8 + index * 0.1, type: "spring", stiffness: 100 }}
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <div className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 relative overflow-hidden">
+                      <div className="relative z-10 flex items-center gap-6">
+                        <motion.div 
+                          className={`w-16 h-16 bg-gradient-to-r ${getMajorColor(index)} rounded-2xl flex items-center justify-center text-2xl shadow-xl`}
+                          whileHover={{ rotate: 360, scale: 1.1 }}
+                          transition={{ type: "spring", stiffness: 200, duration: 0.6 }}
+                        >
+                          {major.icon}
+                        </motion.div>
+                        <div>
+                          <h4 className="text-lg font-bold text-gray-900 mb-1">{major.name}</h4>
+                          <div className="flex items-center gap-4">
+                            <p className="text-sm text-gray-600">{major.count} hồ sơ</p>
+                            <span className="text-sm font-semibold text-green-600 flex items-center gap-1">
+                              <FaArrowUp className="text-xs" />
+                              {major.trend}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="relative z-10 text-right">
+                        <motion.div 
+                          className="text-2xl font-black text-gray-900 mb-2"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 1 + index * 0.1, type: "spring", stiffness: 200 }}
+                        >
+                          {major.percentage}%
+                        </motion.div>
+                        <div className="w-32 h-3 bg-gray-200 rounded-full overflow-hidden">
+                          <motion.div
+                            className={`h-full bg-gradient-to-r ${getMajorColor(index)} shadow-lg`}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${major.percentage}%` }}
+                            transition={{ delay: 1.2 + index * 0.1, duration: 1, type: "spring", stiffness: 100 }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Recent Applications */}
+          <motion.div 
+            className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 relative overflow-hidden"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, type: "spring", stiffness: 100 }}
+          >
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-8">
+                <motion.h3 
+                  className="text-xl font-bold text-gray-900 flex items-center gap-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                    <FaBolt className="text-white text-sm" />
+                  </div>
+                  Hồ Sơ Gần Đây
+                </motion.h3>
+                <motion.div 
+                  className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.8 }}
+                >
+                  {recentApplications.length} hồ sơ
+                </motion.div>
+              </div>
+              
+              <div className="space-y-4">
+                {recentApplications.map((app, index) => (
+                  <motion.div
+                    key={app.id}
+                    className="group p-4 bg-gradient-to-r from-gray-50 to-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 cursor-pointer relative overflow-hidden"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 + index * 0.1 }}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                  >
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-4 mb-3">
+                        <motion.img
+                          src={app.avatar}
+                          alt={app.studentName}
+                          className="w-12 h-12 rounded-full border-2 border-white shadow-lg"
+                          whileHover={{ scale: 1.1 }}
+                        />
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-900 text-lg">{app.studentName}</h4>
+                          <p className="text-sm text-gray-600">{app.major}</p>
+                        </div>
+                        {getStatusBadge(app.status)}
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <FaCalendarAlt />
+                          {new Date(app.submittedAt).toLocaleDateString('vi-VN')}
+                        </span>
+                        <span className="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-semibold">
+                          <FaStar className="text-yellow-500" />
+                          GPA: {app.gpa}
+                        </span>
+                      </div>
+                      
+                      <div className="flex gap-2 mt-3">
+                        <motion.button
+                          className="flex-1 py-2 bg-blue-100 text-blue-600 rounded-xl text-xs font-semibold hover:bg-blue-200 transition-all duration-200 flex items-center justify-center gap-1"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <FaEye />
+                          Xem
+                        </motion.button>
+                        <motion.button
+                          className="flex-1 py-2 bg-green-100 text-green-600 rounded-xl text-xs font-semibold hover:bg-green-200 transition-all duration-200 flex items-center justify-center gap-1"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <FaEdit />
+                          Sửa
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+              
+              <motion.button
+                className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-bold text-lg shadow-xl"
+                whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
+                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5 }}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <FaGem />
+                  Xem tất cả hồ sơ
+                </span>
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Quick Actions */}
+        <motion.div 
+          className="mt-12 bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 relative overflow-hidden"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, type: "spring", stiffness: 100 }}
+        >
+          <div className="relative z-10">
+            <motion.h3 
+              className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.9 }}
+            >
+              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl flex items-center justify-center">
+                <FaMagic className="text-white text-lg" />
+              </div>
+              Thao Tác Nhanh
+            </motion.h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { icon: FaFileAlt, title: "Xử lý hồ sơ", subtitle: "Duyệt hồ sơ mới", color: "from-blue-500 to-cyan-400", count: "89 hồ sơ" },
+                { icon: FaUsers, title: "Quản lý sinh viên", subtitle: "Thông tin sinh viên", color: "from-green-500 to-emerald-400", count: "1,089 sinh viên" },
+                { icon: FaQuestionCircle, title: "Quản lý FAQ", subtitle: "Câu hỏi thường gặp", color: "from-purple-500 to-pink-400", count: "25 FAQ" },
+                { icon: FaChartBar, title: "Báo cáo", subtitle: "Thống kê chi tiết", color: "from-orange-500 to-yellow-400", count: "12 báo cáo" }
+              ].map((action, index) => (
+                <motion.button
+                  key={action.title}
+                  className={`p-6 bg-gradient-to-r ${action.color} text-white rounded-2xl hover:shadow-2xl transition-all duration-300 group relative overflow-hidden`}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1 + index * 0.1 }}
+                >
+                  <div className="relative z-10 flex items-start gap-4">
+                    <motion.div
+                      className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"
+                      whileHover={{ rotate: 360 }}
+                      transition={{ duration: 0.6 }}
+                    >
+                      <action.icon className="text-xl" />
+                    </motion.div>
+                    <div className="text-left flex-1">
+                      <div className="font-bold text-lg mb-1">{action.title}</div>
+                      <div className="text-sm opacity-90 mb-2">{action.subtitle}</div>
+                      <div className="text-xs bg-white/20 px-2 py-1 rounded-full inline-block">
+                        {action.count}
+                      </div>
+                    </div>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 };

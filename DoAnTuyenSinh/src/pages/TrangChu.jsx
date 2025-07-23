@@ -114,8 +114,8 @@ function TrangChu() {
                 transition={{ delay: 0.9 }}
               >
                 Trường Đại học Công nghệ TP.HCM - Đa ngành, hiện đại, 
-                <span className="text-yellow-300 font-semibold"> học bổng hấp dẫn</span>, 
-                môi trường năng động.
+                <span className="text-yellow-300 font-semibold"> được giảm 25% học bổng khi đăng kí xét tuyển</span>, 
+                đăng ký nguyện vọng 1 tại HUTECH cũng có thể nhận được học bổng 50% học phí.
               </motion.p>
               
               <motion.div

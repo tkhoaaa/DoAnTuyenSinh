@@ -16,7 +16,11 @@ import {
   FaBars,
   FaTimes,
   FaGraduationCap,
-  FaTrophy
+  FaTrophy,
+  FaUserCircle,
+  FaShieldAlt,
+  FaCrown,
+  FaUser
 } from "react-icons/fa";
 import { UserContext } from "../accounts/UserContext";
 
@@ -36,6 +40,7 @@ function ThanhHeader() {
   const location = useLocation();
   const { user, username, role, logout } = useContext(UserContext);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Debug: log để kiểm tra giá trị
@@ -55,7 +60,7 @@ function ThanhHeader() {
       <div className="container mx-auto flex items-center justify-between px-4 md:px-6 py-3">
         {/* Logo */}
         <motion.div 
-          className="flex items-center gap-3"
+          className="flex items-center gap-3 flex-shrink-0"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -82,7 +87,7 @@ function ThanhHeader() {
         </motion.div>
 
         {/* Desktop Menu */}
-        <nav className="hidden lg:flex items-center justify-center gap-1">
+        <nav className="hidden lg:flex items-center justify-center gap-1 flex-1 max-w-4xl mx-6">
           {menu.map((item, index) => (
             <motion.div
               key={item.path}
@@ -92,14 +97,14 @@ function ThanhHeader() {
             >
               <Link
                 to={item.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300 ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300 text-sm ${
                   location.pathname === item.path
                     ? "bg-white/20 text-yellow-300 shadow-lg"
                     : ""
                 }`}
               >
-                <span className="text-lg">{item.icon}</span>
-                <span>{item.label}</span>
+                <span className="text-base">{item.icon}</span>
+                <span className="hidden xl:block">{item.label}</span>
               </Link>
             </motion.div>
           ))}
@@ -112,16 +117,16 @@ function ThanhHeader() {
             transition={{ delay: 0.5 }}
           >
             <motion.button
-              className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300 text-sm"
               onClick={() => setShowDropdown((v) => !v)}
               onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <span className="text-lg">
+              <span className="text-base">
                 <FaQuestionCircle />
               </span>
-              <span>Tư vấn & Học bổng</span>
+              <span className="hidden xl:block">Tư vấn & Học bổng</span>
               <motion.div
                 animate={{ rotate: showDropdown ? 180 : 0 }}
                 transition={{ duration: 0.2 }}
@@ -167,53 +172,130 @@ function ThanhHeader() {
           </motion.div>
         </nav>
 
-        {/* Auth Section */}
-        <div className="flex items-center gap-3">
+        {/* Compact Auth Section */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           {user ? (
-            <>
-              <motion.span 
-                className="text-white font-semibold px-3 py-2 bg-white/10 rounded-xl backdrop-blur-sm"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                Xin chào, {displayName}
-              </motion.span>
-              
-              {/* Admin Dashboard Button */}
-              {role === 'admin' && (
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.7 }}
-                >
-                  <Link
-                    to="/admin/tong-quan"
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <FaCog />
-                    <span>Admin</span>
-                  </Link>
-                </motion.div>
-              )}
-              
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6 }}
+            >
               <motion.button
-                onClick={logout}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-yellow-400 hover:text-blue-800 shadow-lg"
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
+                className="flex items-center gap-3 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300 bg-white/10 backdrop-blur-sm"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 }}
               >
-                <FaSignOutAlt />
-                <span>Đăng xuất</span>
+                <motion.div 
+                  className="relative"
+                  whileHover={{ scale: 1.1 }}
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg ${
+                    role === 'admin' ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-blue-500 to-purple-500'
+                  }`}>
+                    {role === 'admin' ? <FaCrown className="text-sm" /> : <FaUserCircle className="text-sm" />}
+                  </div>
+                  {role === 'admin' && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border border-white"></div>
+                  )}
+                </motion.div>
+                <div className="hidden md:block text-left">
+                  <p className="text-sm font-bold leading-none">
+                    Xin chào, {displayName}
+                  </p>
+                  {role === 'admin' && (
+                    <p className="text-xs text-yellow-300 leading-none mt-1 flex items-center gap-1">
+                      <FaShieldAlt className="text-xs" />
+                      Quản trị viên
+                    </p>
+                  )}
+                </div>
+                <motion.div
+                  animate={{ rotate: showUserDropdown ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <FaChevronDown className="text-xs" />
+                </motion.div>
               </motion.button>
-            </>
+
+              {/* User Dropdown */}
+              <AnimatePresence>
+                {showUserDropdown && (
+                  <motion.div 
+                    className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 z-50 overflow-hidden"
+                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  >
+                    {/* User Info Header */}
+                    <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg ${
+                          role === 'admin' ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-blue-500 to-purple-500'
+                        }`}>
+                          {role === 'admin' ? <FaCrown /> : <FaUser />}
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900 text-sm">{displayName}</p>
+                          <p className="text-xs text-gray-600 flex items-center gap-1">
+                            {role === 'admin' ? (
+                              <>
+                                <FaShieldAlt className="text-yellow-500" />
+                                Quản trị viên
+                              </>
+                            ) : (
+                              <>
+                                <FaUser className="text-blue-500" />
+                                Người dùng
+                              </>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dropdown Menu Items */}
+                    <div className="py-2">
+                      {role === 'admin' && (
+                        <Link
+                          to="/admin/tong-quan"
+                          className="flex items-center gap-3 px-4 py-3 text-blue-700 hover:bg-blue-50 hover:text-blue-900 transition-all duration-200"
+                          onClick={() => setShowUserDropdown(false)}
+                        >
+                          <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center text-white shadow-lg">
+                            <FaCog className="text-sm" />
+                          </div>
+                          <div>
+                            <div className="font-semibold">Admin Dashboard</div>
+                            <div className="text-xs text-gray-500">Quản lý hệ thống</div>
+                          </div>
+                        </Link>
+                      )}
+                      
+                      <button
+                        onClick={() => {
+                          logout();
+                          setShowUserDropdown(false);
+                        }}
+                        className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 w-full text-left"
+                      >
+                        <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg flex items-center justify-center text-white shadow-lg">
+                          <FaSignOutAlt className="text-sm" />
+                        </div>
+                        <div>
+                          <div className="font-semibold">Đăng xuất</div>
+                          <div className="text-xs text-gray-500">Thoát khỏi tài khoản</div>
+                        </div>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           ) : (
-            <>
+            <div className="flex items-center gap-2">
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -221,14 +303,12 @@ function ThanhHeader() {
               >
                 <Link
                   to="/accounts/dang-nhap"
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300 text-sm"
                 >
-                  <span className="text-lg">
+                  <span className="text-base">
                     <FaSignInAlt />
                   </span>
-                  <span>Đăng nhập</span>
+                  <span className="hidden sm:block">Đăng nhập</span>
                 </Link>
               </motion.div>
               
@@ -239,22 +319,20 @@ function ThanhHeader() {
               >
                 <Link
                   to="/accounts/dang-ky"
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300 text-sm"
                 >
-                  <span className="text-lg">
+                  <span className="text-base">
                     <FaUserEdit />
                   </span>
-                  <span>Đăng ký</span>
+                  <span className="hidden sm:block">Đăng ký</span>
                 </Link>
               </motion.div>
-            </>
+            </div>
           )}
 
           {/* Mobile Menu Button */}
           <motion.button
-            className="lg:hidden p-2 text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+            className="lg:hidden p-2 text-white hover:bg-white/10 rounded-xl transition-all duration-200 ml-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -321,6 +399,37 @@ function ThanhHeader() {
                   <span>Đăng ký học bổng</span>
                 </Link>
               </motion.div>
+
+              {/* Mobile Auth Section */}
+              {user && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="border-t border-gray-200 pt-4 space-y-2"
+                >
+                  {role === 'admin' && (
+                    <Link
+                      to="/admin/tong-quan"
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-green-700 hover:bg-green-50 transition-all duration-200"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <FaCog />
+                      <span>Admin Dashboard</span>
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-red-700 hover:bg-red-50 transition-all duration-200 w-full text-left"
+                  >
+                    <FaSignOutAlt />
+                    <span>Đăng xuất</span>
+                  </button>
+                </motion.div>
+              )}
             </div>
           </motion.div>
         )}
