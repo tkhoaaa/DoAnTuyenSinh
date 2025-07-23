@@ -10,9 +10,8 @@ const dbConfig = {
     database: process.env.DB_NAME || 'tuyensinh',
     port: process.env.DB_PORT || 3306,
     connectionLimit: 10,
-    acquireTimeout: 60000,
-    timeout: 60000,
-    reconnect: true
+    waitForConnections: true,
+    queueLimit: 0
 };
 
 const pool = mysql.createPool(dbConfig);

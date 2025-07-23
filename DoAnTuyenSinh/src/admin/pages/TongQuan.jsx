@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import axios from 'axios';
 import {
   FaUsers,
   FaFileAlt,
@@ -31,69 +32,75 @@ import {
 
 const TongQuan = () => {
   const [stats, setStats] = useState({
-    totalApplications: 1247,
-    pendingApplications: 89,
-    approvedApplications: 1089,
-    rejectedApplications: 69,
-    totalStudents: 1089,
-    totalMajors: 61,
-    averageGPA: 8.2,
-    completionRate: 87.3
+    totalApplications: 0,
+    pendingApplications: 0,
+    approvedApplications: 0,
+    rejectedApplications: 0,
+    totalStudents: 0,
+    totalMajors: 0,
+    averageGPA: 0,
+    completionRate: 0
   });
 
-  const [recentApplications, setRecentApplications] = useState([
-    {
-      id: 1,
-      studentName: "Nguyễn Văn An",
-      major: "Công nghệ Thông tin",
-      submittedAt: "2025-01-23 14:30",
-      status: "pending",
-      gpa: 8.5,
-      avatar: "https://ui-avatars.com/api/?name=Nguyen+Van+An&background=3b82f6&color=fff"
-    },
-    {
-      id: 2,
-      studentName: "Trần Thị Bình",
-      major: "Quản trị Kinh doanh",
-      submittedAt: "2025-01-23 13:15",
-      status: "approved",
-      gpa: 9.2,
-      avatar: "https://ui-avatars.com/api/?name=Tran+Thi+Binh&background=10b981&color=fff"
-    },
-    {
-      id: 3,
-      studentName: "Lê Minh Cường",
-      major: "Kỹ thuật Cơ khí",
-      submittedAt: "2025-01-23 12:45",
-      status: "pending",
-      gpa: 7.8,
-      avatar: "https://ui-avatars.com/api/?name=Le+Minh+Cuong&background=f59e0b&color=fff"
-    },
-    {
-      id: 4,
-      studentName: "Phan Thị Dung",
-      major: "Kế toán",
-      submittedAt: "2025-01-23 11:20",
-      status: "rejected",
-      gpa: 6.5,
-      avatar: "https://ui-avatars.com/api/?name=Phan+Thi+Dung&background=ef4444&color=fff"
-    }
-  ]);
-
-  const [topMajors, setTopMajors] = useState([
-    { name: "Công nghệ Thông tin", count: 245, percentage: 19.6, trend: "+12.3%", icon: "💻" },
-    { name: "Quản trị Kinh doanh", count: 198, percentage: 15.9, trend: "+8.7%", icon: "📊" },
-    { name: "Kỹ thuật Cơ khí", count: 156, percentage: 12.5, trend: "+5.2%", icon: "⚙️" },
-    { name: "Kế toán", count: 134, percentage: 10.7, trend: "+3.1%", icon: "💰" },
-    { name: "Tài chính - Ngân hàng", count: 112, percentage: 9.0, trend: "+7.8%", icon: "🏦" }
-  ]);
-
+  const [recentApplications, setRecentApplications] = useState([]);
+  const [topMajors, setTopMajors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all dashboard data in parallel
+      const [statsResponse, recentResponse, majorsResponse] = await Promise.all([
+        axios.get('http://localhost:3001/api/admin/dashboard-stats'),
+        axios.get('http://localhost:3001/api/admin/recent-applications'),
+        axios.get('http://localhost:3001/api/admin/top-majors')
+      ]);
+
+      if (statsResponse.data.success) {
+        setStats(statsResponse.data.data);
+      }
+
+      if (recentResponse.data.success) {
+        setRecentApplications(recentResponse.data.data);
+      }
+
+      if (majorsResponse.data.success) {
+        setTopMajors(majorsResponse.data.data);
+      }
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setError('Không thể tải dữ liệu dashboard. Vui lòng kiểm tra kết nối server.');
+      
+      // Set empty arrays instead of mock data
+      setStats({
+        totalApplications: 0,
+        pendingApplications: 0,
+        approvedApplications: 0,
+        rejectedApplications: 0,
+        totalStudents: 0,
+        totalMajors: 0,
+        averageGPA: 0,
+        completionRate: 0
+      });
+      setRecentApplications([]);
+      setTopMajors([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const StatCard = ({ icon: Icon, title, value, color, subtitle, trend, delay = 0 }) => {
     return (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 import {
   FaSearch,
   FaFilter,
@@ -22,94 +23,111 @@ import {
 } from 'react-icons/fa';
 
 const QuanLyHoSo = () => {
-  const [applications, setApplications] = useState([
-    {
-      id: 1,
-      studentName: "Nguyễn Văn An",
-      email: "nguyenvanan@email.com",
-      phone: "0912345678",
-      cccd: "123456789012",
-      major: "Công nghệ Thông tin",
-      admissionMethod: "Học bạ THPT",
-      submittedAt: "2025-01-23 14:30",
-      status: "pending",
-      gpa: 8.5,
-      documents: ["Học bạ", "CCCD", "Giấy khai sinh"],
-      assignedTo: null
-    },
-    {
-      id: 2,
-      studentName: "Trần Thị Bình",
-      email: "tranthibinh@email.com",
-      phone: "0987654321",
-      cccd: "987654321098",
-      major: "Quản trị Kinh doanh",
-      admissionMethod: "Điểm thi THPT",
-      submittedAt: "2025-01-23 13:15",
-      status: "approved",
-      gpa: 9.2,
-      documents: ["Học bạ", "CCCD", "Giấy khai sinh", "Giấy chứng nhận"],
-      assignedTo: "Nguyễn Minh"
-    },
-    {
-      id: 3,
-      studentName: "Lê Minh Cường",
-      email: "leminhcuong@email.com",
-      phone: "0911223344",
-      cccd: "456789123456",
-      major: "Kỹ thuật Cơ khí",
-      admissionMethod: "Học bạ THPT",
-      submittedAt: "2025-01-23 12:45",
-      status: "pending",
-      gpa: 7.8,
-      documents: ["Học bạ", "CCCD"],
-      assignedTo: "Phạm Lan"
-    },
-    {
-      id: 4,
-      studentName: "Phan Thị Dung",
-      email: "phanthidung@email.com",
-      phone: "0933556677",
-      cccd: "789123456789",
-      major: "Kế toán",
-      admissionMethod: "Điểm ĐGNL",
-      submittedAt: "2025-01-23 11:20",
-      status: "rejected",
-      gpa: 6.5,
-      documents: ["Học bạ", "CCCD", "Giấy khai sinh"],
-      assignedTo: "Lê Hương"
-    }
-  ]);
-
-  const [filteredApplications, setFilteredApplications] = useState(applications);
+  const [applications, setApplications] = useState([]);
+  const [filteredApplications, setFilteredApplications] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [majorFilter, setMajorFilter] = useState("all");
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [majors, setMajors] = useState([]);
 
-  // Filter applications
   useEffect(() => {
-    let filtered = applications;
+    fetchMajors();
+  }, []);
 
-    if (searchTerm) {
-      filtered = filtered.filter(app =>
-        app.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.cccd.includes(searchTerm)
-      );
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Fetch applications when filters change
+  useEffect(() => {
+    fetchApplications();
+  }, [statusFilter, majorFilter, debouncedSearchTerm]);
+
+  // Set filtered applications from API response
+  useEffect(() => {
+    setFilteredApplications(applications);
+  }, [applications]);
+
+  const fetchApplications = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await axios.get('http://localhost:3001/api/admin/applications', {
+        params: {
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+          major: majorFilter !== 'all' ? majorFilter : undefined,
+          search: debouncedSearchTerm || undefined
+        }
+      });
+
+      if (response.data.success) {
+        setApplications(response.data.data.applications);
+      } else {
+        setApplications([]);
+      }
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+      setError('Không thể tải danh sách hồ sơ. Vui lòng kiểm tra kết nối server.');
+      setApplications([]);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(app => app.status === statusFilter);
+  const fetchMajors = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/auth/majors');
+      if (response.data.success) {
+        setMajors(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching majors:', error);
+      // Set default majors if API fails
+      setMajors([
+        { name: "Công nghệ Thông tin" },
+        { name: "Quản trị Kinh doanh" },
+        { name: "Kỹ thuật Cơ khí" },
+        { name: "Kế toán" }
+      ]);
     }
+  };
 
-    if (majorFilter !== "all") {
-      filtered = filtered.filter(app => app.major === majorFilter);
+  const handleStatusChange = async (applicationId, newStatus) => {
+    try {
+      const response = await axios.put(`http://localhost:3001/api/admin/applications/${applicationId}/status`, {
+        status: newStatus
+      });
+
+      if (response.data.success) {
+        // Update local state
+        setApplications(prev => 
+          prev.map(app => 
+            app.id === applicationId 
+              ? { ...app, status: newStatus }
+              : app
+          )
+        );
+        
+        // Update selected application if it's the same one
+        if (selectedApplication && selectedApplication.id === applicationId) {
+          setSelectedApplication(prev => ({ ...prev, status: newStatus }));
+        }
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Không thể cập nhật trạng thái hồ sơ');
     }
-
-    setFilteredApplications(filtered);
-  }, [applications, searchTerm, statusFilter, majorFilter]);
+  };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -127,16 +145,6 @@ const QuanLyHoSo = () => {
     );
   };
 
-  const handleStatusChange = (applicationId, newStatus) => {
-    setApplications(prev => 
-      prev.map(app => 
-        app.id === applicationId 
-          ? { ...app, status: newStatus }
-          : app
-      )
-    );
-  };
-
   const handleViewDetails = (application) => {
     setSelectedApplication(application);
     setShowDetailModal(true);
@@ -151,6 +159,23 @@ const QuanLyHoSo = () => {
     };
     return colors[major] || "from-gray-500 to-gray-600";
   };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('vi-VN');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600 text-lg">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
@@ -218,10 +243,9 @@ const QuanLyHoSo = () => {
             className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
           >
             <option value="all">Tất cả ngành</option>
-            <option value="Công nghệ Thông tin">Công nghệ Thông tin</option>
-            <option value="Quản trị Kinh doanh">Quản trị Kinh doanh</option>
-            <option value="Kỹ thuật Cơ khí">Kỹ thuật Cơ khí</option>
-            <option value="Kế toán">Kế toán</option>
+            {majors.map(major => (
+              <option key={major.name} value={major.name}>{major.name}</option>
+            ))}
           </select>
 
           {/* Stats */}
@@ -282,7 +306,7 @@ const QuanLyHoSo = () => {
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
                         <FaCalendar className="text-orange-500" />
-                        {app.submittedAt}
+                        {formatDate(app.submittedAt)}
                       </span>
                       <span className="flex items-center gap-1">
                         <FaUser className="text-blue-500" />
@@ -456,7 +480,7 @@ const QuanLyHoSo = () => {
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <span className="text-gray-600">Ngày nộp:</span>
-                          <span className="font-semibold">{selectedApplication.submittedAt}</span>
+                          <span className="font-semibold">{formatDate(selectedApplication.submittedAt)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Trạng thái:</span>

@@ -295,7 +295,7 @@ function QuenMatKhau() {
                     <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                       <FaLock className="text-blue-500" />
                       Xác nhận mật khẩu
-                    </label>
+            </label>
                     <div className="relative group">
                       <input
                         type={showPassword ? "text" : "password"}
@@ -402,7 +402,7 @@ function QuenMatKhau() {
                   <FaExclamationTriangle className="text-red-600 text-xl" />
                 </motion.div>
                 <p className="text-red-800 font-semibold">{error}</p>
-              </div>
+        </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -426,7 +426,7 @@ function QuenMatKhau() {
             </motion.a>
           </p>
         </motion.div>
-      </motion.div>
+    </motion.div>
     </div>
   );
 }
