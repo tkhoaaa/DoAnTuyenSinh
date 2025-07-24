@@ -351,7 +351,7 @@ INSERT IGNORE INTO faqs (question, answer, category) VALUES
 
 -- 13. Tạo user admin mặc định nếu chưa có
 INSERT IGNORE INTO users (email, password, username, full_name, role, role_id, is_active) VALUES
-('admin@hutechs.edu.vn', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Quản trị viên hệ thống', 'admin', 1, TRUE);
+('admin@HUTECHS.edu.vn', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Quản trị viên hệ thống', 'admin', 1, TRUE);
 
 -- 14. Tạo admin_users record cho admin users
 INSERT IGNORE INTO admin_users (user_id, department, position, permissions)

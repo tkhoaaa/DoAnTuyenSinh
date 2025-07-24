@@ -1,6 +1,18 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaFacebook, FaYoutube, FaInstagram, FaLinkedin, FaPaperPlane, FaUser, FaComments } from "react-icons/fa";
+import {
+  FaMapMarkerAlt,
+  FaPhone,
+  FaEnvelope,
+  FaClock,
+  FaFacebook,
+  FaYoutube,
+  FaInstagram,
+  FaLinkedin,
+  FaPaperPlane,
+  FaUser,
+  FaComments,
+} from "react-icons/fa";
 import SEO from "../components/SEO";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
@@ -10,33 +22,53 @@ const contactInfo = [
     icon: FaMapMarkerAlt,
     title: "Địa chỉ",
     content: "475A Điện Biên Phủ, P.25, Q.Bình Thạnh, TP.HCM",
-    color: "from-red-500 to-pink-500"
+    color: "from-red-500 to-pink-500",
   },
   {
     icon: FaPhone,
     title: "Điện thoại",
     content: "028.5445.7777",
-    color: "from-green-500 to-emerald-500"
+    color: "from-green-500 to-emerald-500",
   },
   {
     icon: FaEnvelope,
     title: "Email",
     content: "tuyensinh@hutech.edu.vn",
-    color: "from-blue-500 to-indigo-500"
+    color: "from-blue-500 to-indigo-500",
   },
   {
     icon: FaClock,
     title: "Giờ làm việc",
     content: "Thứ 2 - Thứ 6: 7:30 - 17:00",
-    color: "from-purple-500 to-pink-500"
-  }
+    color: "from-purple-500 to-pink-500",
+  },
 ];
 
 const socialLinks = [
-  { icon: FaFacebook, name: "Facebook", url: "https://facebook.com/hutech.edu.vn", color: "from-blue-600 to-blue-700" },
-  { icon: FaYoutube, name: "YouTube", url: "https://youtube.com/hutech", color: "from-red-600 to-red-700" },
-  { icon: FaInstagram, name: "Instagram", url: "https://instagram.com/hutech", color: "from-pink-600 to-purple-600" },
-  { icon: FaLinkedin, name: "LinkedIn", url: "https://linkedin.com/company/hutech", color: "from-blue-700 to-blue-800" }
+  {
+    icon: FaFacebook,
+    name: "Facebook",
+    url: "https://facebook.com/hutech.edu.vn",
+    color: "from-blue-600 to-blue-700",
+  },
+  {
+    icon: FaYoutube,
+    name: "YouTube",
+    url: "https://www.youtube.com/@hutechuniversity",
+    color: "from-red-600 to-red-700",
+  },
+  {
+    icon: FaInstagram,
+    name: "Instagram",
+    url: "https://www.instagram.com/hutechuniversity/",
+    color: "from-pink-600 to-purple-600",
+  },
+  {
+    icon: FaLinkedin,
+    name: "LinkedIn",
+    url: "https://linkedin.com/company/hutech",
+    color: "from-blue-700 to-blue-800",
+  },
 ];
 
 function LienHe() {
@@ -45,7 +77,7 @@ function LienHe() {
     email: "",
     phone: "",
     subject: "",
-    message: ""
+    message: "",
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
@@ -63,7 +95,9 @@ function LienHe() {
 
     // Simulate form submission
     setTimeout(() => {
-      setSuccess("Tin nhắn của bạn đã được gửi thành công! Chúng tôi sẽ phản hồi trong thời gian sớm nhất.");
+      setSuccess(
+        "Tin nhắn của bạn đã được gửi thành công! Chúng tôi sẽ phản hồi trong thời gian sớm nhất."
+      );
       setForm({ name: "", email: "", phone: "", subject: "", message: "" });
       setLoading(false);
     }, 2000);
@@ -71,25 +105,28 @@ function LienHe() {
 
   return (
     <>
-      <SEO 
+      <SEO
         title="Liên hệ - HUTECH"
         description="Liên hệ với HUTECH để được tư vấn tuyển sinh, hỗ trợ thông tin và giải đáp thắc mắc."
         keywords="liên hệ HUTECH, tư vấn tuyển sinh, hỗ trợ sinh viên, thông tin liên hệ"
         canonical="/lien-he"
       />
-      
+
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
         {/* Hero Section */}
-        <motion.section 
+        <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="relative py-20 overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 opacity-90"></div>
-          <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-          }}></div>
-          
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          ></div>
+
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
               initial={{ y: 30, opacity: 0 }}
@@ -105,19 +142,20 @@ function LienHe() {
               >
                 <FaEnvelope className="text-white text-3xl" />
               </motion.div>
-              
+
               <h1 className="text-5xl font-bold text-white mb-4">
                 Liên hệ với chúng tôi
               </h1>
               <p className="text-xl text-white/90 max-w-2xl mx-auto">
-                Chúng tôi luôn sẵn sàng hỗ trợ và tư vấn cho bạn mọi lúc, mọi nơi
+                Chúng tôi luôn sẵn sàng hỗ trợ và tư vấn cho bạn mọi lúc, mọi
+                nơi
               </p>
             </motion.div>
           </div>
         </motion.section>
 
         {/* Contact Info */}
-        <motion.section 
+        <motion.section
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -134,20 +172,21 @@ function LienHe() {
                 Thông tin liên hệ
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Hãy liên hệ với chúng tôi qua các kênh sau để được hỗ trợ tốt nhất
+                Hãy liên hệ với chúng tôi qua các kênh sau để được hỗ trợ tốt
+                nhất
               </p>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
               variants={{
                 hidden: { opacity: 0 },
                 visible: {
                   opacity: 1,
                   transition: {
-                    staggerChildren: 0.1
-                  }
-                }
+                    staggerChildren: 0.1,
+                  },
+                },
               }}
               initial="hidden"
               animate="visible"
@@ -157,7 +196,7 @@ function LienHe() {
                   key={index}
                   variants={{
                     hidden: { opacity: 0, y: 20 },
-                    visible: { opacity: 1, y: 0 }
+                    visible: { opacity: 1, y: 0 },
                   }}
                   className="group"
                 >
@@ -172,9 +211,11 @@ function LienHe() {
                     >
                       <info.icon className="text-2xl" />
                     </motion.div>
-                    
+
                     <h3 className="text-lg font-bold mb-2">{info.title}</h3>
-                    <p className="text-white/90 text-sm leading-relaxed">{info.content}</p>
+                    <p className="text-white/90 text-sm leading-relaxed">
+                      {info.content}
+                    </p>
                   </motion.div>
                 </motion.div>
               ))}
@@ -210,7 +251,7 @@ function LienHe() {
         </motion.section>
 
         {/* Contact Form */}
-        <motion.section 
+        <motion.section
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6 }}
@@ -228,7 +269,8 @@ function LienHe() {
                   Gửi tin nhắn cho chúng tôi
                 </h2>
                 <p className="text-lg text-gray-600">
-                  Hãy để lại thông tin và tin nhắn của bạn, chúng tôi sẽ phản hồi trong thời gian sớm nhất
+                  Hãy để lại thông tin và tin nhắn của bạn, chúng tôi sẽ phản
+                  hồi trong thời gian sớm nhất
                 </p>
               </motion.div>
 
@@ -389,7 +431,7 @@ function LienHe() {
         </motion.section>
 
         {/* Map Section */}
-        <motion.section 
+        <motion.section
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.7 }}
@@ -434,4 +476,4 @@ function LienHe() {
   );
 }
 
-export default LienHe; 
+export default LienHe;

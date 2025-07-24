@@ -87,7 +87,7 @@ npm run dev
    - Backend API: http://localhost:3001
 
 2. **Đăng nhập Admin**:
-   - Email: `admin@hutechs.edu.vn`
+   - Email: `admin@HUTECHS.edu.vn`
    - Password: `admin123`
 
 3. **Test tính năng**:
@@ -114,7 +114,7 @@ Sau khi chạy script, bạn sẽ có:
 ## 🔐 **Tài khoản mặc định**
 
 ### **Admin Account:**
-- **Email**: `admin@hutechs.edu.vn`
+- **Email**: `admin@HUTECHS.edu.vn`
 - **Password**: `admin123`
 - **Role**: `admin`
 
@@ -133,7 +133,7 @@ curl http://localhost:3001/health
 # Login test
 curl -X POST http://localhost:3001/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"identifier":"admin@hutechs.edu.vn","password":"admin123"}'
+  -d '{"identifier":"admin@HUTECHS.edu.vn","password":"admin123"}'
 
 # Applications list
 curl http://localhost:3001/api/admin/applications

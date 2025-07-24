@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.get('/health', (req, res) => {
     res.json({
         success: true,
-        message: 'HUTECHS Simple API Server is running',
+        message: 'HUTECH Simple API Server is running',
         timestamp: new Date().toISOString()
     });
 });
@@ -245,9 +245,8 @@ app.get(`${authPrefix}/user/:id`, async(req, res) => {
 app.get(`${authPrefix}/majors`, async(req, res) => {
     try {
         const [majors] = await pool.execute(`
-            SELECT id, ten_nganh as name, ma_nganh as code, is_active 
+            SELECT id, ten_nganh as name, ma_nganh as code 
             FROM nganh 
-            WHERE is_active = true 
             ORDER BY ten_nganh ASC
         `);
 
@@ -268,6 +267,113 @@ app.get(`${authPrefix}/majors`, async(req, res) => {
     }
 });
 
+// Lấy danh sách khối thi THPT
+app.get(`${authPrefix}/exam-blocks`, async(req, res) => {
+    try {
+        const [examBlocks] = await pool.execute(`
+            SELECT id, ma_khoi as code, ten_khoi as name, cac_mon as subjects, mo_ta as description
+            FROM khoi_thi_thpt 
+            ORDER BY ma_khoi ASC
+        `);
+
+        // Parse JSON subjects for each block with safe fallback
+        const formattedBlocks = examBlocks.map(block => {
+            let subjects = [];
+
+            if (!block.subjects) {
+                // If subjects is null/undefined, return empty array
+                subjects = [];
+            } else if (typeof block.subjects === 'string') {
+                try {
+                    // Try to parse as JSON first
+                    subjects = JSON.parse(block.subjects);
+                } catch (error) {
+                    // If not JSON, split by comma as fallback
+                    subjects = block.subjects.split(',').map(s => s.trim());
+                }
+            } else {
+                // If already an array or object
+                subjects = block.subjects;
+            }
+
+            return {
+                ...block,
+                subjects: subjects
+            };
+        });
+
+        res.json({
+            success: true,
+            data: formattedBlocks,
+            meta: {
+                total: formattedBlocks.length
+            }
+        });
+    } catch (error) {
+        console.error('Get exam blocks error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server nội bộ'
+        });
+    }
+});
+
+// Lấy khối thi theo ngành học
+app.get(`${authPrefix}/majors/:majorId/exam-blocks`, async(req, res) => {
+    try {
+        const { majorId } = req.params;
+
+        const [examBlocks] = await pool.execute(`
+            SELECT kt.id, kt.ma_khoi as code, kt.ten_khoi as name, kt.cac_mon as subjects, kt.mo_ta as description
+            FROM khoi_thi_thpt kt
+            INNER JOIN nganh_khoi_thi nkt ON kt.id = nkt.khoi_thi_id
+            WHERE nkt.nganh_id = ?
+            ORDER BY kt.ma_khoi ASC
+        `, [majorId]);
+
+        // Parse JSON subjects for each block with safe fallback
+        const formattedBlocks = examBlocks.map(block => {
+            let subjects = [];
+
+            if (!block.subjects) {
+                // If subjects is null/undefined, return empty array
+                subjects = [];
+            } else if (typeof block.subjects === 'string') {
+                try {
+                    // Try to parse as JSON first
+                    subjects = JSON.parse(block.subjects);
+                } catch (error) {
+                    // If not JSON, split by comma as fallback
+                    subjects = block.subjects.split(',').map(s => s.trim());
+                }
+            } else {
+                // If already an array or object
+                subjects = block.subjects;
+            }
+
+            return {
+                ...block,
+                subjects: subjects
+            };
+        });
+
+        res.json({
+            success: true,
+            data: formattedBlocks,
+            meta: {
+                total: formattedBlocks.length,
+                majorId: parseInt(majorId)
+            }
+        });
+    } catch (error) {
+        console.error('Get exam blocks by major error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server nội bộ'
+        });
+    }
+});
+
 // ========== END AUTH & USER ROUTES ========== //
 
 // ========== ADMISSION APPLICATION ROUTES ========== //
@@ -279,6 +385,7 @@ app.post(`${authPrefix}/apply`, [
     body('cccd').notEmpty().withMessage('CCCD không được để trống'),
     body('sdt').notEmpty().withMessage('Số điện thoại không được để trống'),
     body('email').isEmail().withMessage('Email không hợp lệ'),
+    body('phuong_thuc_xet_tuyen').isIn(['hoc_ba', 'thi_thpt', 'danh_gia_nang_luc']).withMessage('Phương thức xét tuyển không hợp lệ'),
 ], async(req, res) => {
     try {
         const errors = validationResult(req);
@@ -302,21 +409,71 @@ app.post(`${authPrefix}/apply`, [
             dia_chi,
             nganh_id,
             nganh_ids,
+            phuong_thuc_xet_tuyen,
+            // Học bạ THPT
             diem_hk1,
             diem_ca_nam,
+            // Thi THPT
+            khoi_thi,
+            diem_thi_thpt,
+            // Đánh giá năng lực
+            diem_danh_gia_nang_luc,
             user_id
         } = req.body;
+
+        // Validate based on admission method
+        if (phuong_thuc_xet_tuyen === 'hoc_ba') {
+            if (!diem_ca_nam) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Điểm học bạ cả năm là bắt buộc khi xét tuyển bằng học bạ'
+                });
+            }
+        } else if (phuong_thuc_xet_tuyen === 'thi_thpt') {
+            if (!khoi_thi || !diem_thi_thpt) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Khối thi và điểm thi THPT là bắt buộc khi xét tuyển bằng điểm thi THPT'
+                });
+            }
+        } else if (phuong_thuc_xet_tuyen === 'danh_gia_nang_luc') {
+            if (!diem_danh_gia_nang_luc) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Điểm đánh giá năng lực là bắt buộc khi xét tuyển bằng đánh giá năng lực'
+                });
+            }
+        }
 
         // Generate application code
         const applicationCode = 'HS' + Date.now();
 
-        // Insert application
+        // Insert application with new fields - Convert undefined to null
         const [result] = await pool.execute(
             `INSERT INTO applications 
             (application_code, ho_ten, ngay_sinh, cccd, sdt, email, noi_hoc_12, truong_thpt, ten_lop_12, dia_chi, 
-             nganh_id, nganh_ids, diem_hk1, diem_ca_nam, user_id, status, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`, [applicationCode, ho_ten, ngay_sinh, cccd, sdt, email, noi_hoc_12, truong_thpt, ten_lop_12, dia_chi,
-                nganh_id, JSON.stringify(nganh_ids), diem_hk1, diem_ca_nam, user_id
+             nganh_id, nganh_ids, phuong_thuc_xet_tuyen, khoi_thi, diem_thi_thpt, diem_danh_gia_nang_luc,
+             diem_hk1, diem_ca_nam, user_id, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`, [
+                applicationCode,
+                ho_ten,
+                ngay_sinh,
+                cccd,
+                sdt,
+                email,
+                noi_hoc_12,
+                truong_thpt,
+                ten_lop_12,
+                dia_chi,
+                nganh_id,
+                JSON.stringify(nganh_ids),
+                phuong_thuc_xet_tuyen,
+                khoi_thi || null,
+                diem_thi_thpt ? JSON.stringify(diem_thi_thpt) : null,
+                diem_danh_gia_nang_luc || null,
+                diem_hk1 || null,
+                diem_ca_nam || null,
+                user_id || null
             ]
         );
 
@@ -325,7 +482,8 @@ app.post(`${authPrefix}/apply`, [
             message: 'Nộp hồ sơ thành công',
             data: {
                 application_id: result.insertId,
-                application_code: applicationCode
+                application_code: applicationCode,
+                admission_method: phuong_thuc_xet_tuyen
             }
         });
     } catch (error) {
@@ -697,7 +855,7 @@ async function getMajorOptions() {
 
     try {
         const [majors] = await pool.execute(
-            'SELECT ten_nganh as name, ma_nganh as code FROM nganh WHERE is_active = true ORDER BY ten_nganh'
+            'SELECT ten_nganh as name, ma_nganh as code FROM nganh ORDER BY ten_nganh'
         );
 
         majorOptionsCache = majors.map(m => m.name);
@@ -754,16 +912,104 @@ app.get('/api/admin/setup-db', async(req, res) => {
             (22, 'ATTT', 'An toàn Thông tin')
         `);
 
+        // Thêm cột phương thức xét tuyển vào bảng applications
+        try {
+            await pool.execute(`
+                ALTER TABLE applications 
+                ADD COLUMN phuong_thuc_xet_tuyen ENUM('hoc_ba', 'thi_thpt', 'danh_gia_nang_luc') DEFAULT 'hoc_ba' AFTER nganh_id
+            `);
+        } catch (err) {
+            if (!err.message.includes('Duplicate column name')) throw err;
+        }
+
+        try {
+            await pool.execute(`
+                ALTER TABLE applications 
+                ADD COLUMN khoi_thi VARCHAR(10) NULL AFTER phuong_thuc_xet_tuyen
+            `);
+        } catch (err) {
+            if (!err.message.includes('Duplicate column name')) throw err;
+        }
+
+        try {
+            await pool.execute(`
+                ALTER TABLE applications 
+                ADD COLUMN diem_thi_thpt JSON NULL AFTER khoi_thi
+            `);
+        } catch (err) {
+            if (!err.message.includes('Duplicate column name')) throw err;
+        }
+
+        try {
+            await pool.execute(`
+                ALTER TABLE applications 
+                ADD COLUMN diem_danh_gia_nang_luc DECIMAL(7,2) NULL AFTER diem_thi_thpt
+            `);
+        } catch (err) {
+            if (!err.message.includes('Duplicate column name')) throw err;
+        }
+
+        // Tạo bảng khối thi THPT
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS khoi_thi_thpt (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                ma_khoi VARCHAR(10) UNIQUE NOT NULL,
+                ten_khoi VARCHAR(100) NOT NULL,
+                cac_mon JSON NOT NULL,
+                mo_ta TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+
+        // Thêm dữ liệu khối thi THPT
+        await pool.execute(`
+            INSERT IGNORE INTO khoi_thi_thpt (ma_khoi, ten_khoi, cac_mon, mo_ta) VALUES
+            ('A00', 'Khối A00', '["Toán", "Lý", "Hóa"]', 'Khối thi truyền thống cho các ngành kỹ thuật, công nghệ'),
+            ('A01', 'Khối A01', '["Toán", "Lý", "Tiếng Anh"]', 'Khối thi cho các ngành kỹ thuật có yêu cầu ngoại ngữ cao'),
+            ('B00', 'Khối B00', '["Toán", "Hóa", "Sinh"]', 'Khối thi cho các ngành y dược, sinh học'),
+            ('C00', 'Khối C00', '["Văn", "Sử", "Địa"]', 'Khối thi cho các ngành xã hội nhân văn'),
+            ('D01', 'Khối D01', '["Toán", "Văn", "Tiếng Anh"]', 'Khối thi cho các ngành kinh tế, quản trị'),
+            ('D07', 'Khối D07', '["Toán", "Hóa", "Tiếng Anh"]', 'Khối thi cho các ngành có yêu cầu toán và hóa cao'),
+            ('D08', 'Khối D08', '["Toán", "Sinh", "Tiếng Anh"]', 'Khối thi cho các ngành y dược có yêu cầu tiếng Anh'),
+            ('V00', 'Khối V00', '["Toán", "Lý", "Vẽ"]', 'Khối thi cho các ngành kiến trúc, mỹ thuật');
+        `);
+
+        // Tạo bảng liên kết ngành học với khối thi
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS nganh_khoi_thi (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nganh_id INT NOT NULL,
+                khoi_thi_id INT NOT NULL,
+                FOREIGN KEY (nganh_id) REFERENCES nganh(id) ON DELETE CASCADE,
+                FOREIGN KEY (khoi_thi_id) REFERENCES khoi_thi_thpt(id) ON DELETE CASCADE,
+                UNIQUE KEY unique_nganh_khoi (nganh_id, khoi_thi_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+
+        // Liên kết ngành với khối thi
+        await pool.execute(`
+            INSERT IGNORE INTO nganh_khoi_thi (nganh_id, khoi_thi_id) VALUES
+            (1, 1), (1, 2), (1, 5), 
+            (2, 5), (2, 1), 
+            (3, 1), (3, 2), (3, 6), 
+            (4, 5), (4, 1), 
+            (5, 5), (5, 1),
+            (21, 1), (21, 2), (21, 5),
+            (22, 1), (22, 2), (22, 5);
+        `);
+
         // Kiểm tra dữ liệu
         const [nganhCount] = await pool.execute('SELECT COUNT(*) as count FROM nganh');
         const [appCount] = await pool.execute('SELECT COUNT(*) as count FROM applications');
+        const [khoiThiCount] = await pool.execute('SELECT COUNT(*) as count FROM khoi_thi_thpt');
 
         res.json({
             success: true,
-            message: 'Database setup completed',
+            message: 'Database setup với phương thức xét tuyển completed',
             data: {
                 majorCount: nganhCount[0].count,
-                applicationCount: appCount[0].count
+                applicationCount: appCount[0].count,
+                examBlockCount: khoiThiCount[0].count
             }
         });
     } catch (error) {
@@ -931,7 +1177,7 @@ const startServer = async() => {
         await testConnection();
         // Start HTTP server
         const server = app.listen(PORT, () => {
-            console.log('\n🚀 HUTECHS Simple Backend API Server Started!');
+            console.log('\n🚀 HUTECH Simple Backend API Server Started!');
             console.log(`📡 Server: http://localhost:${PORT}`);
             console.log('📋 Available API endpoints:');
             console.log('   POST /api/auth/login - User login');

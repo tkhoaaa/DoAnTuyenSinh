@@ -1,7 +1,7 @@
 {
     "name": "doantuyensinh",
     "version": "1.0.0",
-    "description": "Đại học HUTECHS",
+    "description": "Đại học HUTECH",
     "type": "module",
     "scripts": {
         "dev": "vite",

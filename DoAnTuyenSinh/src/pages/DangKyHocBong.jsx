@@ -1,7 +1,24 @@
 import React, { useState, useContext } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUser, FaEnvelope, FaPhone, FaGraduationCap, FaCalendar, FaVenusMars, FaIdCard, FaMapMarkerAlt, FaStar, FaTrophy, FaUsers, FaFileUpload, FaList, FaPlus, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
+import {
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaGraduationCap,
+  FaCalendar,
+  FaVenusMars,
+  FaIdCard,
+  FaMapMarkerAlt,
+  FaStar,
+  FaTrophy,
+  FaUsers,
+  FaFileUpload,
+  FaList,
+  FaPlus,
+  FaCheckCircle,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 import { UserContext } from "../accounts/UserContext";
 import SEO from "../components/SEO";
 import Button from "../components/ui/Button";
@@ -9,7 +26,7 @@ import Input from "../components/ui/Input";
 
 function DangKyHocBong() {
   const { user } = useContext(UserContext);
-  const [activeTab, setActiveTab] = useState('register');
+  const [activeTab, setActiveTab] = useState("register");
   const [form, setForm] = useState({
     ho_ten: "",
     ngay_sinh: "",
@@ -27,7 +44,7 @@ function DangKyHocBong() {
     kinh_te: "",
     so_thanh_vien: "",
     ly_do: "",
-    nguon_thong_tin: ""
+    nguon_thong_tin: "",
   });
   const [attachments, setAttachments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -51,38 +68,52 @@ function DangKyHocBong() {
 
     try {
       const formData = new FormData();
-      
-      Object.keys(form).forEach(key => {
+
+      Object.keys(form).forEach((key) => {
         formData.append(key, form[key]);
       });
-      
-      attachments.forEach(file => {
-        formData.append('attachments', file);
+
+      attachments.forEach((file) => {
+        formData.append("attachments", file);
       });
 
-      const res = await axios.post("http://localhost:3001/api/scholarship/apply", formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+      const res = await axios.post(
+        "http://localhost:3001/api/scholarship/apply",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
-      });
+      );
 
       setSuccess("Nộp đơn học bổng thành công!");
       setForm({
-        ho_ten: "", ngay_sinh: "", gioi_tinh: "", cccd: "", dia_chi: "",
-        phone: "", email: "", nganh: "", lop: "", khoa: "", diem_tb: "",
-        hoc_bong: "", thanh_tich: "", kinh_te: "", so_thanh_vien: "",
-        ly_do: "", nguon_thong_tin: ""
+        ho_ten: "",
+        ngay_sinh: "",
+        gioi_tinh: "",
+        cccd: "",
+        dia_chi: "",
+        phone: "",
+        email: "",
+        nganh: "",
+        lop: "",
+        khoa: "",
+        diem_tb: "",
+        hoc_bong: "",
+        thanh_tich: "",
+        kinh_te: "",
+        so_thanh_vien: "",
+        ly_do: "",
+        nguon_thong_tin: "",
       });
       setAttachments([]);
     } catch (err) {
       const errors = err.response?.data?.errors;
       if (Array.isArray(errors) && errors.length > 0) {
-        setError(errors.map(e => e.msg).join(' | '));
+        setError(errors.map((e) => e.msg).join(" | "));
       } else {
-        setError(
-          err.response?.data?.message ||
-          "Nộp đơn thất bại!"
-        );
+        setError(err.response?.data?.message || "Nộp đơn thất bại!");
       }
     }
     setLoading(false);
@@ -93,42 +124,50 @@ function DangKyHocBong() {
       setError("Vui lòng đăng nhập để xem danh sách đơn");
       return;
     }
-    
+
     setLoadingList(true);
     try {
-      const res = await axios.get(`http://localhost:3001/api/scholarship/list?email=${user.email}`);
+      const res = await axios.get(
+        `http://localhost:3001/api/scholarship/list?email=${user.email}`
+      );
       setApplications(res.data.data || []);
     } catch (err) {
-      setError("Không thể tải danh sách đơn: " + (err.response?.data?.message || err.message));
+      setError(
+        "Không thể tải danh sách đơn: " +
+          (err.response?.data?.message || err.message)
+      );
     }
     setLoadingList(false);
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN');
+    return new Date(dateString).toLocaleDateString("vi-VN");
   };
 
   return (
     <>
-      <SEO 
+      <SEO
         title="Đăng ký học bổng - HUTECH"
         description="Đăng ký học bổng HUTECH 2025 - Học bổng khuyến khích học tập, tài năng, hỗ trợ sinh viên nghèo. Nộp đơn trực tuyến đơn giản."
         keywords="đăng ký học bổng, học bổng HUTECH, học bổng tài năng, học bổng khuyến khích"
         canonical="/dang-ky-hoc-bong"
       />
-      
+
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
         {/* Hero Section */}
-        <motion.section 
+        <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="relative py-20 overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 opacity-90"></div>
-          <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-          }}></div>
-          
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          ></div>
+
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
               initial={{ y: 30, opacity: 0 }}
@@ -144,19 +183,20 @@ function DangKyHocBong() {
               >
                 <FaTrophy className="text-white text-3xl" />
               </motion.div>
-              
+
               <h1 className="text-5xl font-bold text-white mb-4">
                 Đăng Ký Học Bổng
               </h1>
               <p className="text-xl text-white/90 max-w-2xl mx-auto">
-                Cơ hội nhận học bổng giá trị từ HUTECH - Hỗ trợ tài chính cho sinh viên xuất sắc
+                Cơ hội nhận học bổng giá trị từ HUTECH - Hỗ trợ tài chính cho
+                sinh viên xuất sắc
               </p>
             </motion.div>
           </div>
         </motion.section>
 
         {/* Main Content */}
-        <motion.section 
+        <motion.section
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -180,25 +220,24 @@ function DangKyHocBong() {
                   <h2 className="text-3xl font-bold text-white mb-2">
                     Hệ Thống Học Bổng HUTECH
                   </h2>
-                  <p className="text-white/90">
-                    Chọn dịch vụ bạn muốn sử dụng
-                  </p>
+                  <p className="text-white/90">Chọn dịch vụ bạn muốn sử dụng</p>
                 </motion.div>
-                
+
                 {/* Tab buttons */}
-                <motion.div 
+                <motion.div
                   className="flex justify-center space-x-4"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.6 }}
                 >
                   <Button
-                    variant={activeTab === 'register' ? "gradient" : "outline"}
+                    variant={activeTab === "register" ? "gradient" : "outline"}
                     size="lg"
-                    onClick={() => setActiveTab('register')}
-                    className={activeTab === 'register' ? 
-                      "bg-gradient-to-r from-yellow-400 to-yellow-300 text-blue-900 font-bold" : 
-                      "border-2 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-bold"
+                    onClick={() => setActiveTab("register")}
+                    className={
+                      activeTab === "register"
+                        ? "bg-gradient-to-r from-yellow-400 to-yellow-300 text-blue-900 font-bold"
+                        : "border-2 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-bold"
                     }
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -207,15 +246,16 @@ function DangKyHocBong() {
                     Nộp đơn mới
                   </Button>
                   <Button
-                    variant={activeTab === 'list' ? "gradient" : "outline"}
+                    variant={activeTab === "list" ? "gradient" : "outline"}
                     size="lg"
                     onClick={() => {
-                      setActiveTab('list');
+                      setActiveTab("list");
                       loadApplications();
                     }}
-                    className={activeTab === 'list' ? 
-                      "bg-gradient-to-r from-yellow-400 to-yellow-300 text-blue-900 font-bold" : 
-                      "border-2 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-bold"
+                    className={
+                      activeTab === "list"
+                        ? "bg-gradient-to-r from-yellow-400 to-yellow-300 text-blue-900 font-bold"
+                        : "border-2 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-bold"
                     }
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -229,7 +269,7 @@ function DangKyHocBong() {
               {/* Tab content */}
               <div className="p-8">
                 <AnimatePresence mode="wait">
-                  {activeTab === 'register' ? (
+                  {activeTab === "register" ? (
                     // Form đăng ký học bổng
                     <motion.form
                       key="register"
@@ -241,7 +281,7 @@ function DangKyHocBong() {
                       transition={{ duration: 0.3 }}
                     >
                       {/* Thông tin cá nhân */}
-                      <motion.div 
+                      <motion.div
                         className="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-2xl border border-blue-100"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -333,7 +373,7 @@ function DangKyHocBong() {
                       </motion.div>
 
                       {/* Thông tin học tập */}
-                      <motion.div 
+                      <motion.div
                         className="bg-gradient-to-r from-green-50 to-emerald-50 p-8 rounded-2xl border border-green-100"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -398,9 +438,15 @@ function DangKyHocBong() {
                               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                             >
                               <option value="">Chọn loại học bổng</option>
-                              <option value="Học bổng khuyến khích học tập">Học bổng khuyến khích học tập</option>
-                              <option value="Học bổng tài năng">Học bổng tài năng</option>
-                              <option value="Học bổng hỗ trợ sinh viên nghèo">Học bổng hỗ trợ sinh viên nghèo</option>
+                              <option value="Học bổng khuyến khích học tập">
+                                Học bổng khuyến khích học tập
+                              </option>
+                              <option value="Học bổng tài năng">
+                                Học bổng tài năng
+                              </option>
+                              <option value="Học bổng hỗ trợ sinh viên nghèo">
+                                Học bổng hỗ trợ sinh viên nghèo
+                              </option>
                             </select>
                           </div>
                           <div className="md:col-span-3">
@@ -420,7 +466,7 @@ function DangKyHocBong() {
                       </motion.div>
 
                       {/* Hoàn cảnh gia đình */}
-                      <motion.div 
+                      <motion.div
                         className="bg-gradient-to-r from-purple-50 to-pink-50 p-8 rounded-2xl border border-purple-100"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -465,7 +511,7 @@ function DangKyHocBong() {
                       </motion.div>
 
                       {/* Lý do và nguồn thông tin */}
-                      <motion.div 
+                      <motion.div
                         className="bg-gradient-to-r from-orange-50 to-red-50 p-8 rounded-2xl border border-orange-100"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -504,7 +550,9 @@ function DangKyHocBong() {
                               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                             >
                               <option value="">Chọn nguồn thông tin</option>
-                              <option value="Website trường">Website trường</option>
+                              <option value="Website trường">
+                                Website trường
+                              </option>
                               <option value="Mạng xã hội">Mạng xã hội</option>
                               <option value="Bạn bè">Bạn bè</option>
                               <option value="Thầy cô">Thầy cô</option>
@@ -515,7 +563,7 @@ function DangKyHocBong() {
                       </motion.div>
 
                       {/* Upload file minh chứng */}
-                      <motion.div 
+                      <motion.div
                         className="bg-gradient-to-r from-teal-50 to-cyan-50 p-8 rounded-2xl border border-teal-100"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -540,23 +588,29 @@ function DangKyHocBong() {
                               className="hidden"
                               id="file-upload"
                             />
-                            <label htmlFor="file-upload" className="cursor-pointer">
+                            <label
+                              htmlFor="file-upload"
+                              className="cursor-pointer"
+                            >
                               <FaFileUpload className="text-4xl text-teal-500 mx-auto mb-4" />
                               <p className="text-lg font-semibold text-gray-700 mb-2">
                                 Chọn file hoặc kéo thả vào đây
                               </p>
                               <p className="text-sm text-gray-500">
-                                Chấp nhận: PDF, DOC, DOCX, JPG, PNG (mỗi file tối đa 5MB)
+                                Chấp nhận: PDF, DOC, DOCX, JPG, PNG (mỗi file
+                                tối đa 5MB)
                               </p>
                             </label>
                           </div>
                           {attachments.length > 0 && (
-                            <motion.div 
+                            <motion.div
                               className="mt-4"
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                             >
-                              <p className="text-sm font-semibold text-gray-700 mb-2">Files đã chọn:</p>
+                              <p className="text-sm font-semibold text-gray-700 mb-2">
+                                Files đã chọn:
+                              </p>
                               <div className="space-y-2">
                                 {attachments.map((file, index) => (
                                   <motion.div
@@ -567,7 +621,9 @@ function DangKyHocBong() {
                                     className="flex items-center gap-2 p-2 bg-teal-50 rounded-lg"
                                   >
                                     <FaFileUpload className="text-teal-500" />
-                                    <span className="text-sm text-gray-700">{file.name}</span>
+                                    <span className="text-sm text-gray-700">
+                                      {file.name}
+                                    </span>
                                   </motion.div>
                                 ))}
                               </div>
@@ -577,7 +633,7 @@ function DangKyHocBong() {
                       </motion.div>
 
                       {/* Submit button */}
-                      <motion.div 
+                      <motion.div
                         className="flex justify-center"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -652,7 +708,7 @@ function DangKyHocBong() {
                       </div>
 
                       {loadingList ? (
-                        <motion.div 
+                        <motion.div
                           className="text-center py-12"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -661,25 +717,27 @@ function DangKyHocBong() {
                           <p className="text-gray-600">Đang tải danh sách...</p>
                         </motion.div>
                       ) : applications.length === 0 ? (
-                        <motion.div 
+                        <motion.div
                           className="text-center py-12"
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                         >
                           <FaList className="text-6xl text-gray-400 mx-auto mb-4" />
-                          <p className="text-gray-600 text-lg">Chưa có đơn học bổng nào được gửi</p>
+                          <p className="text-gray-600 text-lg">
+                            Chưa có đơn học bổng nào được gửi
+                          </p>
                         </motion.div>
                       ) : (
-                        <motion.div 
+                        <motion.div
                           className="space-y-6"
                           variants={{
                             hidden: { opacity: 0 },
                             visible: {
                               opacity: 1,
                               transition: {
-                                staggerChildren: 0.1
-                              }
-                            }
+                                staggerChildren: 0.1,
+                              },
+                            },
                           }}
                           initial="hidden"
                           animate="visible"
@@ -689,7 +747,7 @@ function DangKyHocBong() {
                               key={app.id || index}
                               variants={{
                                 hidden: { opacity: 0, y: 20 },
-                                visible: { opacity: 1, y: 0 }
+                                visible: { opacity: 1, y: 0 },
                               }}
                               className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl border border-gray-200 hover:shadow-lg transition-all duration-300"
                             >
@@ -701,35 +759,59 @@ function DangKyHocBong() {
                                   {formatDate(app.created_at)}
                                 </span>
                               </div>
-                              
+
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                                 <div className="space-y-2">
-                                  <p><strong>Ngành:</strong> {app.nganh}</p>
-                                  <p><strong>Lớp:</strong> {app.lop}</p>
-                                  <p><strong>Khóa:</strong> {app.khoa}</p>
-                                  <p><strong>Điểm TB:</strong> {app.diem_tb}</p>
+                                  <p>
+                                    <strong>Ngành:</strong> {app.nganh}
+                                  </p>
+                                  <p>
+                                    <strong>Lớp:</strong> {app.lop}
+                                  </p>
+                                  <p>
+                                    <strong>Khóa:</strong> {app.khoa}
+                                  </p>
+                                  <p>
+                                    <strong>Điểm TB:</strong> {app.diem_tb}
+                                  </p>
                                 </div>
                                 <div className="space-y-2">
-                                  <p><strong>Loại học bổng:</strong> {app.hoc_bong}</p>
-                                  <p><strong>Hoàn cảnh:</strong> {app.kinh_te}</p>
-                                  <p><strong>Thành viên:</strong> {app.so_thanh_vien} người</p>
-                                  <p><strong>Trạng thái:</strong> 
+                                  <p>
+                                    <strong>Loại học bổng:</strong>{" "}
+                                    {app.hoc_bong}
+                                  </p>
+                                  <p>
+                                    <strong>Hoàn cảnh:</strong> {app.kinh_te}
+                                  </p>
+                                  <p>
+                                    <strong>Thành viên:</strong>{" "}
+                                    {app.so_thanh_vien} người
+                                  </p>
+                                  <p>
+                                    <strong>Trạng thái:</strong>
                                     <span className="ml-2 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
                                       Đang xử lý
                                     </span>
                                   </p>
                                 </div>
                               </div>
-                              
+
                               {app.attachments && (
                                 <div className="mt-4 pt-4 border-t border-gray-200">
-                                  <p className="text-sm font-semibold text-gray-700 mb-2">File đính kèm:</p>
+                                  <p className="text-sm font-semibold text-gray-700 mb-2">
+                                    File đính kèm:
+                                  </p>
                                   <div className="flex flex-wrap gap-2">
-                                    {JSON.parse(app.attachments).map((file, fileIndex) => (
-                                      <span key={fileIndex} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                                        {file}
-                                      </span>
-                                    ))}
+                                    {JSON.parse(app.attachments).map(
+                                      (file, fileIndex) => (
+                                        <span
+                                          key={fileIndex}
+                                          className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
+                                        >
+                                          {file}
+                                        </span>
+                                      )
+                                    )}
                                   </div>
                                 </div>
                               )}
@@ -749,4 +831,4 @@ function DangKyHocBong() {
   );
 }
 
-export default DangKyHocBong; 
+export default DangKyHocBong;

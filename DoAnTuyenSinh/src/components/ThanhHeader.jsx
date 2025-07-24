@@ -20,7 +20,7 @@ import {
   FaUserCircle,
   FaShieldAlt,
   FaCrown,
-  FaUser
+  FaUser,
 } from "react-icons/fa";
 import { UserContext } from "../accounts/UserContext";
 
@@ -51,7 +51,7 @@ function ThanhHeader() {
     username || user?.username || user?.name || user?.email || "Người dùng";
 
   return (
-    <motion.header 
+    <motion.header
       className="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 shadow-2xl sticky top-0 z-50 backdrop-blur-sm"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
@@ -59,7 +59,7 @@ function ThanhHeader() {
     >
       <div className="container mx-auto flex items-center justify-between px-4 md:px-6 py-3">
         {/* Logo */}
-        <motion.div 
+        <motion.div
           className="flex items-center gap-3 flex-shrink-0"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -70,7 +70,7 @@ function ThanhHeader() {
             transition={{ duration: 0.6 }}
           >
             <img
-              src="https://media.loveitopcdn.com/3807/logo-hutech-1.png"
+              src="https://upload.wikimedia.org/wikipedia/vi/8/81/Logo_Tr%C6%B0%E1%BB%9Dng_%C4%90%E1%BA%A1i_h%E1%BB%8Dc_C%C3%B4ng_ngh%E1%BB%87_Th%C3%A0nh_ph%E1%BB%91_H%E1%BB%93_Ch%C3%AD_Minh.png"
               alt="Logo HUTECH"
               className="h-12 w-12 object-contain rounded-2xl border-2 border-white/20 shadow-lg bg-white/10 backdrop-blur-sm"
               style={{ minWidth: 48, minHeight: 48 }}
@@ -78,7 +78,7 @@ function ThanhHeader() {
           </motion.div>
           <div className="flex flex-col">
             <span className="text-white font-bold text-xl tracking-wide">
-              HUTECH-S
+              HUTECH
             </span>
             <span className="text-blue-200 text-xs font-medium">
               Tuyển sinh 2025
@@ -108,9 +108,9 @@ function ThanhHeader() {
               </Link>
             </motion.div>
           ))}
-          
+
           {/* Dropdown Tư vấn & Học bổng */}
-          <motion.div 
+          <motion.div
             className="relative"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -134,10 +134,10 @@ function ThanhHeader() {
                 <FaChevronDown className="ml-1 text-xs" />
               </motion.div>
             </motion.button>
-            
+
             <AnimatePresence>
               {showDropdown && (
-                <motion.div 
+                <motion.div
                   className="absolute left-0 mt-2 w-64 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 z-50 overflow-hidden"
                   initial={{ opacity: 0, scale: 0.9, y: -10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -152,7 +152,9 @@ function ThanhHeader() {
                     <FaQuestionCircle className="text-blue-500" />
                     <div>
                       <div className="font-semibold">Đăng ký tư vấn</div>
-                      <div className="text-xs text-gray-500">Hỗ trợ tư vấn tuyển sinh</div>
+                      <div className="text-xs text-gray-500">
+                        Hỗ trợ tư vấn tuyển sinh
+                      </div>
                     </div>
                   </Link>
                   <Link
@@ -163,7 +165,9 @@ function ThanhHeader() {
                     <FaTrophy className="text-yellow-500" />
                     <div>
                       <div className="font-semibold">Đăng ký học bổng</div>
-                      <div className="text-xs text-gray-500">Cơ hội nhận học bổng</div>
+                      <div className="text-xs text-gray-500">
+                        Cơ hội nhận học bổng
+                      </div>
                     </div>
                   </Link>
                 </motion.div>
@@ -187,16 +191,21 @@ function ThanhHeader() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <motion.div 
-                  className="relative"
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg ${
-                    role === 'admin' ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-blue-500 to-purple-500'
-                  }`}>
-                    {role === 'admin' ? <FaCrown className="text-sm" /> : <FaUserCircle className="text-sm" />}
+                <motion.div className="relative" whileHover={{ scale: 1.1 }}>
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg ${
+                      role === "admin"
+                        ? "bg-gradient-to-r from-yellow-500 to-orange-500"
+                        : "bg-gradient-to-r from-blue-500 to-purple-500"
+                    }`}
+                  >
+                    {role === "admin" ? (
+                      <FaCrown className="text-sm" />
+                    ) : (
+                      <FaUserCircle className="text-sm" />
+                    )}
                   </div>
-                  {role === 'admin' && (
+                  {role === "admin" && (
                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border border-white"></div>
                   )}
                 </motion.div>
@@ -204,7 +213,7 @@ function ThanhHeader() {
                   <p className="text-sm font-bold leading-none">
                     Xin chào, {displayName}
                   </p>
-                  {role === 'admin' && (
+                  {role === "admin" && (
                     <p className="text-xs text-yellow-300 leading-none mt-1 flex items-center gap-1">
                       <FaShieldAlt className="text-xs" />
                       Quản trị viên
@@ -222,7 +231,7 @@ function ThanhHeader() {
               {/* User Dropdown */}
               <AnimatePresence>
                 {showUserDropdown && (
-                  <motion.div 
+                  <motion.div
                     className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 z-50 overflow-hidden"
                     initial={{ opacity: 0, scale: 0.9, y: -10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -232,15 +241,21 @@ function ThanhHeader() {
                     {/* User Info Header */}
                     <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg ${
-                          role === 'admin' ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-blue-500 to-purple-500'
-                        }`}>
-                          {role === 'admin' ? <FaCrown /> : <FaUser />}
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg ${
+                            role === "admin"
+                              ? "bg-gradient-to-r from-yellow-500 to-orange-500"
+                              : "bg-gradient-to-r from-blue-500 to-purple-500"
+                          }`}
+                        >
+                          {role === "admin" ? <FaCrown /> : <FaUser />}
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900 text-sm">{displayName}</p>
+                          <p className="font-bold text-gray-900 text-sm">
+                            {displayName}
+                          </p>
                           <p className="text-xs text-gray-600 flex items-center gap-1">
-                            {role === 'admin' ? (
+                            {role === "admin" ? (
                               <>
                                 <FaShieldAlt className="text-yellow-500" />
                                 Quản trị viên
@@ -258,7 +273,7 @@ function ThanhHeader() {
 
                     {/* Dropdown Menu Items */}
                     <div className="py-2">
-                      {role === 'admin' && (
+                      {role === "admin" && (
                         <Link
                           to="/admin/tong-quan"
                           className="flex items-center gap-3 px-4 py-3 text-blue-700 hover:bg-blue-50 hover:text-blue-900 transition-all duration-200"
@@ -269,11 +284,13 @@ function ThanhHeader() {
                           </div>
                           <div>
                             <div className="font-semibold">Admin Dashboard</div>
-                            <div className="text-xs text-gray-500">Quản lý hệ thống</div>
+                            <div className="text-xs text-gray-500">
+                              Quản lý hệ thống
+                            </div>
                           </div>
                         </Link>
                       )}
-                      
+
                       <button
                         onClick={() => {
                           logout();
@@ -286,7 +303,9 @@ function ThanhHeader() {
                         </div>
                         <div>
                           <div className="font-semibold">Đăng xuất</div>
-                          <div className="text-xs text-gray-500">Thoát khỏi tài khoản</div>
+                          <div className="text-xs text-gray-500">
+                            Thoát khỏi tài khoản
+                          </div>
                         </div>
                       </button>
                     </div>
@@ -311,7 +330,7 @@ function ThanhHeader() {
                   <span className="hidden sm:block">Đăng nhập</span>
                 </Link>
               </motion.div>
-              
+
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -374,7 +393,7 @@ function ThanhHeader() {
                   </Link>
                 </motion.div>
               ))}
-              
+
               {/* Mobile Dropdown Items */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -408,7 +427,7 @@ function ThanhHeader() {
                   transition={{ delay: 0.6 }}
                   className="border-t border-gray-200 pt-4 space-y-2"
                 >
-                  {role === 'admin' && (
+                  {role === "admin" && (
                     <Link
                       to="/admin/tong-quan"
                       className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-green-700 hover:bg-green-50 transition-all duration-200"

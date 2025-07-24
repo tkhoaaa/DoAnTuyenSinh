@@ -1,7 +1,23 @@
 import React, { useState, useContext } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUser, FaEnvelope, FaPhone, FaGraduationCap, FaCalendar, FaVenusMars, FaIdCard, FaMapMarkerAlt, FaComments, FaList, FaPlus, FaInfoCircle, FaCheckCircle, FaExclamationTriangle, FaStar } from "react-icons/fa";
+import {
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaGraduationCap,
+  FaCalendar,
+  FaVenusMars,
+  FaIdCard,
+  FaMapMarkerAlt,
+  FaComments,
+  FaList,
+  FaPlus,
+  FaInfoCircle,
+  FaCheckCircle,
+  FaExclamationTriangle,
+  FaStar,
+} from "react-icons/fa";
 import { UserContext } from "../accounts/UserContext";
 import SEO from "../components/SEO";
 import Button from "../components/ui/Button";
@@ -9,7 +25,7 @@ import Input from "../components/ui/Input";
 
 function DangKyTuVan() {
   const { user } = useContext(UserContext);
-  const [activeTab, setActiveTab] = useState('register'); // 'register' hoặc 'list'
+  const [activeTab, setActiveTab] = useState("register"); // 'register' hoặc 'list'
   const [form, setForm] = useState({
     ho_ten: "",
     ngay_sinh: "",
@@ -22,7 +38,7 @@ function DangKyTuVan() {
     diem_tb: "",
     phuong_thuc: "",
     noi_dung: "",
-    nguon_thong_tin: ""
+    nguon_thong_tin: "",
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
@@ -40,22 +56,31 @@ function DangKyTuVan() {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:3001/api/consult/apply", form);
+      const res = await axios.post(
+        "http://localhost:3001/api/consult/apply",
+        form
+      );
       setSuccess("Gửi yêu cầu tư vấn thành công!");
       setForm({
-        ho_ten: "", ngay_sinh: "", gioi_tinh: "", phone: "", email: "",
-        nganh: "", lop: "", khoa: "", diem_tb: "", phuong_thuc: "",
-        noi_dung: "", nguon_thong_tin: ""
+        ho_ten: "",
+        ngay_sinh: "",
+        gioi_tinh: "",
+        phone: "",
+        email: "",
+        nganh: "",
+        lop: "",
+        khoa: "",
+        diem_tb: "",
+        phuong_thuc: "",
+        noi_dung: "",
+        nguon_thong_tin: "",
       });
     } catch (err) {
       const errors = err.response?.data?.errors;
       if (Array.isArray(errors) && errors.length > 0) {
-        setError(errors.map(e => e.msg).join(' | '));
+        setError(errors.map((e) => e.msg).join(" | "));
       } else {
-        setError(
-          err.response?.data?.message ||
-          "Gửi yêu cầu thất bại!"
-        );
+        setError(err.response?.data?.message || "Gửi yêu cầu thất bại!");
       }
     }
     setLoading(false);
@@ -66,42 +91,50 @@ function DangKyTuVan() {
       setError("Vui lòng đăng nhập để xem danh sách yêu cầu");
       return;
     }
-    
+
     setLoadingList(true);
     try {
-      const res = await axios.get(`http://localhost:3001/api/consult/list?email=${user.email}`);
+      const res = await axios.get(
+        `http://localhost:3001/api/consult/list?email=${user.email}`
+      );
       setConsultations(res.data.data || []);
     } catch (err) {
-      setError("Không thể tải danh sách yêu cầu: " + (err.response?.data?.message || err.message));
+      setError(
+        "Không thể tải danh sách yêu cầu: " +
+          (err.response?.data?.message || err.message)
+      );
     }
     setLoadingList(false);
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN');
+    return new Date(dateString).toLocaleDateString("vi-VN");
   };
 
   return (
     <>
-      <SEO 
+      <SEO
         title="Đăng ký tư vấn - HUTECH"
         description="Đăng ký tư vấn tuyển sinh HUTECH 2025 - Tư vấn trực tiếp, qua điện thoại, email. Hỗ trợ thông tin chi tiết về ngành học, học phí, học bổng."
         keywords="đăng ký tư vấn, tư vấn tuyển sinh, HUTECH, tư vấn ngành học, học phí"
         canonical="/dang-ky-tu-van"
       />
-      
+
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-teal-50 to-emerald-50">
         {/* Hero Section */}
-        <motion.section 
+        <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="relative py-20 overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-teal-600 to-emerald-600 opacity-90"></div>
-          <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-          }}></div>
-          
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          ></div>
+
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
               initial={{ y: 30, opacity: 0 }}
@@ -117,19 +150,20 @@ function DangKyTuVan() {
               >
                 <FaComments className="text-white text-3xl" />
               </motion.div>
-              
+
               <h1 className="text-5xl font-bold text-white mb-4">
                 Đăng Ký Tư Vấn
               </h1>
               <p className="text-xl text-white/90 max-w-2xl mx-auto">
-                Đội ngũ tư vấn chuyên nghiệp sẵn sàng hỗ trợ bạn mọi thắc mắc về tuyển sinh
+                Đội ngũ tư vấn chuyên nghiệp sẵn sàng hỗ trợ bạn mọi thắc mắc về
+                tuyển sinh
               </p>
             </motion.div>
           </div>
         </motion.section>
 
         {/* Main Content */}
-        <motion.section 
+        <motion.section
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -153,25 +187,24 @@ function DangKyTuVan() {
                   <h2 className="text-3xl font-bold text-white mb-2">
                     Dịch Vụ Tư Vấn HUTECH
                   </h2>
-                  <p className="text-white/90">
-                    Chọn dịch vụ bạn muốn sử dụng
-                  </p>
+                  <p className="text-white/90">Chọn dịch vụ bạn muốn sử dụng</p>
                 </motion.div>
-                
+
                 {/* Tab buttons */}
-                <motion.div 
+                <motion.div
                   className="flex justify-center space-x-4"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.6 }}
                 >
                   <Button
-                    variant={activeTab === 'register' ? "gradient" : "outline"}
+                    variant={activeTab === "register" ? "gradient" : "outline"}
                     size="lg"
-                    onClick={() => setActiveTab('register')}
-                    className={activeTab === 'register' ? 
-                      "bg-gradient-to-r from-yellow-400 to-yellow-300 text-green-900 font-bold" : 
-                      "border-2 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-bold"
+                    onClick={() => setActiveTab("register")}
+                    className={
+                      activeTab === "register"
+                        ? "bg-gradient-to-r from-yellow-400 to-yellow-300 text-green-900 font-bold"
+                        : "border-2 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-bold"
                     }
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -180,15 +213,16 @@ function DangKyTuVan() {
                     Gửi yêu cầu mới
                   </Button>
                   <Button
-                    variant={activeTab === 'list' ? "gradient" : "outline"}
+                    variant={activeTab === "list" ? "gradient" : "outline"}
                     size="lg"
                     onClick={() => {
-                      setActiveTab('list');
+                      setActiveTab("list");
                       loadConsultations();
                     }}
-                    className={activeTab === 'list' ? 
-                      "bg-gradient-to-r from-yellow-400 to-yellow-300 text-green-900 font-bold" : 
-                      "border-2 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-bold"
+                    className={
+                      activeTab === "list"
+                        ? "bg-gradient-to-r from-yellow-400 to-yellow-300 text-green-900 font-bold"
+                        : "border-2 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-bold"
                     }
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -202,7 +236,7 @@ function DangKyTuVan() {
               {/* Tab content */}
               <div className="p-8">
                 <AnimatePresence mode="wait">
-                  {activeTab === 'register' ? (
+                  {activeTab === "register" ? (
                     // Form đăng ký tư vấn
                     <motion.form
                       key="register"
@@ -214,7 +248,7 @@ function DangKyTuVan() {
                       transition={{ duration: 0.3 }}
                     >
                       {/* Thông tin cá nhân */}
-                      <motion.div 
+                      <motion.div
                         className="bg-gradient-to-r from-green-50 to-emerald-50 p-8 rounded-2xl border border-green-100"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -288,7 +322,7 @@ function DangKyTuVan() {
                       </motion.div>
 
                       {/* Thông tin học tập */}
-                      <motion.div 
+                      <motion.div
                         className="bg-gradient-to-r from-teal-50 to-cyan-50 p-8 rounded-2xl border border-teal-100"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -345,7 +379,7 @@ function DangKyTuVan() {
                       </motion.div>
 
                       {/* Thông tin tư vấn */}
-                      <motion.div 
+                      <motion.div
                         className="bg-gradient-to-r from-emerald-50 to-green-50 p-8 rounded-2xl border border-emerald-100"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -370,10 +404,18 @@ function DangKyTuVan() {
                               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
                             >
                               <option value="">Chọn phương thức</option>
-                              <option value="Tư vấn trực tiếp">Tư vấn trực tiếp</option>
-                              <option value="Tư vấn qua điện thoại">Tư vấn qua điện thoại</option>
-                              <option value="Tư vấn qua email">Tư vấn qua email</option>
-                              <option value="Tư vấn qua video call">Tư vấn qua video call</option>
+                              <option value="Tư vấn trực tiếp">
+                                Tư vấn trực tiếp
+                              </option>
+                              <option value="Tư vấn qua điện thoại">
+                                Tư vấn qua điện thoại
+                              </option>
+                              <option value="Tư vấn qua email">
+                                Tư vấn qua email
+                              </option>
+                              <option value="Tư vấn qua video call">
+                                Tư vấn qua video call
+                              </option>
                             </select>
                           </div>
                           <div>
@@ -402,7 +444,9 @@ function DangKyTuVan() {
                               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
                             >
                               <option value="">Chọn nguồn thông tin</option>
-                              <option value="Website trường">Website trường</option>
+                              <option value="Website trường">
+                                Website trường
+                              </option>
                               <option value="Mạng xã hội">Mạng xã hội</option>
                               <option value="Bạn bè">Bạn bè</option>
                               <option value="Thầy cô">Thầy cô</option>
@@ -413,7 +457,7 @@ function DangKyTuVan() {
                       </motion.div>
 
                       {/* Submit button */}
-                      <motion.div 
+                      <motion.div
                         className="flex justify-center"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -488,7 +532,7 @@ function DangKyTuVan() {
                       </div>
 
                       {loadingList ? (
-                        <motion.div 
+                        <motion.div
                           className="text-center py-12"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -497,25 +541,27 @@ function DangKyTuVan() {
                           <p className="text-gray-600">Đang tải danh sách...</p>
                         </motion.div>
                       ) : consultations.length === 0 ? (
-                        <motion.div 
+                        <motion.div
                           className="text-center py-12"
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                         >
                           <FaList className="text-6xl text-gray-400 mx-auto mb-4" />
-                          <p className="text-gray-600 text-lg">Chưa có yêu cầu tư vấn nào được gửi</p>
+                          <p className="text-gray-600 text-lg">
+                            Chưa có yêu cầu tư vấn nào được gửi
+                          </p>
                         </motion.div>
                       ) : (
-                        <motion.div 
+                        <motion.div
                           className="space-y-6"
                           variants={{
                             hidden: { opacity: 0 },
                             visible: {
                               opacity: 1,
                               transition: {
-                                staggerChildren: 0.1
-                              }
-                            }
+                                staggerChildren: 0.1,
+                              },
+                            },
                           }}
                           initial="hidden"
                           animate="visible"
@@ -525,7 +571,7 @@ function DangKyTuVan() {
                               key={consult.id || index}
                               variants={{
                                 hidden: { opacity: 0, y: 20 },
-                                visible: { opacity: 1, y: 0 }
+                                visible: { opacity: 1, y: 0 },
                               }}
                               className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl border border-gray-200 hover:shadow-lg transition-all duration-300"
                             >
@@ -537,27 +583,43 @@ function DangKyTuVan() {
                                   {formatDate(consult.created_at)}
                                 </span>
                               </div>
-                              
+
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm mb-4">
                                 <div className="space-y-2">
-                                  <p><strong>Ngành:</strong> {consult.nganh}</p>
-                                  <p><strong>Lớp:</strong> {consult.lop}</p>
-                                  <p><strong>Khóa:</strong> {consult.khoa}</p>
-                                  <p><strong>Điểm TB:</strong> {consult.diem_tb}</p>
+                                  <p>
+                                    <strong>Ngành:</strong> {consult.nganh}
+                                  </p>
+                                  <p>
+                                    <strong>Lớp:</strong> {consult.lop}
+                                  </p>
+                                  <p>
+                                    <strong>Khóa:</strong> {consult.khoa}
+                                  </p>
+                                  <p>
+                                    <strong>Điểm TB:</strong> {consult.diem_tb}
+                                  </p>
                                 </div>
                                 <div className="space-y-2">
-                                  <p><strong>Phương thức:</strong> {consult.phuong_thuc}</p>
-                                  <p><strong>Trạng thái:</strong> 
+                                  <p>
+                                    <strong>Phương thức:</strong>{" "}
+                                    {consult.phuong_thuc}
+                                  </p>
+                                  <p>
+                                    <strong>Trạng thái:</strong>
                                     <span className="ml-2 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
                                       Đang xử lý
                                     </span>
                                   </p>
                                 </div>
                               </div>
-                              
+
                               <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                                <p className="text-sm font-semibold text-gray-700 mb-2">Nội dung tư vấn:</p>
-                                <p className="text-sm text-gray-600 whitespace-pre-wrap">{consult.noi_dung}</p>
+                                <p className="text-sm font-semibold text-gray-700 mb-2">
+                                  Nội dung tư vấn:
+                                </p>
+                                <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                                  {consult.noi_dung}
+                                </p>
                               </div>
                             </motion.div>
                           ))}
@@ -575,4 +637,4 @@ function DangKyTuVan() {
   );
 }
 
-export default DangKyTuVan; 
+export default DangKyTuVan;

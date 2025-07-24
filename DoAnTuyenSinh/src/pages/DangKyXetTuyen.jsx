@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUser, FaEnvelope, FaPhone, FaGraduationCap, FaCalendar, FaIdCard, FaMapMarkerAlt, FaSchool, FaFileUpload, FaCheckCircle, FaExclamationTriangle, FaPlus, FaMinus } from "react-icons/fa";
+import {
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaGraduationCap,
+  FaCalendar,
+  FaIdCard,
+  FaMapMarkerAlt,
+  FaSchool,
+  FaFileUpload,
+  FaCheckCircle,
+  FaExclamationTriangle,
+  FaPlus,
+  FaMinus,
+} from "react-icons/fa";
 import SEO from "../components/SEO";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
@@ -20,8 +34,22 @@ function DangKyXetTuyen() {
     ten_lop_12: "",
     dia_chi: "",
   });
+
+  // Phương thức xét tuyển
+  const [phuongThucXetTuyen, setPhuongThucXetTuyen] = useState("hoc_ba");
+
+  // Học bạ THPT (hiện tại)
   const [diemHK1, setDiemHK1] = useState({});
   const [diemCaNam, setDiemCaNam] = useState({});
+
+  // Thi THPT
+  const [khoiThiList, setKhoiThiList] = useState([]);
+  const [selectedKhoiThi, setSelectedKhoiThi] = useState("");
+  const [diemThiTHPT, setDiemThiTHPT] = useState({});
+
+  // Đánh giá năng lực
+  const [diemDanhGiaNangLuc, setDiemDanhGiaNangLuc] = useState("");
+
   const [fileHoSo, setFileHoSo] = useState(null);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
@@ -42,6 +70,7 @@ function DangKyXetTuyen() {
   ];
 
   useEffect(() => {
+    // Load majors
     axios
       .get("http://localhost:3001/api/auth/majors")
       .then((res) => {
@@ -55,6 +84,22 @@ function DangKyXetTuyen() {
       .catch((error) => {
         console.error("Error fetching majors:", error);
         setNganhList([]);
+      });
+
+    // Load exam blocks
+    axios
+      .get("http://localhost:3001/api/auth/exam-blocks")
+      .then((res) => {
+        console.log("Exam blocks API response:", res.data);
+        if (res.data.success) {
+          setKhoiThiList(res.data.data);
+        } else {
+          setKhoiThiList([]);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching exam blocks:", error);
+        setKhoiThiList([]);
       });
   }, []);
 
@@ -79,6 +124,39 @@ function DangKyXetTuyen() {
     else setDiemCaNam({ ...diemCaNam, [mon]: value });
   };
 
+  const handleDiemThiTHPTChange = (mon, value) => {
+    setDiemThiTHPT({ ...diemThiTHPT, [mon]: value });
+  };
+
+  const handleKhoiThiChange = (khoiThiCode) => {
+    setSelectedKhoiThi(khoiThiCode);
+    const khoiThi = khoiThiList.find(k => k.code === khoiThiCode);
+    if (khoiThi) {
+      // Reset điểm khi đổi khối
+      const newDiem = {};
+      khoiThi.subjects.forEach(mon => {
+        newDiem[mon] = "";
+      });
+      setDiemThiTHPT(newDiem);
+    }
+  };
+
+  const handlePhuongThucChange = (method) => {
+    setPhuongThucXetTuyen(method);
+    // Reset dữ liệu khi đổi phương thức
+    if (method !== "hoc_ba") {
+      setDiemHK1({});
+      setDiemCaNam({});
+    }
+    if (method !== "thi_thpt") {
+      setSelectedKhoiThi("");
+      setDiemThiTHPT({});
+    }
+    if (method !== "danh_gia_nang_luc") {
+      setDiemDanhGiaNangLuc("");
+    }
+  };
+
   const handleFileChange = (e) => {
     setFileHoSo(e.target.files[0]);
   };
@@ -92,20 +170,36 @@ function DangKyXetTuyen() {
       const applicationData = {
         ...form,
         nganh_id: parseInt(nganhIds[0]) || null,
-        nganh_ids: nganhIds.filter(Boolean).map(id => parseInt(id)),
-        diem_hk1: JSON.stringify(diemHK1),
-        diem_ca_nam: JSON.stringify(diemCaNam),
+        nganh_ids: nganhIds.filter(Boolean).map((id) => parseInt(id)),
+        phuong_thuc_xet_tuyen: phuongThucXetTuyen,
         user_id: localStorage.getItem("userId") || null,
       };
 
+      // Add data based on admission method
+      if (phuongThucXetTuyen === "hoc_ba") {
+        applicationData.diem_hk1 = JSON.stringify(diemHK1);
+        applicationData.diem_ca_nam = JSON.stringify(diemCaNam);
+      } else if (phuongThucXetTuyen === "thi_thpt") {
+        applicationData.khoi_thi = selectedKhoiThi;
+        applicationData.diem_thi_thpt = diemThiTHPT;
+      } else if (phuongThucXetTuyen === "danh_gia_nang_luc") {
+        applicationData.diem_danh_gia_nang_luc = parseFloat(diemDanhGiaNangLuc);
+      }
+
       console.log("Submitting application:", applicationData);
 
-      const response = await axios.post("http://localhost:3001/api/auth/apply", applicationData, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await axios.post(
+        "http://localhost:3001/api/auth/apply",
+        applicationData,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       if (response.data.success) {
-        setSuccess("Đăng ký thành công! Mã hồ sơ: " + response.data.data.application_code);
+        setSuccess(
+          "Đăng ký thành công! Mã hồ sơ: " + response.data.data.application_code
+        );
         setForm({
           ho_ten: "",
           ngay_sinh: "",
@@ -118,15 +212,22 @@ function DangKyXetTuyen() {
           dia_chi: "",
         });
         setNganhIds([""]);
+        setPhuongThucXetTuyen("hoc_ba");
         setDiemHK1({});
         setDiemCaNam({});
+        setSelectedKhoiThi("");
+        setDiemThiTHPT({});
+        setDiemDanhGiaNangLuc("");
         setFileHoSo(null);
       } else {
         setError(response.data.message || "Đăng ký thất bại!");
       }
     } catch (err) {
       console.error("Submit error:", err);
-      setError(err.response?.data?.message || "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin!");
+      setError(
+        err.response?.data?.message ||
+          "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin!"
+      );
     } finally {
       setLoading(false);
     }
@@ -134,25 +235,28 @@ function DangKyXetTuyen() {
 
   return (
     <>
-      <SEO 
+      <SEO
         title="Đăng ký xét tuyển"
-        description="Đăng ký xét tuyển HUTECHS 2025 - Nộp hồ sơ trực tuyến, chọn ngành học, xét tuyển theo nhiều phương thức. Quy trình đơn giản, nhanh chóng."
-        keywords="đăng ký xét tuyển, HUTECHS, nộp hồ sơ, xét tuyển online, tuyển sinh 2025"
+        description="Đăng ký xét tuyển HUTECH 2025 - Nộp hồ sơ trực tuyến, chọn ngành học, xét tuyển theo nhiều phương thức. Quy trình đơn giản, nhanh chóng."
+        keywords="đăng ký xét tuyển, HUTECH, nộp hồ sơ, xét tuyển online, tuyển sinh 2025"
         canonical="/dang-ky-xet-tuyen"
       />
-      
+
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
         {/* Hero Section */}
-        <motion.section 
+        <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="relative py-20 overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 opacity-90"></div>
-          <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-          }}></div>
-          
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          ></div>
+
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
               initial={{ y: 30, opacity: 0 }}
@@ -168,19 +272,20 @@ function DangKyXetTuyen() {
               >
                 <FaGraduationCap className="text-white text-3xl" />
               </motion.div>
-              
+
               <h1 className="text-5xl font-bold text-white mb-4">
                 Đăng Ký Xét Tuyển
               </h1>
               <p className="text-xl text-white/90 max-w-2xl mx-auto">
-                Nộp hồ sơ xét tuyển HUTECH 2025 - Quy trình đơn giản, nhanh chóng
+                Nộp hồ sơ xét tuyển HUTECH 2025 - Quy trình đơn giản, nhanh
+                chóng
               </p>
             </motion.div>
           </div>
         </motion.section>
 
         {/* Main Content */}
-        <motion.section 
+        <motion.section
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -202,9 +307,9 @@ function DangKyXetTuyen() {
               >
                 ĐĂNG KÝ THÔNG TIN ĐỂ XÉT HỌC BẠ 2025 VÀ HỌC BỔNG HUTECH
               </motion.h2>
-              
-              <motion.form 
-                className="space-y-10" 
+
+              <motion.form
+                className="space-y-10"
                 onSubmit={handleSubmit}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -327,20 +432,23 @@ function DangKyXetTuyen() {
                   </h3>
                   <div className="space-y-4">
                     {nganhIds.map((id, idx) => (
-                      <motion.div 
-                        key={idx} 
+                      <motion.div
+                        key={idx}
                         className="flex items-center gap-4"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 * idx }}
                       >
                         <label className="font-semibold text-gray-700 min-w-[80px]">
-                          Ngành {idx + 1} <span className="text-red-500">*</span>
+                          Ngành {idx + 1}{" "}
+                          <span className="text-red-500">*</span>
                         </label>
                         <select
                           className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                           value={id}
-                          onChange={(e) => handleNganhChange(idx, e.target.value)}
+                          onChange={(e) =>
+                            handleNganhChange(idx, e.target.value)
+                          }
                           required
                         >
                           <option value="">--Chọn ngành--</option>
@@ -389,13 +497,168 @@ function DangKyXetTuyen() {
                   </div>
                 </motion.section>
 
-                {/* Bảng điểm lớp 12 */}
+                {/* Phương thức xét tuyển */}
                 <motion.section
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.9 }}
-                  className="bg-gradient-to-r from-purple-50 to-pink-50 p-8 rounded-2xl border border-purple-100"
+                  transition={{ delay: 0.85 }}
+                  className="bg-gradient-to-r from-purple-50 to-violet-50 p-8 rounded-2xl border border-purple-100"
                 >
+                  <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-violet-600 rounded-xl flex items-center justify-center">
+                      <FaFileUpload className="text-white text-lg" />
+                    </div>
+                    3. Phương thức xét tuyển
+                  </h3>
+                  
+                  <div className="grid md:grid-cols-3 gap-4 mb-6">
+                    {[
+                      { value: "hoc_ba", label: "Học bạ THPT", desc: "Xét tuyển bằng điểm học bạ 3 năm THPT" },
+                      { value: "thi_thpt", label: "Thi THPT", desc: "Xét tuyển bằng điểm thi tốt nghiệp THPT" },
+                      { value: "danh_gia_nang_luc", label: "Đánh giá năng lực", desc: "Xét tuyển bằng điểm đánh giá năng lực" },
+                    ].map((method) => (
+                      <motion.div
+                        key={method.value}
+                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                          phuongThucXetTuyen === method.value
+                            ? "border-purple-500 bg-purple-100"
+                            : "border-gray-200 bg-white hover:border-purple-300"
+                        }`}
+                        onClick={() => handlePhuongThucChange(method.value)}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <div className="flex items-center mb-2">
+                          <input
+                            type="radio"
+                            name="phuongThucXetTuyen"
+                            value={method.value}
+                            checked={phuongThucXetTuyen === method.value}
+                            onChange={() => handlePhuongThucChange(method.value)}
+                            className="text-purple-600 mr-3"
+                          />
+                          <h4 className="font-semibold text-gray-800">{method.label}</h4>
+                        </div>
+                        <p className="text-sm text-gray-600">{method.desc}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.section>
+
+
+
+                {/* Thi THPT */}
+                {phuongThucXetTuyen === "thi_thpt" && (
+                  <motion.section
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 }}
+                    className="bg-gradient-to-r from-blue-50 to-cyan-50 p-8 rounded-2xl border border-blue-100"
+                  >
+                    <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center">
+                        <FaFileUpload className="text-white text-lg" />
+                      </div>
+                      4. Điểm thi THPT
+                    </h3>
+                    
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-lg font-semibold text-gray-700 mb-3">
+                          Chọn khối thi <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                          value={selectedKhoiThi}
+                          onChange={(e) => handleKhoiThiChange(e.target.value)}
+                          required
+                        >
+                          <option value="">--Chọn khối thi--</option>
+                          {khoiThiList.map((khoi) => (
+                            <option key={khoi.code} value={khoi.code}>
+                              {khoi.name} - {khoi.subjects.join(", ")}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {selectedKhoiThi && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="grid md:grid-cols-3 gap-4"
+                        >
+                          {khoiThiList
+                            .find(k => k.code === selectedKhoiThi)
+                            ?.subjects.map((mon) => (
+                              <div key={mon}>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Điểm {mon} <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="number"
+                                  step="0.25"
+                                  min="0"
+                                  max="10"
+                                  value={diemThiTHPT[mon] || ""}
+                                  onChange={(e) => handleDiemThiTHPTChange(mon, e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="0.00"
+                                  required
+                                />
+                              </div>
+                            ))}
+                        </motion.div>
+                      )}
+                    </div>
+                  </motion.section>
+                )}
+
+                {/* Đánh giá năng lực */}
+                {phuongThucXetTuyen === "danh_gia_nang_luc" && (
+                  <motion.section
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 }}
+                    className="bg-gradient-to-r from-green-50 to-teal-50 p-8 rounded-2xl border border-green-100"
+                  >
+                    <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-teal-600 rounded-xl flex items-center justify-center">
+                        <FaCheckCircle className="text-white text-lg" />
+                      </div>
+                      4. Điểm đánh giá năng lực
+                    </h3>
+                    
+                    <div className="max-w-md">
+                      <label className="block text-lg font-semibold text-gray-700 mb-3">
+                        Điểm đánh giá năng lực <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="1200"
+                        value={diemDanhGiaNangLuc}
+                        onChange={(e) => setDiemDanhGiaNangLuc(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                        placeholder="Nhập điểm đánh giá năng lực"
+                        required
+                      />
+                      <p className="text-sm text-gray-500 mt-2">
+                        Điểm tối đa: 1200 điểm
+                      </p>
+                    </div>
+                  </motion.section>
+                )}
+
+                {/* Bảng điểm lớp 12 (chỉ hiển thị khi chọn học bạ) */}
+                {phuongThucXetTuyen === "hoc_ba" && (
+                  <motion.section
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.0 }}
+                    className="bg-gradient-to-r from-purple-50 to-pink-50 p-8 rounded-2xl border border-purple-100"
+                  >
                   <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
                       <FaGraduationCap className="text-white text-lg" />
@@ -466,6 +729,7 @@ function DangKyXetTuyen() {
                     </table>
                   </div>
                 </motion.section>
+                )}
 
                 {/* Upload file */}
                 <motion.section
@@ -481,13 +745,16 @@ function DangKyXetTuyen() {
                     4. Hình học bạ và CCCD
                   </h3>
                   <p className="text-sm text-gray-600 mb-4">
-                    Thí sinh đính kèm ảnh chụp hoặc file scan tất cả các trang trong
-                    học bạ THPT/ Bảng điểm 3 năm học THPT và mặt trước CCCD.
+                    Thí sinh đính kèm ảnh chụp hoặc file scan tất cả các trang
+                    trong học bạ THPT/ Bảng điểm 3 năm học THPT và mặt trước
+                    CCCD.
                   </p>
                   <div className="flex items-center gap-4">
                     <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-orange-400 rounded-xl cursor-pointer hover:bg-orange-50 transition-all duration-200 group">
                       <FaFileUpload className="w-8 h-8 text-orange-500 mb-2 group-hover:scale-110 transition-transform" />
-                      <span className="text-orange-600 font-semibold">Upload File</span>
+                      <span className="text-orange-600 font-semibold">
+                        Upload File
+                      </span>
                       <input
                         type="file"
                         className="hidden"
@@ -523,9 +790,12 @@ function DangKyXetTuyen() {
                       className="mt-1 accent-blue-600"
                       required
                     />
-                    <label htmlFor="camket" className="text-sm text-gray-700 leading-relaxed">
-                      Tôi xin cam đoan các thông tin trên là đúng sự thật và hoàn toàn
-                      chịu trách nhiệm theo quy định của Nhà trường.
+                    <label
+                      htmlFor="camket"
+                      className="text-sm text-gray-700 leading-relaxed"
+                    >
+                      Tôi xin cam đoan các thông tin trên là đúng sự thật và
+                      hoàn toàn chịu trách nhiệm theo quy định của Nhà trường.
                     </label>
                   </div>
                   <div className="flex gap-3">
@@ -554,7 +824,7 @@ function DangKyXetTuyen() {
                     </Button>
                   </div>
                 </motion.section>
-                
+
                 {/* Messages */}
                 <AnimatePresence>
                   {success && (

@@ -1,7 +1,7 @@
 {
-    "name": "hutechs-backend-simple",
+    "name": "HUTECHSs-backend-simple",
     "version": "1.0.0",
-    "description": "Simple Backend API for HUTECHS admission system",
+    "description": "Simple Backend API for HUTECHSS admission system",
     "main": "index.js",
     "type": "module",
     "scripts": {
@@ -21,12 +21,12 @@
         "nodemon": "^3.0.2"
     },
     "keywords": [
-        "hutechs",
+        "HUTECHSs",
         "admission",
         "api",
         "mysql",
         "simple"
     ],
-    "author": "HUTECHS Dev Team",
+    "author": "HUTECHSS Dev Team",
     "license": "MIT"
 }

@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useTransform,
+} from "framer-motion";
+import axios from "axios";
 import {
   FaUsers,
   FaFileAlt,
@@ -27,8 +32,8 @@ import {
   FaRocket,
   FaFire,
   FaGem,
-  FaMagic
-} from 'react-icons/fa';
+  FaMagic,
+} from "react-icons/fa";
 
 const TongQuan = () => {
   const [stats, setStats] = useState({
@@ -39,13 +44,13 @@ const TongQuan = () => {
     totalStudents: 0,
     totalMajors: 0,
     averageGPA: 0,
-    completionRate: 0
+    completionRate: 0,
   });
 
   const [recentApplications, setRecentApplications] = useState([]);
   const [topMajors, setTopMajors] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -60,13 +65,15 @@ const TongQuan = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch all dashboard data in parallel
-      const [statsResponse, recentResponse, majorsResponse] = await Promise.all([
-        axios.get('http://localhost:3001/api/admin/dashboard-stats'),
-        axios.get('http://localhost:3001/api/admin/recent-applications'),
-        axios.get('http://localhost:3001/api/admin/top-majors')
-      ]);
+      const [statsResponse, recentResponse, majorsResponse] = await Promise.all(
+        [
+          axios.get("http://localhost:3001/api/admin/dashboard-stats"),
+          axios.get("http://localhost:3001/api/admin/recent-applications"),
+          axios.get("http://localhost:3001/api/admin/top-majors"),
+        ]
+      );
 
       if (statsResponse.data.success) {
         setStats(statsResponse.data.data);
@@ -79,11 +86,12 @@ const TongQuan = () => {
       if (majorsResponse.data.success) {
         setTopMajors(majorsResponse.data.data);
       }
-
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      setError('Không thể tải dữ liệu dashboard. Vui lòng kiểm tra kết nối server.');
-      
+      console.error("Error fetching dashboard data:", error);
+      setError(
+        "Không thể tải dữ liệu dashboard. Vui lòng kiểm tra kết nối server."
+      );
+
       // Set empty arrays instead of mock data
       setStats({
         totalApplications: 0,
@@ -93,7 +101,7 @@ const TongQuan = () => {
         totalStudents: 0,
         totalMajors: 0,
         averageGPA: 0,
-        completionRate: 0
+        completionRate: 0,
       });
       setRecentApplications([]);
       setTopMajors([]);
@@ -102,18 +110,30 @@ const TongQuan = () => {
     }
   };
 
-  const StatCard = ({ icon: Icon, title, value, color, subtitle, trend, delay = 0 }) => {
+  const StatCard = ({
+    icon: Icon,
+    title,
+    value,
+    color,
+    subtitle,
+    trend,
+    delay = 0,
+  }) => {
     return (
-      <div 
+      <div
         className="relative group cursor-pointer stat-card"
         style={{ animationDelay: `${delay}s` }}
       >
         <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 overflow-hidden transition-all duration-300 hover:shadow-3xl hover:scale-105">
           {/* Simple hover background */}
-          <div 
+          <div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-3xl"
             style={{
-              background: `linear-gradient(135deg, ${color.replace('text-', '').replace('-600', '')}15, ${color.replace('text-', '').replace('-600', '')}05)`
+              background: `linear-gradient(135deg, ${color
+                .replace("text-", "")
+                .replace("-600", "")}15, ${color
+                .replace("text-", "")
+                .replace("-600", "")}05)`,
             }}
           />
 
@@ -121,24 +141,43 @@ const TongQuan = () => {
             <div className="flex-1">
               <p className="text-sm text-gray-600 mb-2 font-medium">{title}</p>
               <p className={`text-4xl font-black ${color} mb-1 stat-number`}>
-                {typeof value === 'number' ? value.toLocaleString() : value}
+                {typeof value === "number" ? value.toLocaleString() : value}
               </p>
-              {subtitle && <p className="text-xs text-gray-500 mb-3">{subtitle}</p>}
+              {subtitle && (
+                <p className="text-xs text-gray-500 mb-3">{subtitle}</p>
+              )}
               {trend && (
                 <div className="flex items-center gap-2 stat-trend">
-                  <span className={`text-xs font-bold flex items-center gap-1 ${
-                    parseFloat(trend.replace('%', '')) > 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {parseFloat(trend.replace('%', '')) > 0 ? <FaArrowUp /> : <FaArrowDown />}
+                  <span
+                    className={`text-xs font-bold flex items-center gap-1 ${
+                      parseFloat(trend.replace("%", "")) > 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {parseFloat(trend.replace("%", "")) > 0 ? (
+                      <FaArrowUp />
+                    ) : (
+                      <FaArrowDown />
+                    )}
                     {trend}
                   </span>
-                  <span className="text-xs text-gray-500">so với tháng trước</span>
+                  <span className="text-xs text-gray-500">
+                    so với tháng trước
+                  </span>
                 </div>
               )}
             </div>
-            
+
             <div
-              className={`w-20 h-20 bg-gradient-to-br ${color.replace('text-', 'from-').replace('-600', '-400')} ${color.replace('text-', 'to-').replace('-600', '-600')} rounded-2xl flex items-center justify-center shadow-2xl stat-icon transition-all duration-300 group-hover:scale-110 group-hover:rotate-12`}
+              className={`w-20 h-20 bg-gradient-to-br ${color
+                .replace("text-", "from-")
+                .replace("-600", "-400")} ${color
+                .replace("text-", "to-")
+                .replace(
+                  "-600",
+                  "-600"
+                )} rounded-2xl flex items-center justify-center shadow-2xl stat-icon transition-all duration-300 group-hover:scale-110 group-hover:rotate-12`}
             >
               <Icon className="text-white text-2xl" />
             </div>
@@ -223,13 +262,25 @@ const TongQuan = () => {
 
   const getStatusBadge = (status) => {
     const config = {
-      pending: { text: "Chờ xử lý", color: "bg-gradient-to-r from-yellow-400 to-orange-400 text-white", icon: FaClock },
-      approved: { text: "Đã duyệt", color: "bg-gradient-to-r from-green-400 to-emerald-400 text-white", icon: FaCheckCircle },
-      rejected: { text: "Từ chối", color: "bg-gradient-to-r from-red-400 to-pink-400 text-white", icon: FaTimes }
+      pending: {
+        text: "Chờ xử lý",
+        color: "bg-gradient-to-r from-yellow-400 to-orange-400 text-white",
+        icon: FaClock,
+      },
+      approved: {
+        text: "Đã duyệt",
+        color: "bg-gradient-to-r from-green-400 to-emerald-400 text-white",
+        icon: FaCheckCircle,
+      },
+      rejected: {
+        text: "Từ chối",
+        color: "bg-gradient-to-r from-red-400 to-pink-400 text-white",
+        icon: FaTimes,
+      },
     };
     const { text, color, icon: Icon } = config[status];
     return (
-      <motion.span 
+      <motion.span
         className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 ${color} shadow-lg`}
         whileHover={{ scale: 1.05 }}
         initial={{ scale: 0 }}
@@ -245,10 +296,10 @@ const TongQuan = () => {
   const getMajorColor = (index) => {
     const colors = [
       "from-blue-500 to-cyan-400",
-      "from-green-500 to-emerald-400", 
+      "from-green-500 to-emerald-400",
       "from-purple-500 to-pink-400",
       "from-orange-500 to-yellow-400",
-      "from-red-500 to-pink-400"
+      "from-red-500 to-pink-400",
     ];
     return colors[index % colors.length];
   };
@@ -299,22 +350,22 @@ const TongQuan = () => {
                 Hệ thống quản lý tuyển sinh HUTECH 2025
               </p>
             </div>
-            
+
             <div className="bg-white/80 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-xl border border-white/20 relative overflow-hidden clock-container">
               {/* Static background with subtle gradient */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl"></div>
-              
+
               <div className="text-right relative z-10">
                 <p className="text-sm text-gray-600 mb-1 flex items-center justify-end gap-2">
                   <span className="text-base clock-emoji">🕐</span>
                   Thời gian thực
                 </p>
                 <div className="text-2xl font-bold text-blue-600 font-mono tracking-wider">
-                  {currentTime.toLocaleTimeString('vi-VN')}
+                  {currentTime.toLocaleTimeString("vi-VN")}
                 </div>
                 <p className="text-sm text-gray-500 flex items-center justify-end gap-2 mt-1">
                   <FaCalendarAlt className="text-blue-500" />
-                  {currentTime.toLocaleDateString('vi-VN')}
+                  {currentTime.toLocaleDateString("vi-VN")}
                 </p>
               </div>
             </div>
@@ -364,7 +415,8 @@ const TongQuan = () => {
           }
 
           @keyframes sparkleGlow {
-            0%, 100% {
+            0%,
+            100% {
               transform: scale(1);
               opacity: 0.8;
               filter: drop-shadow(0 0 8px rgba(255, 193, 7, 0.3));
@@ -377,7 +429,8 @@ const TongQuan = () => {
           }
 
           @keyframes rocketFloat {
-            0%, 100% {
+            0%,
+            100% {
               transform: translateY(0px) rotate(0deg);
             }
             25% {
@@ -392,10 +445,13 @@ const TongQuan = () => {
           }
 
           @keyframes clockTick {
-            0%, 50%, 100% {
+            0%,
+            50%,
+            100% {
               transform: scale(1);
             }
-            25%, 75% {
+            25%,
+            75% {
               transform: scale(1.05);
             }
           }
@@ -484,7 +540,7 @@ const TongQuan = () => {
         {/* Charts and Recent Activity */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Top Majors Chart */}
-          <motion.div 
+          <motion.div
             className="xl:col-span-2 bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 relative overflow-hidden"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -492,7 +548,7 @@ const TongQuan = () => {
           >
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-8">
-                <motion.h3 
+                <motion.h3
                   className="text-2xl font-bold text-gray-900 flex items-center gap-3"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -503,7 +559,7 @@ const TongQuan = () => {
                   </div>
                   Top 5 Ngành Học Phổ Biến
                 </motion.h3>
-                <motion.div 
+                <motion.div
                   className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 px-4 py-2 rounded-full"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -513,7 +569,7 @@ const TongQuan = () => {
                   Hot trends
                 </motion.div>
               </div>
-              
+
               <div className="space-y-6">
                 {topMajors.map((major, index) => (
                   <motion.div
@@ -521,22 +577,36 @@ const TongQuan = () => {
                     className="group relative"
                     initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 + index * 0.1, type: "spring", stiffness: 100 }}
+                    transition={{
+                      delay: 0.8 + index * 0.1,
+                      type: "spring",
+                      stiffness: 100,
+                    }}
                     whileHover={{ scale: 1.02 }}
                   >
                     <div className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 relative overflow-hidden">
                       <div className="relative z-10 flex items-center gap-6">
-                        <motion.div 
-                          className={`w-16 h-16 bg-gradient-to-r ${getMajorColor(index)} rounded-2xl flex items-center justify-center text-2xl shadow-xl`}
+                        <motion.div
+                          className={`w-16 h-16 bg-gradient-to-r ${getMajorColor(
+                            index
+                          )} rounded-2xl flex items-center justify-center text-2xl shadow-xl`}
                           whileHover={{ rotate: 360, scale: 1.1 }}
-                          transition={{ type: "spring", stiffness: 200, duration: 0.6 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 200,
+                            duration: 0.6,
+                          }}
                         >
                           {major.icon}
                         </motion.div>
                         <div>
-                          <h4 className="text-lg font-bold text-gray-900 mb-1">{major.name}</h4>
+                          <h4 className="text-lg font-bold text-gray-900 mb-1">
+                            {major.name}
+                          </h4>
                           <div className="flex items-center gap-4">
-                            <p className="text-sm text-gray-600">{major.count} hồ sơ</p>
+                            <p className="text-sm text-gray-600">
+                              {major.count} hồ sơ
+                            </p>
                             <span className="text-sm font-semibold text-green-600 flex items-center gap-1">
                               <FaArrowUp className="text-xs" />
                               {major.trend}
@@ -544,22 +614,33 @@ const TongQuan = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="relative z-10 text-right">
-                        <motion.div 
+                        <motion.div
                           className="text-2xl font-black text-gray-900 mb-2"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          transition={{ delay: 1 + index * 0.1, type: "spring", stiffness: 200 }}
+                          transition={{
+                            delay: 1 + index * 0.1,
+                            type: "spring",
+                            stiffness: 200,
+                          }}
                         >
                           {major.percentage}%
                         </motion.div>
                         <div className="w-32 h-3 bg-gray-200 rounded-full overflow-hidden">
                           <motion.div
-                            className={`h-full bg-gradient-to-r ${getMajorColor(index)} shadow-lg`}
+                            className={`h-full bg-gradient-to-r ${getMajorColor(
+                              index
+                            )} shadow-lg`}
                             initial={{ width: 0 }}
                             animate={{ width: `${major.percentage}%` }}
-                            transition={{ delay: 1.2 + index * 0.1, duration: 1, type: "spring", stiffness: 100 }}
+                            transition={{
+                              delay: 1.2 + index * 0.1,
+                              duration: 1,
+                              type: "spring",
+                              stiffness: 100,
+                            }}
                           />
                         </div>
                       </div>
@@ -571,7 +652,7 @@ const TongQuan = () => {
           </motion.div>
 
           {/* Recent Applications */}
-          <motion.div 
+          <motion.div
             className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 relative overflow-hidden"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -579,7 +660,7 @@ const TongQuan = () => {
           >
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-8">
-                <motion.h3 
+                <motion.h3
                   className="text-xl font-bold text-gray-900 flex items-center gap-3"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -590,7 +671,7 @@ const TongQuan = () => {
                   </div>
                   Hồ Sơ Gần Đây
                 </motion.h3>
-                <motion.div 
+                <motion.div
                   className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -599,7 +680,7 @@ const TongQuan = () => {
                   {recentApplications.length} hồ sơ
                 </motion.div>
               </div>
-              
+
               <div className="space-y-4">
                 {recentApplications.map((app, index) => (
                   <motion.div
@@ -619,23 +700,27 @@ const TongQuan = () => {
                           whileHover={{ scale: 1.1 }}
                         />
                         <div className="flex-1">
-                          <h4 className="font-bold text-gray-900 text-lg">{app.studentName}</h4>
+                          <h4 className="font-bold text-gray-900 text-lg">
+                            {app.studentName}
+                          </h4>
                           <p className="text-sm text-gray-600">{app.major}</p>
                         </div>
                         {getStatusBadge(app.status)}
                       </div>
-                      
+
                       <div className="flex items-center justify-between text-xs text-gray-500">
                         <span className="flex items-center gap-1">
                           <FaCalendarAlt />
-                          {new Date(app.submittedAt).toLocaleDateString('vi-VN')}
+                          {new Date(app.submittedAt).toLocaleDateString(
+                            "vi-VN"
+                          )}
                         </span>
                         <span className="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-semibold">
                           <FaStar className="text-yellow-500" />
                           GPA: {app.gpa}
                         </span>
                       </div>
-                      
+
                       <div className="flex gap-2 mt-3">
                         <motion.button
                           className="flex-1 py-2 bg-blue-100 text-blue-600 rounded-xl text-xs font-semibold hover:bg-blue-200 transition-all duration-200 flex items-center justify-center gap-1"
@@ -658,10 +743,13 @@ const TongQuan = () => {
                   </motion.div>
                 ))}
               </div>
-              
+
               <motion.button
                 className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-bold text-lg shadow-xl"
-                whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+                }}
                 whileTap={{ scale: 0.98 }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -677,14 +765,14 @@ const TongQuan = () => {
         </div>
 
         {/* Quick Actions */}
-        <motion.div 
+        <motion.div
           className="mt-12 bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 relative overflow-hidden"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, type: "spring", stiffness: 100 }}
         >
           <div className="relative z-10">
-            <motion.h3 
+            <motion.h3
               className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -695,13 +783,37 @@ const TongQuan = () => {
               </div>
               Thao Tác Nhanh
             </motion.h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { icon: FaFileAlt, title: "Xử lý hồ sơ", subtitle: "Duyệt hồ sơ mới", color: "from-blue-500 to-cyan-400", count: "89 hồ sơ" },
-                { icon: FaUsers, title: "Quản lý sinh viên", subtitle: "Thông tin sinh viên", color: "from-green-500 to-emerald-400", count: "1,089 sinh viên" },
-                { icon: FaQuestionCircle, title: "Quản lý FAQ", subtitle: "Câu hỏi thường gặp", color: "from-purple-500 to-pink-400", count: "25 FAQ" },
-                { icon: FaChartBar, title: "Báo cáo", subtitle: "Thống kê chi tiết", color: "from-orange-500 to-yellow-400", count: "12 báo cáo" }
+                {
+                  icon: FaFileAlt,
+                  title: "Xử lý hồ sơ",
+                  subtitle: "Duyệt hồ sơ mới",
+                  color: "from-blue-500 to-cyan-400",
+                  count: "89 hồ sơ",
+                },
+                {
+                  icon: FaUsers,
+                  title: "Quản lý sinh viên",
+                  subtitle: "Thông tin sinh viên",
+                  color: "from-green-500 to-emerald-400",
+                  count: "1,089 sinh viên",
+                },
+                {
+                  icon: FaQuestionCircle,
+                  title: "Quản lý FAQ",
+                  subtitle: "Câu hỏi thường gặp",
+                  color: "from-purple-500 to-pink-400",
+                  count: "25 FAQ",
+                },
+                {
+                  icon: FaChartBar,
+                  title: "Báo cáo",
+                  subtitle: "Thống kê chi tiết",
+                  color: "from-orange-500 to-yellow-400",
+                  count: "12 báo cáo",
+                },
               ].map((action, index) => (
                 <motion.button
                   key={action.title}
@@ -721,8 +833,12 @@ const TongQuan = () => {
                       <action.icon className="text-xl" />
                     </motion.div>
                     <div className="text-left flex-1">
-                      <div className="font-bold text-lg mb-1">{action.title}</div>
-                      <div className="text-sm opacity-90 mb-2">{action.subtitle}</div>
+                      <div className="font-bold text-lg mb-1">
+                        {action.title}
+                      </div>
+                      <div className="text-sm opacity-90 mb-2">
+                        {action.subtitle}
+                      </div>
                       <div className="text-xs bg-white/20 px-2 py-1 rounded-full inline-block">
                         {action.count}
                       </div>
@@ -738,4 +854,4 @@ const TongQuan = () => {
   );
 };
 
-export default TongQuan; 
+export default TongQuan;
