@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   FaGraduationCap,
   FaTrophy,
@@ -18,6 +19,7 @@ import StructuredData, {
 } from "../components/StructuredData";
 import OptimizedImage from "../components/OptimizedImage";
 import Button from "../components/ui/Button";
+import VideoModal from "../components/VideoModal";
 
 const bannerUrl =
   "https://file1.hutech.edu.vn/file/editor/homepage1/792764-xep-hang-scimago-2025-713x475.jpg";
@@ -51,6 +53,17 @@ const itemAnimation = {
 };
 
 function TrangChu() {
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const videoUrl = "https://youtu.be/ayTTBNBtNpk?si=7byB99-BkTZPRP0n";
+
+  const handleVideoClick = () => {
+    setIsVideoModalOpen(true);
+  };
+
+  const handleCloseVideoModal = () => {
+    setIsVideoModalOpen(false);
+  };
+
   return (
     <>
       <SEO
@@ -146,6 +159,8 @@ function TrangChu() {
                 transition={{ delay: 1.1 }}
               >
                 <Button
+                  as={Link}
+                  to="/dang-ky-xet-tuyen"
                   variant="gradient"
                   size="lg"
                   className="bg-gradient-to-r from-yellow-400 to-yellow-300 hover:from-yellow-300 hover:to-yellow-200 text-blue-900 font-bold text-lg px-8 py-4"
@@ -162,6 +177,7 @@ function TrangChu() {
                   className="border-2 border-white/30 text-white hover:bg-white/10 backdrop-blur-sm font-bold text-lg px-8 py-4"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={handleVideoClick}
                 >
                   <FaPlay className="mr-2" />
                   Xem video giới thiệu
@@ -262,7 +278,8 @@ function TrangChu() {
                 <motion.div
                   key={i}
                   variants={itemAnimation}
-                  className="group bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-6 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+                  className="group bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-6 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 cursor-pointer"
+                  onClick={() => window.open(item.link, '_blank')}
                 >
                   <div className="relative overflow-hidden rounded-2xl mb-6">
                     <OptimizedImage
@@ -288,6 +305,10 @@ function TrangChu() {
                     className="group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-300"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(item.link, '_blank');
+                    }}
                   >
                     Xem chi tiết
                     <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
@@ -372,6 +393,8 @@ function TrangChu() {
                     </p>
 
                     <Button
+                      as={Link}
+                      to={action.link}
                       variant="outline"
                       size="lg"
                       className="border-2 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-semibold"
@@ -388,6 +411,13 @@ function TrangChu() {
           </div>
         </motion.section>
       </div>
+
+      {/* Video Modal */}
+      <VideoModal
+        isOpen={isVideoModalOpen}
+        onClose={handleCloseVideoModal}
+        videoUrl={videoUrl}
+      />
     </>
   );
 }

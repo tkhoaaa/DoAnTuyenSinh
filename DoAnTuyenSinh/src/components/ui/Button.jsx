@@ -11,6 +11,7 @@ const Button = React.forwardRef(({
   disabled = false,
   onClick,
   type = "button",
+  as: Component = "button",
   ...props
 }, ref) => {
   const baseClasses = "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background";
@@ -54,20 +55,23 @@ const Button = React.forwardRef(({
     </>
   );
 
+  // Create motion component from the polymorphic component
+  const MotionComponent = motion(Component);
+
   return (
-    <motion.button
+    <MotionComponent
       ref={ref}
       className={classes}
       disabled={disabled || loading}
       onClick={onClick}
-      type={type}
+      type={Component === "button" ? type : undefined}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.1 }}
       {...props}
     >
       {buttonContent}
-    </motion.button>
+    </MotionComponent>
   );
 });
 

@@ -335,8 +335,10 @@ DoAnTuyenSinh/
 │   │   ├── SEO.jsx               # SEO component
 │   │   ├── StructuredData.jsx    # Schema markup
 │   │   ├── OptimizedImage.jsx    # Optimized images
+│   │   ├── ScrollToTop.jsx       # Auto scroll to top khi chuyển route
+│   │   ├── VideoModal.jsx        # YouTube video modal với animations
 │   │   └── 📁 ui/                # Reusable UI components
-│   │       ├── Button.jsx        # Button component với variants
+│   │       ├── Button.jsx        # Polymorphic button với variants và as prop
 │   │       └── Input.jsx         # Input component với validation
 │   │
 │   ├── 📁 pages/                 # Public pages
@@ -524,6 +526,9 @@ CREATE TABLE hoso (
 - ✅ SEO optimized với meta tags
 - ✅ Responsive design cho all devices
 - ✅ Modern UI/UX với animations
+- ✅ **Video giới thiệu HUTECH** trong modal với YouTube player
+- ✅ **Auto scroll to top** khi chuyển trang
+- ✅ **Navigation links** tích hợp với React Router
 
 ## 🎯 Phương thức xét tuyển
 
@@ -645,13 +650,18 @@ CREATE TABLE nganh_khoi_thi (
 - **Form Validation**: Real-time feedback với animations
 - **Modal Dialogs**: Smooth open/close transitions
 - **Dropdown Menus**: Animated dropdowns với backdrop
+- **Video Modal**: YouTube player integration với backdrop blur
+- **Navigation**: Polymorphic routing với React Router DOM
+- **Scroll Management**: Auto scroll to top khi chuyển route
 
 ### 🎨 Component Library
 
-- **Button Component**: Variants, icons, loading states
+- **Button Component**: Polymorphic variants, icons, loading states, `as` prop support
 - **Input Component**: Validation, icons, error states
 - **Card Components**: Gradient backgrounds, hover effects
 - **Navigation**: Animated headers, mobile menus
+- **VideoModal Component**: YouTube integration, backdrop blur, responsive player
+- **ScrollToTop Component**: Route-based auto scroll với smooth behavior
 
 ## 🔐 Hệ thống Authentication
 
@@ -730,14 +740,16 @@ GET  /health                      # Kiểm tra server
 
 ### 🔧 Core Components
 
-- **`App.jsx`**: Main router với public/admin routes
+- **`App.jsx`**: Main router với public/admin routes và ScrollToTop integration
 - **`UserContext.jsx`**: Global authentication state
 - **`ThanhHeader.jsx`**: Modern navigation header với animations
 - **`ChanTrang.jsx`**: Footer với social links và contact info
+- **`ScrollToTop.jsx`**: Auto scroll component cho route changes
+- **`VideoModal.jsx`**: YouTube video player modal với animations
 
 ### 📄 Page Components
 
-- **`TrangChu.jsx`**: Homepage với hero section và animations
+- **`TrangChu.jsx`**: Homepage với hero section, video modal integration, và navigation links
 - **`DangKyXetTuyen.jsx`**: Multi-step application form với validation
 - **`DangKyTuVan.jsx`**: Consultation registration với tabbed interface
 - **`DangKyHocBong.jsx`**: Scholarship application với modern form
@@ -755,11 +767,12 @@ GET  /health                      # Kiểm tra server
 
 ### 🎨 UI Components
 
-- **`Button.jsx`**: Reusable button với variants, icons, loading states
+- **`Button.jsx`**: Polymorphic button với variants, icons, loading states, và `as` prop
 - **`Input.jsx`**: Input component với validation, icons, error states
 - **`OptimizedImage.jsx`**: Image component với lazy loading
 - **`SEO.jsx`**: SEO component với meta tags
 - **`StructuredData.jsx`**: Schema markup cho search engines
+- **`VideoModal.jsx`**: YouTube video modal với backdrop blur và responsive design
 
 ## 🏛️ Admin Dashboard
 
@@ -920,6 +933,100 @@ users (1) ←→ (n) scholarships
 nganh (1) ←→ (n) applications
 nganh (n) ←→ (n) khoi_thi_thpt (through nganh_khoi_thi)
 khoi_thi_thpt (1) ←→ (n) nganh_khoi_thi
+```
+
+## 🎬 Video Integration & Navigation
+
+### 📺 Video Modal Component
+
+**Video giới thiệu HUTECH chính thức**:
+- **URL**: https://youtu.be/ayTTBNBtNpk?si=7byB99-BkTZPRP0n
+- **Component**: `VideoModal.jsx`
+- **Integration**: Button "Xem video giới thiệu" trên homepage
+
+#### Features:
+- ✅ **YouTube Embed**: Auto-play video trong modal
+- ✅ **Responsive Design**: Responsive player cho all devices
+- ✅ **Backdrop Blur**: Glassmorphism effect
+- ✅ **Smooth Animations**: Framer Motion transitions
+- ✅ **Click Outside**: Close modal khi click backdrop
+- ✅ **Escape Key**: Close modal với keyboard shortcut
+
+#### Implementation:
+```jsx
+// Usage trong TrangChu.jsx
+const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+const videoUrl = "https://youtu.be/ayTTBNBtNpk?si=7byB99-BkTZPRP0n";
+
+<Button onClick={() => setIsVideoModalOpen(true)}>
+  <FaPlay className="mr-2" />
+  Xem video giới thiệu
+</Button>
+
+<VideoModal
+  isOpen={isVideoModalOpen}
+  onClose={() => setIsVideoModalOpen(false)}
+  videoUrl={videoUrl}
+/>
+```
+
+### 🧭 Enhanced Navigation
+
+#### Achievement Cards Navigation:
+- **Card clickable**: Click vào card → Mở link trong tab mới
+- **Button clickable**: Click button → Navigation với React Router
+- **Links**: 
+  - Thông tin tuyển sinh → `/thong-tin-tuyen-sinh`
+  - Đăng ký xét tuyển → `/dang-ky-xet-tuyen`
+  - FAQ → `/faq`
+
+#### Polymorphic Button Component:
+```jsx
+// Button hỗ trợ as prop để render khác nhau
+<Button as={Link} to="/dang-ky-xet-tuyen">
+  Đăng ký xét tuyển ngay
+</Button>
+
+// Hoặc external link
+<Button as="a" href="https://external-link.com" target="_blank">
+  Xem chi tiết
+</Button>
+```
+
+### 📜 ScrollToTop Component
+
+#### Auto Scroll Management:
+- ✅ **Route Changes**: Tự động scroll lên đầu trang khi chuyển route
+- ✅ **Smooth Behavior**: Smooth scrolling effect
+- ✅ **Performance**: Lightweight với useEffect hook
+
+#### Implementation:
+```jsx
+// ScrollToTop.jsx
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+  }, [pathname]);
+
+  return null;
+};
+
+// Integration trong App.jsx
+<BrowserRouter>
+  <ScrollToTop />
+  <Routes>
+    {/* Routes */}
+  </Routes>
+</BrowserRouter>
 ```
 
 ## 🎨 Favicon & Branding
@@ -1411,6 +1518,9 @@ pm2 save
 - ✅ **Responsive design** cho mọi thiết bị
 - ✅ **SEO optimized** với meta tags và structured data
 - ✅ **Production ready** với error handling và validation
+- ✅ **Video giới thiệu HUTECH** với YouTube modal integration
+- ✅ **Smart navigation** với polymorphic Button component
+- ✅ **Auto scroll management** khi chuyển route
 
 ### 🚀 Deployment:
 - **Frontend**: ✅ [Vercel](https://do-an-tuyen-sinh.vercel.app/) - Live Production

@@ -8,6 +8,7 @@ import TraCuuKetQua from "./pages/TraCuuKetQua";
 import LienHe from "./pages/LienHe";
 import ThanhHeader from "./components/ThanhHeader";
 import ChanTrang from "./components/ChanTrang";
+import ScrollToTop from "./components/ScrollToTop";
 import DangNhap from "./accounts/DangNhap";
 import DangKyTaiKhoan from "./accounts/DangKyTaiKhoan";
 import DangKyTaiKhoanAdmin from "./accounts/DangKyTaiKhoanAdmin";
@@ -28,6 +29,7 @@ function App() {
     <HelmetProvider>
       <UserContextProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             {/* Admin Routes */}
             <Route path="/admin/tong-quan" element={
