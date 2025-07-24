@@ -14,10 +14,20 @@ function DangNhap() {
   const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { login, user, role } = useContext(UserContext);
+  const { login, loginDemo, user, role } = useContext(UserContext);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleDemoLogin = () => {
+    setError("");
+    setSuccess("");
+    loginDemo();
+    setSuccess("Đăng nhập Demo thành công!");
+    setTimeout(() => {
+      navigate("/admin");
+    }, 1000);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -199,7 +209,7 @@ function DangNhap() {
 
           {/* Submit button */}
           <motion.div
-            className="mt-8"
+            className="mt-8 space-y-4"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.6 }}
@@ -214,6 +224,30 @@ function DangNhap() {
             >
               {loading ? "Đang xử lý..." : "Đăng nhập"}
             </Button>
+
+            {/* Demo Login Button */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-gray-500">hoặc</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={handleDemoLogin}
+              disabled={loading}
+              className="w-full text-lg font-semibold border-amber-300 text-amber-600 hover:bg-amber-50"
+            >
+              🎯 Xem Demo Admin Dashboard
+            </Button>
+            <p className="text-xs text-center text-gray-500 mt-2">
+              * Demo mode dành cho Vercel deployment (không cần backend)
+            </p>
           </motion.div>
 
           {/* Links */}

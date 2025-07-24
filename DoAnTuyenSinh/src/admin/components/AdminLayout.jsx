@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { UserContext } from "../../accounts/UserContext";
 import {
   FaBars,
   FaTimes,
@@ -29,6 +30,7 @@ import {
 import { Link, useLocation } from "react-router-dom";
 
 const AdminLayout = ({ children }) => {
+  const { isDemoMode } = useContext(UserContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -285,6 +287,26 @@ const AdminLayout = ({ children }) => {
         ))}
       </div>
 
+      {/* Demo Mode Banner */}
+      {isDemoMode && (
+        <motion.div
+          className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-400 to-orange-500 text-white py-2 px-4 text-center shadow-lg"
+          initial={{ y: -100 }}
+          animate={{ y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex items-center justify-center gap-2 text-sm font-semibold">
+            🎯 <span>DEMO MODE - Dữ liệu mẫu cho Vercel deployment</span>
+            <div className="hidden md:flex items-center gap-1 ml-4 text-xs opacity-80">
+              <span>|</span>
+              <span>Backend không cần thiết</span>
+              <span>|</span>
+              <span>Tất cả tính năng hoạt động bình thường</span>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {sidebarOpen && (
@@ -298,7 +320,7 @@ const AdminLayout = ({ children }) => {
         )}
       </AnimatePresence>
 
-      <div className="flex min-h-screen">
+      <div className={`flex min-h-screen ${isDemoMode ? 'pt-10' : ''}`}>
         {/* Sidebar */}
         <motion.aside
           className={`fixed inset-y-0 left-0 z-50 w-80 bg-white/90 backdrop-blur-2xl shadow-2xl border-r border-white/30 transform transition-all duration-500 ease-in-out lg:translate-x-0 lg:relative lg:z-10 ${

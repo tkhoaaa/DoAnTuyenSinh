@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   motion,
   AnimatePresence,
@@ -6,6 +6,8 @@ import {
   useTransform,
 } from "framer-motion";
 import axios from "axios";
+import { UserContext } from "../../accounts/UserContext";
+import { DEMO_DASHBOARD_STATS } from "../../config/demoData";
 import {
   FaUsers,
   FaFileAlt,
@@ -36,6 +38,7 @@ import {
 } from "react-icons/fa";
 
 const TongQuan = () => {
+  const { isDemoMode } = useContext(UserContext);
   const [stats, setStats] = useState({
     totalApplications: 0,
     pendingApplications: 0,
@@ -65,6 +68,25 @@ const TongQuan = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+
+      if (isDemoMode) {
+        // Use demo data when in demo mode
+        console.log("Using demo data for dashboard");
+        setStats({
+          totalApplications: DEMO_DASHBOARD_STATS.total_applications,
+          pendingApplications: DEMO_DASHBOARD_STATS.pending_applications,
+          approvedApplications: DEMO_DASHBOARD_STATS.approved_applications,
+          rejectedApplications: DEMO_DASHBOARD_STATS.rejected_applications,
+          totalStudents: DEMO_DASHBOARD_STATS.total_users,
+          totalMajors: DEMO_DASHBOARD_STATS.total_majors,
+          averageGPA: 7.8,
+          completionRate: 85,
+        });
+        setRecentApplications(DEMO_DASHBOARD_STATS.recent_applications);
+        setTopMajors(DEMO_DASHBOARD_STATS.top_majors);
+        setError("");
+        return;
+      }
 
       // Fetch all dashboard data in parallel
       const [statsResponse, recentResponse, majorsResponse] = await Promise.all(

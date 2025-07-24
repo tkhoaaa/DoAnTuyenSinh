@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from "react";
+import { DEMO_USER } from "../config/demoData";
 
 export const UserContext = createContext();
 
@@ -9,9 +10,18 @@ export function UserContextProvider({ children }) {
   const [username, setUsername] = useState(
     localStorage.getItem("username") || ""
   );
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
-    if (userId) {
+    const demoMode = localStorage.getItem("demoMode");
+    
+    if (demoMode === "true") {
+      setIsDemoMode(true);
+      setUser(DEMO_USER);
+      setRole("admin");
+      setUserId(DEMO_USER.id);
+      setUsername(DEMO_USER.username);
+    } else if (userId) {
       const storedRole = localStorage.getItem("role");
       const storedUsername = localStorage.getItem("username");
       const storedUserData = localStorage.getItem("userData");
@@ -37,6 +47,7 @@ export function UserContextProvider({ children }) {
     // Xử lý trường hợp username undefined/null
     const validUsername = username || "Người dùng";
 
+    setIsDemoMode(false);
     setUserId(id);
     setRole(role);
     setUsername(validUsername);
@@ -47,6 +58,7 @@ export function UserContextProvider({ children }) {
     localStorage.setItem("role", role);
     localStorage.setItem("username", validUsername);
     if (userData) localStorage.setItem("userData", JSON.stringify(userData));
+    localStorage.removeItem("demoMode");
 
     console.log("Login completed. New state:", {
       id,
@@ -55,21 +67,43 @@ export function UserContextProvider({ children }) {
     });
   };
 
+  const loginDemo = () => {
+    console.log("Demo login called");
+
+    setIsDemoMode(true);
+    setUserId(DEMO_USER.id);
+    setRole("admin");
+    setUsername(DEMO_USER.username);
+    setUser(DEMO_USER);
+
+    // Lưu demo mode vào localStorage
+    localStorage.setItem("demoMode", "true");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("role");
+    localStorage.removeItem("username");
+    localStorage.removeItem("userData");
+
+    console.log("Demo login completed");
+  };
+
   const logout = () => {
     console.log("Logout called");
 
     setUserId("");
     setRole(null);
     setUsername("");
+    setIsDemoMode(false);
+    setUser(null);
+    
     localStorage.removeItem("userId");
     localStorage.removeItem("role");
     localStorage.removeItem("username");
     localStorage.removeItem("userData");
-    setUser(null);
+    localStorage.removeItem("demoMode");
   };
 
   return (
-    <UserContext.Provider value={{ user, role, username, login, logout }}>
+    <UserContext.Provider value={{ user, role, username, login, loginDemo, logout, isDemoMode }}>
       {children}
     </UserContext.Provider>
   );

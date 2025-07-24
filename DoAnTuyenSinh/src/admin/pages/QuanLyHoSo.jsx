@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import { UserContext } from '../../accounts/UserContext';
+import { DEMO_APPLICATIONS, DEMO_MAJORS } from '../../config/demoData';
 import {
   FaSearch,
   FaFilter,
@@ -23,6 +25,7 @@ import {
 } from 'react-icons/fa';
 
 const QuanLyHoSo = () => {
+  const { isDemoMode } = useContext(UserContext);
   const [applications, setApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -62,6 +65,35 @@ const QuanLyHoSo = () => {
     try {
       setLoading(true);
       setError('');
+
+      if (isDemoMode) {
+        // Use demo data when in demo mode
+        console.log("Using demo data for applications");
+        let filteredData = [...DEMO_APPLICATIONS];
+
+        // Apply filters to demo data
+        if (statusFilter !== 'all') {
+          filteredData = filteredData.filter(app => app.status === statusFilter);
+        }
+
+        if (majorFilter !== 'all') {
+          filteredData = filteredData.filter(app => app.major_name === majorFilter);
+        }
+
+        if (debouncedSearchTerm) {
+          const searchLower = debouncedSearchTerm.toLowerCase();
+          filteredData = filteredData.filter(app => 
+            app.ho_ten.toLowerCase().includes(searchLower) ||
+            app.email.toLowerCase().includes(searchLower) ||
+            app.application_code.toLowerCase().includes(searchLower)
+          );
+        }
+
+        setApplications(filteredData);
+        setError('');
+        return;
+      }
+
       const response = await axios.get('http://localhost:3001/api/admin/applications', {
         params: {
           status: statusFilter !== 'all' ? statusFilter : undefined,
@@ -86,6 +118,13 @@ const QuanLyHoSo = () => {
 
   const fetchMajors = async () => {
     try {
+      if (isDemoMode) {
+        // Use demo data when in demo mode
+        console.log("Using demo data for majors");
+        setMajors(DEMO_MAJORS.map(major => ({ name: major.ten_nganh })));
+        return;
+      }
+
       const response = await axios.get('http://localhost:3001/api/auth/majors');
       if (response.data.success) {
         setMajors(response.data.data);
@@ -104,6 +143,24 @@ const QuanLyHoSo = () => {
 
   const handleStatusChange = async (applicationId, newStatus) => {
     try {
+      if (isDemoMode) {
+        // Update local state in demo mode
+        setApplications(prev => 
+          prev.map(app => 
+            app.id === applicationId 
+              ? { ...app, status: newStatus }
+              : app
+          )
+        );
+        
+        // Update selected application if it's the same one
+        if (selectedApplication && selectedApplication.id === applicationId) {
+          setSelectedApplication(prev => ({ ...prev, status: newStatus }));
+        }
+        alert(`Trạng thái hồ sơ đã được cập nhật (Demo mode)`);
+        return;
+      }
+
       const response = await axios.put(`http://localhost:3001/api/admin/applications/${applicationId}/status`, {
         status: newStatus
       });

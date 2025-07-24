@@ -20,6 +20,7 @@ Một hệ thống quản lý tuyển sinh trực tuyến hoàn chỉnh cho trư
 - [🎨 Frontend Components](#-frontend-components)
 - [🏛️ Admin Dashboard](#️-admin-dashboard)
 - [🗄️ Database Schema](#️-database-schema)
+- [🎯 Demo Mode - Admin Dashboard cho Vercel](#-demo-mode---admin-dashboard-cho-vercel)
 - [🎨 Favicon & Branding](#-favicon--branding)
 - [🛠️ Troubleshooting](#️-troubleshooting)
 - [📈 Migration Guide](#-migration-guide)
@@ -352,7 +353,9 @@ DoAnTuyenSinh/
 │   │   └── LienHe.jsx            # Contact page với form
 │   │
 │   ├── 📁 config/
-│   │   └── siteConfig.js         # Site configuration
+│   │   ├── siteConfig.js         # Site configuration
+│   │   ├── apiConfig.js          # API configuration cho dev/prod
+│   │   └── demoData.js           # Mock data cho Demo Mode
 │   ├── 📁 utils/
 │   │   └── apiClient.js          # API client functions
 │   ├── App.jsx                   # Main app component
@@ -517,6 +520,7 @@ CREATE TABLE hoso (
 - ✅ Thống kê báo cáo với charts
 - ✅ Role-based access control
 - ✅ Modern admin layout với sidebar
+- ✅ **Demo Mode** cho Vercel deployment (không cần backend)
 
 ### 🌐 Cho công chúng
 
@@ -741,7 +745,7 @@ GET  /health                      # Kiểm tra server
 ### 🔧 Core Components
 
 - **`App.jsx`**: Main router với public/admin routes và ScrollToTop integration
-- **`UserContext.jsx`**: Global authentication state
+- **`UserContext.jsx`**: Global authentication state với Demo Mode support
 - **`ThanhHeader.jsx`**: Modern navigation header với animations
 - **`ChanTrang.jsx`**: Footer với social links và contact info
 - **`ScrollToTop.jsx`**: Auto scroll component cho route changes
@@ -778,15 +782,16 @@ GET  /health                      # Kiểm tra server
 
 ### 🎨 Design Pattern: Modern Sidebar Layout
 
-- **`AdminLayout.jsx`**: Main layout wrapper với responsive sidebar
+- **`AdminLayout.jsx`**: Main layout wrapper với responsive sidebar và Demo Mode banner
 - **Role protection**: Tự động redirect nếu không phải admin
 - **Responsive sidebar**: Collapsible trên mobile với animations
 - **Notification system**: Dropdown notifications với indicators
+- **Demo Mode banner**: Top warning khi ở Demo Mode
 
 ### 📊 Dashboard Pages
 
-- **`TongQuan.jsx`**: Overview với statistics cards và charts
-- **`QuanLyHoSo.jsx`**: Application management với filters, search, và modals
+- **`TongQuan.jsx`**: Overview với statistics cards, charts, và Demo Mode support
+- **`QuanLyHoSo.jsx`**: Application management với filters, search, modals, và Demo Mode
 - **`QuanLyFAQ.jsx`**: FAQ CRUD interface với categories và search
 
 ### 🛡️ Security Features
@@ -1028,6 +1033,170 @@ const ScrollToTop = () => {
   </Routes>
 </BrowserRouter>
 ```
+
+## 🎯 Demo Mode - Admin Dashboard cho Vercel
+
+### 🚀 Giải pháp cho Backend không deploy được
+
+Vì **backend Node.js không thể deploy lên Vercel** (chỉ hỗ trợ serverless functions), chúng tôi đã tạo **Demo Mode** hoàn chỉnh để showcase admin dashboard với dữ liệu mẫu thực tế.
+
+### 🎯 Cách sử dụng Demo Mode
+
+#### Bước 1: Truy cập trang đăng nhập
+```
+URL: https://do-an-tuyen-sinh.vercel.app/accounts/dang-nhap
+```
+
+#### Bước 2: Click Demo button
+- **Vị trí**: Dưới form đăng nhập thông thường
+- **Button**: "🎯 Xem Demo Admin Dashboard" (màu vàng cam)
+- **Không cần**: Username/password
+
+#### Bước 3: Tự động vào Admin Dashboard
+- **Chuyển hướng**: Sau 1 giây → `/admin`
+- **Banner Demo**: Hiển thị thông báo Demo Mode
+- **Full Access**: Tất cả tính năng admin hoạt động
+
+### 📊 Dữ liệu Demo hoàn chỉnh
+
+#### **Statistics Dashboard**
+```javascript
+- Tổng hồ sơ: 1,247
+- Chờ duyệt: 89 | Đã duyệt: 876 | Từ chối: 282
+- Tổng users: 1,568 | Tổng ngành: 45
+- GPA trung bình: 7.8 | Tỷ lệ hoàn thành: 85%
+```
+
+#### **Applications Management (8 hồ sơ mẫu)**
+```javascript
+1. Nguyễn Văn An - CNTT - Học bạ (GPA: 8.5, Pending)
+2. Trần Thị Bình - Kinh tế - Thi THPT A00 (GPA: 7.8, Approved)
+3. Lê Minh Châu - Thiết kế - Đánh giá năng lực 650đ (Rejected)
+4. Phạm Quốc Duy - QTKD - Học bạ (GPA: 7.2, Pending)
+5. Võ Thị Hương - Kế toán - Thi THPT D01 (GPA: 8.1, Approved)
+// ... và 3 hồ sơ khác với đầy đủ thông tin
+```
+
+#### **Majors Data (8 ngành học)**
+```javascript
+- Công nghệ Thông tin (CNTT) - 345 hồ sơ
+- Kinh tế (KT) - 287 hồ sơ  
+- Quản trị Kinh doanh (QTKD) - 234 hồ sơ
+- Kế toán (KeToan) - 198 hồ sơ
+- Thiết kế Đồ họa (TKDH) - 156 hồ sơ
+// ... và các ngành khác
+```
+
+### ⚡ Tính năng Demo hoạt động
+
+#### **🎯 Dashboard Analytics**
+- ✅ **Statistics Cards**: Animated với real data
+- ✅ **Recent Applications**: 5 hồ sơ gần đây với timeline
+- ✅ **Top Majors**: Charts và rankings  
+- ✅ **Charts & Graphs**: Data visualization
+
+#### **📄 Application Management**  
+- ✅ **Full CRUD**: View, edit, update status
+- ✅ **Advanced Filters**: Status, Major, Search
+- ✅ **Real-time Search**: Debounced với 500ms
+- ✅ **Status Updates**: Pending → Approved/Rejected
+- ✅ **Pagination**: Client-side pagination
+- ✅ **Detail Modal**: Xem chi tiết hồ sơ
+
+#### **🎨 UI/UX Features**
+- ✅ **Demo Banner**: Top notification với warning
+- ✅ **Smooth Animations**: Framer Motion transitions
+- ✅ **Responsive Design**: Mobile & desktop perfect
+- ✅ **Loading States**: Skeleton loading với animations
+- ✅ **Error Handling**: Graceful error messages
+
+### 🔧 Technical Implementation
+
+#### **Files được tạo/cập nhật:**
+```javascript
+// Mock Data
+├── src/config/demoData.js       // Comprehensive mock data
+
+// Authentication 
+├── src/accounts/UserContext.jsx // Demo mode support
+├── src/accounts/DangNhap.jsx    // Demo login button
+
+// Admin Components
+├── src/admin/pages/TongQuan.jsx      // Demo dashboard
+├── src/admin/pages/QuanLyHoSo.jsx    // Demo applications  
+├── src/admin/components/AdminLayout.jsx // Demo banner
+```
+
+#### **Demo Mode Logic:**
+```javascript
+// UserContext.jsx
+const [isDemoMode, setIsDemoMode] = useState(false);
+
+const loginDemo = () => {
+  setIsDemoMode(true);
+  setUser(DEMO_USER);
+  localStorage.setItem("demoMode", "true");
+};
+
+// Admin pages check demo mode
+if (isDemoMode) {
+  // Use DEMO_DATA instead of API calls
+  setApplications(DEMO_APPLICATIONS);
+  setStats(DEMO_DASHBOARD_STATS);
+}
+```
+
+#### **Demo Data Structure:**
+```javascript
+// demoData.js
+export const DEMO_USER = {
+  id: 999,
+  username: "demo_admin", 
+  email: "demo@hutech.edu.vn",
+  role: "admin"
+};
+
+export const DEMO_APPLICATIONS = [
+  // 8 realistic applications với đầy đủ fields
+];
+
+export const DEMO_DASHBOARD_STATS = {
+  // Real statistics data
+};
+```
+
+### 🎯 Showcase Value
+
+#### **✅ Hoàn hảo cho:**
+- **Portfolio**: Demonstrate full-stack capabilities
+- **Interviews**: Show working admin dashboard
+- **Clients**: Preview admin features without setup
+- **Presentations**: No dependency on backend uptime
+
+#### **✅ Production-Ready Demo:**
+- **Fast Loading**: No API delays
+- **Always Available**: No server dependencies  
+- **Full Functional**: All interactions work
+- **Professional UI**: Polished admin interface
+
+### 🔗 Demo URLs
+
+#### **Public URLs:**
+```
+🌐 Homepage: https://do-an-tuyen-sinh.vercel.app/
+🔐 Demo Login: https://do-an-tuyen-sinh.vercel.app/accounts/dang-nhap
+👑 Admin Demo: https://do-an-tuyen-sinh.vercel.app/admin (after demo login)
+```
+
+#### **Features Showcase:**
+```
+📊 Dashboard: Statistics, charts, analytics
+📄 Applications: Full management với filters
+🎯 Demo Banner: Clear demo mode indication
+🎨 Modern UI: Glassmorphism, animations, responsive
+```
+
+---
 
 ## 🎨 Favicon & Branding
 
@@ -1521,9 +1690,11 @@ pm2 save
 - ✅ **Video giới thiệu HUTECH** với YouTube modal integration
 - ✅ **Smart navigation** với polymorphic Button component
 - ✅ **Auto scroll management** khi chuyển route
+- ✅ **Demo Mode** cho admin dashboard trên Vercel (không cần backend)
 
 ### 🚀 Deployment:
 - **Frontend**: ✅ [Vercel](https://do-an-tuyen-sinh.vercel.app/) - Live Production
+- **Admin Demo**: ✅ [Demo Mode](https://do-an-tuyen-sinh.vercel.app/accounts/dang-nhap) - Full admin showcase
 - **Backend**: ⚠️ Local Development (localhost:3001)
 - **Database**: MySQL 8.0 Local
 - **CORS**: Configured for both local and production domains
@@ -1534,6 +1705,8 @@ pm2 save
 - Batch operations cho admin
 - Mobile app với React Native
 - AI-powered admission recommendations
+- Demo Mode cho tất cả user features
+- Serverless backend với Vercel Functions
 
 ---
 
