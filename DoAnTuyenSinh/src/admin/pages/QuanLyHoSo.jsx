@@ -38,8 +38,28 @@ const QuanLyHoSo = () => {
   const [error, setError] = useState('');
   const [majors, setMajors] = useState([]);
 
+  // Debug logging
+  console.log("QuanLyHoSo render - isDemoMode:", isDemoMode);
+  console.log("QuanLyHoSo render - applications length:", applications.length);
+  console.log("QuanLyHoSo render - DEMO_APPLICATIONS length:", DEMO_APPLICATIONS?.length);
+  console.log("QuanLyHoSo render - DEMO_APPLICATIONS sample:", DEMO_APPLICATIONS?.[0]);
+  console.log("QuanLyHoSo render - loading:", loading);
+  console.log("QuanLyHoSo render - error:", error);
+
+  // Initial load
   useEffect(() => {
+    console.log("Initial useEffect - isDemoMode:", isDemoMode);
     fetchMajors();
+    fetchApplications();
+  }, []);
+
+  // Reload when demo mode changes
+  useEffect(() => {
+    console.log("Demo mode changed useEffect - isDemoMode:", isDemoMode);
+    if (isDemoMode !== undefined) {
+      fetchMajors();
+      fetchApplications();
+    }
   }, [isDemoMode]);
 
   // Debounce search term
@@ -53,8 +73,9 @@ const QuanLyHoSo = () => {
 
   // Fetch applications when filters change
   useEffect(() => {
+    console.log("Filter change useEffect - isDemoMode:", isDemoMode);
     fetchApplications();
-  }, [statusFilter, majorFilter, debouncedSearchTerm, isDemoMode]);
+  }, [statusFilter, majorFilter, debouncedSearchTerm]);
 
   // Set filtered applications from API response
   useEffect(() => {
@@ -67,13 +88,24 @@ const QuanLyHoSo = () => {
       setError('');
       
       console.log("fetchApplications called with isDemoMode:", isDemoMode);
+      console.log("localStorage demoMode:", localStorage.getItem("demoMode"));
+      
+      // Check both isDemoMode from context and localStorage as fallback
+      const isDemo = isDemoMode || localStorage.getItem("demoMode") === "true";
+      console.log("Using demo mode (combined check):", isDemo);
 
-      if (isDemoMode) {
+      if (isDemo) {
         // Use demo data when in demo mode
-        console.log("Using demo data for applications", DEMO_APPLICATIONS.length, "items");
+        console.log("Using demo data for applications", DEMO_APPLICATIONS?.length || 0, "items");
+        
+        if (!DEMO_APPLICATIONS || DEMO_APPLICATIONS.length === 0) {
+          console.error("DEMO_APPLICATIONS is empty or undefined!");
+          setError("Demo data không có sẵn. Vui lòng thử lại.");
+          return;
+        }
         
         // Add small delay to prevent race conditions
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 200));
         
         let filteredData = [...DEMO_APPLICATIONS];
 
@@ -95,8 +127,10 @@ const QuanLyHoSo = () => {
           );
         }
 
+        console.log("Setting filtered demo data:", filteredData.length, "items");
         setApplications(filteredData);
         setError('');
+        setLoading(false);
         return;
       }
 
@@ -124,10 +158,24 @@ const QuanLyHoSo = () => {
 
   const fetchMajors = async () => {
     try {
-      if (isDemoMode) {
+      // Check both isDemoMode from context and localStorage as fallback
+      const isDemo = isDemoMode || localStorage.getItem("demoMode") === "true";
+      console.log("fetchMajors - using demo mode:", isDemo);
+      
+      if (isDemo) {
         // Use demo data when in demo mode
-        console.log("Using demo data for majors");
-        setMajors(DEMO_MAJORS.map(major => ({ name: major.ten_nganh })));
+        console.log("Using demo data for majors", DEMO_MAJORS?.length || 0, "items");
+        if (DEMO_MAJORS && DEMO_MAJORS.length > 0) {
+          setMajors(DEMO_MAJORS.map(major => ({ name: major.ten_nganh })));
+        } else {
+          console.error("DEMO_MAJORS is empty or undefined!");
+          setMajors([
+            { name: "Công nghệ Thông tin" },
+            { name: "Quản trị Kinh doanh" },
+            { name: "Kế toán" },
+            { name: "Thiết kế Đồ họa" }
+          ]);
+        }
         return;
       }
 
@@ -349,8 +397,17 @@ const QuanLyHoSo = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
+
+        
         <div className="divide-y divide-gray-200">
-          {filteredApplications.map((app, index) => (
+          {filteredApplications.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              <FaFileAlt className="mx-auto text-4xl mb-4 text-gray-300" />
+              <h3 className="text-lg font-semibold mb-2">Không có hồ sơ nào</h3>
+              <p>Không tìm thấy hồ sơ phù hợp với bộ lọc hiện tại.</p>
+            </div>
+          ) : (
+            filteredApplications.map((app, index) => (
             <motion.div
               key={app.id}
               initial={{ opacity: 0, y: 20 }}
@@ -361,14 +418,14 @@ const QuanLyHoSo = () => {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center mb-3">
-                    <div className={`w-12 h-12 bg-gradient-to-r ${getMajorColor(app.major)} rounded-xl flex items-center justify-center mr-4`}>
+                    <div className={`w-12 h-12 bg-gradient-to-r ${getMajorColor(app.major_name || app.major)} rounded-xl flex items-center justify-center mr-4`}>
                       <FaGraduationCap className="text-white text-lg" />
                     </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-gray-900 mb-1">
-                        {app.studentName}
+                        {app.ho_ten || app.studentName}
                       </h3>
-                      <p className="text-gray-600">{app.major}</p>
+                      <p className="text-gray-600">{app.major_name || app.major}</p>
                     </div>
                     {getStatusBadge(app.status)}
                   </div>
@@ -380,11 +437,11 @@ const QuanLyHoSo = () => {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <FaPhone className="text-green-500" />
-                      {app.phone}
+                      {app.sdt || app.phone || 'Chưa có'}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <FaIdCard className="text-purple-500" />
-                      {app.cccd}
+                      {app.cccd || 'Chưa có'}
                     </div>
                   </div>
                   
@@ -392,15 +449,15 @@ const QuanLyHoSo = () => {
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
                         <FaCalendar className="text-orange-500" />
-                        {formatDate(app.submittedAt)}
+                        {formatDate(app.created_at || app.submittedAt)}
                       </span>
                       <span className="flex items-center gap-1">
                         <FaUser className="text-blue-500" />
-                        GPA: {app.gpa}
+                        GPA: {app.gpa || 'N/A'}
                       </span>
                       <span className="flex items-center gap-1">
                         <FaFileAlt className="text-green-500" />
-                        {app.documents.length} tài liệu
+                        {app.phuong_thuc_xet_tuyen || 'Chưa rõ'}
                       </span>
                     </div>
                     
@@ -445,7 +502,8 @@ const QuanLyHoSo = () => {
                 </div>
               </div>
             </motion.div>
-          ))}
+            ))
+          )}
         </div>
       </motion.div>
 
