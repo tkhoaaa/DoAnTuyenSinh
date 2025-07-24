@@ -7,9 +7,52 @@ import pool from './config/database.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import {
+    sendWelcomeEmail,
+    sendPasswordResetEmail,
+    sendApplicationSubmittedEmail,
+    sendApplicationStatusUpdateEmail,
+    sendConsultationRequestEmail,
+    sendScholarshipApplicationEmail,
+    sendProfileUpdateEmail,
+    testEmailConnection
+} from './services/emailService.js';
+import { validateEmailConfig } from './config/emailConfig.js';
+import jwt from 'jsonwebtoken';
+import { authenticateToken } from './middleware/auth.js';
+import deviceService from './services/deviceService.js';
 
 const app = express();
 const PORT = 3001;
+
+// Trust proxy để lấy IP address chính xác
+app.set('trust proxy', true);
+
+// Middleware để log activity
+const logActivity = (action, description = '') => {
+    return (req, res, next) => {
+        const originalSend = res.send;
+        res.send = function(data) {
+            // Log activity sau khi response thành công
+            if (res.statusCode >= 200 && res.statusCode < 300) {
+                const userAgent = req.get('User-Agent');
+                const deviceInfo = deviceService.getDeviceInfo(userAgent);
+
+                deviceService.logActivity({
+                    userId: req.user ? req.user.id : null,
+                    action,
+                    description,
+                    ipAddress: req.ip,
+                    userAgent,
+                    deviceInfo,
+                    status: 'success'
+                });
+            }
+            originalSend.call(this, data);
+        };
+        next();
+    };
+};
 
 // CORS configuration
 app.use(cors({
@@ -23,6 +66,9 @@ app.use(cors({
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Serve static files (avatars, attachments)
+app.use('/uploads', express.static('uploads'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -143,6 +189,15 @@ app.post(`${authPrefix}/register`, [
         const [result] = await pool.execute(
             'INSERT INTO users (email, password, username, phone, role) VALUES (?, ?, ?, ?, ?)', [email, hashedPassword, username, phone, 'user']
         );
+
+        // Gửi email chào mừng
+        try {
+            await sendWelcomeEmail(email, username, username);
+        } catch (emailError) {
+            console.error('Error sending welcome email:', emailError);
+            // Không fail request nếu email lỗi
+        }
+
         res.status(201).json({
             success: true,
             message: 'Đăng ký thành công',
@@ -211,6 +266,148 @@ app.post(`${authPrefix}/register-admin`, [
         });
     } catch (error) {
         console.error('Admin register error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server nội bộ'
+        });
+    }
+});
+
+// Quên mật khẩu - Gửi email reset
+app.post(`${authPrefix}/forgot-password`, [
+    body('email').isEmail().withMessage('Email không hợp lệ'),
+], async(req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Dữ liệu đầu vào không hợp lệ',
+                errors: errors.array()
+            });
+        }
+
+        const { email } = req.body;
+
+        // Kiểm tra email có tồn tại không
+        const [users] = await pool.execute(
+            'SELECT id, username, full_name FROM users WHERE email = ? AND is_active = true', [email]
+        );
+
+        if (users.length === 0) {
+            // Không trả về lỗi để tránh lộ thông tin
+            return res.json({
+                success: true,
+                message: 'Nếu email tồn tại, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu'
+            });
+        }
+
+        const user = users[0];
+
+        // Tạo token reset password
+        const crypto = await
+        import ('crypto');
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 giờ
+
+        // Lưu token vào database
+        await pool.execute(
+            'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)', [user.id, resetToken, expiresAt]
+        );
+
+        // Gửi email reset password
+        try {
+            await sendPasswordResetEmail(email, resetToken, user.full_name || user.username);
+        } catch (emailError) {
+            console.error('Error sending password reset email:', emailError);
+            // Xóa token nếu gửi email thất bại
+            await pool.execute('DELETE FROM password_reset_tokens WHERE token = ?', [resetToken]);
+            return res.status(500).json({
+                success: false,
+                message: 'Không thể gửi email. Vui lòng thử lại sau.'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Nếu email tồn tại, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu'
+        });
+
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server nội bộ'
+        });
+    }
+});
+
+// Đặt lại mật khẩu
+app.post(`${authPrefix}/reset-password`, [
+    body('token').notEmpty().withMessage('Token không được để trống'),
+    body('password').isLength({ min: 6 }).withMessage('Mật khẩu tối thiểu 6 ký tự'),
+], async(req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Dữ liệu đầu vào không hợp lệ',
+                errors: errors.array()
+            });
+        }
+
+        const { token, password } = req.body;
+
+        // Kiểm tra token có hợp lệ không
+        const [tokens] = await pool.execute(
+            'SELECT user_id, expires_at, used FROM password_reset_tokens WHERE token = ?', [token]
+        );
+
+        if (tokens.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Token không hợp lệ hoặc đã hết hạn'
+            });
+        }
+
+        const resetToken = tokens[0];
+
+        if (resetToken.used) {
+            return res.status(400).json({
+                success: false,
+                message: 'Token đã được sử dụng'
+            });
+        }
+
+        if (new Date() > new Date(resetToken.expires_at)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Token đã hết hạn'
+            });
+        }
+
+        // Hash mật khẩu mới
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        // Cập nhật mật khẩu
+        await pool.execute(
+            'UPDATE users SET password = ? WHERE id = ?', [hashedPassword, resetToken.user_id]
+        );
+
+        // Đánh dấu token đã sử dụng
+        await pool.execute(
+            'UPDATE password_reset_tokens SET used = true WHERE token = ?', [token]
+        );
+
+        res.json({
+            success: true,
+            message: 'Đặt lại mật khẩu thành công'
+        });
+
+    } catch (error) {
+        console.error('Reset password error:', error);
         res.status(500).json({
             success: false,
             message: 'Lỗi server nội bộ'
@@ -480,6 +677,20 @@ app.post(`${authPrefix}/apply`, [
             ]
         );
 
+        // Gửi email xác nhận nộp hồ sơ
+        try {
+            const applicationData = {
+                id: result.insertId,
+                application_code: applicationCode,
+                major_name: nganh_id, // Cần lấy tên ngành từ database
+                admission_method: phuong_thuc_xet_tuyen
+            };
+            await sendApplicationSubmittedEmail(email, ho_ten, applicationData);
+        } catch (emailError) {
+            console.error('Error sending application submitted email:', emailError);
+            // Không fail request nếu email lỗi
+        }
+
         res.status(201).json({
             success: true,
             message: 'Nộp hồ sơ thành công',
@@ -676,24 +887,40 @@ app.get('/api/admin/applications', async(req, res) => {
             ${whereClause}
         `;
 
+        // Làm sạch parameters - chuyển undefined/null thành null
+        const cleanQueryParams = queryParams.map(param => param === undefined ? null : param);
+
         // Debug parameters before execution
-        const mainParams = [...queryParams, limitNum, offsetNum];
-        const countParams = [...queryParams];
+        const mainParams = [...cleanQueryParams, limitNum, offsetNum];
+        const countParams = [...cleanQueryParams];
+
+        // Kiểm tra và sửa lỗi parameter mismatch
+        const mainQueryPlaceholders = (mainQuery.match(/\?/g) || []).length;
+        const countQueryPlaceholders = (countQuery.match(/\?/g) || []).length;
 
         console.log('🔍 Debug info:', {
             whereClause,
-            queryParams,
+            queryParams: queryParams.length,
             limitNum,
             offsetNum,
-            mainParams,
-            queryLength: mainQuery.split('?').length - 1,
-            paramsLength: mainParams.length
+            mainParams: mainParams.length,
+            mainQueryPlaceholders,
+            countQueryPlaceholders,
+            countParams: countParams.length
         });
 
         // Execute queries - với fallback nếu có lỗi
         let applications, totalCount;
 
         try {
+            // Kiểm tra parameter count trước khi execute
+            if (mainParams.length !== mainQueryPlaceholders) {
+                throw new Error(`Parameter mismatch: expected ${mainQueryPlaceholders}, got ${mainParams.length}`);
+            }
+            if (countParams.length !== countQueryPlaceholders) {
+                throw new Error(`Count parameter mismatch: expected ${countQueryPlaceholders}, got ${countParams.length}`);
+            }
+
             [applications] = await pool.execute(mainQuery, mainParams);
             [totalCount] = await pool.execute(countQuery, countParams);
         } catch (paramError) {
@@ -778,7 +1005,7 @@ app.get('/api/admin/applications', async(req, res) => {
 app.put('/api/admin/applications/:id/status', async(req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status, reason } = req.body;
 
         if (!['pending', 'approved', 'rejected'].includes(status)) {
             return res.status(400).json({
@@ -790,6 +1017,22 @@ app.put('/api/admin/applications/:id/status', async(req, res) => {
         await pool.execute(
             'UPDATE applications SET status = ?, updated_at = NOW() WHERE id = ?', [status, id]
         );
+
+        // Lấy thông tin hồ sơ và user để gửi email
+        const [apps] = await pool.execute('SELECT * FROM applications WHERE id = ?', [id]);
+        if (apps.length > 0) {
+            const app = apps[0];
+            try {
+                const applicationData = {
+                    id: app.id,
+                    major_name: app.nganh_id, // Có thể cần join bảng ngành để lấy tên ngành
+                    admission_method: app.phuong_thuc_xet_tuyen
+                };
+                await sendApplicationStatusUpdateEmail(app.email, app.ho_ten, applicationData, status, reason || '');
+            } catch (emailError) {
+                console.error('Error sending application status update email:', emailError);
+            }
+        }
 
         res.json({
             success: true,
@@ -888,6 +1131,137 @@ function getMajorIcon(majorName) {
 }
 
 // ========== END ADMIN API ROUTES ========== //
+
+// ========== USER PROFILE ROUTES ========== //
+
+// Đổi mật khẩu
+app.put('/api/user/update-password', async(req, res) => {
+    try {
+        const { user_id, old_password, new_password } = req.body;
+        if (!user_id || !old_password || !new_password) {
+            return res.status(400).json({ success: false, message: 'Thiếu thông tin' });
+        }
+        // Lấy user
+        const [users] = await pool.execute('SELECT * FROM users WHERE id = ?', [user_id]);
+        if (users.length === 0) {
+            return res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
+        }
+        const user = users[0];
+        // Kiểm tra mật khẩu cũ
+        const isValid = await bcrypt.compare(old_password, user.password);
+        if (!isValid) {
+            return res.status(401).json({ success: false, message: 'Mật khẩu cũ không đúng' });
+        }
+        // Hash mật khẩu mới
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(new_password, saltRounds);
+        await pool.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user_id]);
+        // Gửi email xác nhận
+        try {
+            await sendProfileUpdateEmail(user.email, user.full_name || user.username, 'password', req.ip);
+        } catch (emailError) {
+            console.error('Error sending profile update email:', emailError);
+        }
+        res.json({ success: true, message: 'Đổi mật khẩu thành công' });
+    } catch (error) {
+        console.error('Update password error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi server nội bộ' });
+    }
+});
+
+// Đổi email
+app.put('/api/user/update-email', async(req, res) => {
+    try {
+        const { user_id, new_email } = req.body;
+        if (!user_id || !new_email) {
+            return res.status(400).json({ success: false, message: 'Thiếu thông tin' });
+        }
+        // Kiểm tra email đã tồn tại chưa
+        const [existing] = await pool.execute('SELECT id FROM users WHERE email = ?', [new_email]);
+        if (existing.length > 0) {
+            return res.status(400).json({ success: false, message: 'Email đã được sử dụng' });
+        }
+        // Lấy user
+        const [users] = await pool.execute('SELECT * FROM users WHERE id = ?', [user_id]);
+        if (users.length === 0) {
+            return res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
+        }
+        const user = users[0];
+        await pool.execute('UPDATE users SET email = ? WHERE id = ?', [new_email, user_id]);
+        // Gửi email xác nhận
+        try {
+            await sendProfileUpdateEmail(new_email, user.full_name || user.username, 'email', req.ip);
+        } catch (emailError) {
+            console.error('Error sending profile update email:', emailError);
+        }
+        res.json({ success: true, message: 'Đổi email thành công' });
+    } catch (error) {
+        console.error('Update email error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi server nội bộ' });
+    }
+});
+
+// Đổi avatar
+app.put('/api/user/update-avatar', async(req, res) => {
+    try {
+        const { user_id, avatar_url } = req.body;
+        if (!user_id || !avatar_url) {
+            return res.status(400).json({ success: false, message: 'Thiếu thông tin' });
+        }
+        // Lấy user
+        const [users] = await pool.execute('SELECT * FROM users WHERE id = ?', [user_id]);
+        if (users.length === 0) {
+            return res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
+        }
+        const user = users[0];
+        await pool.execute('UPDATE users SET avatar = ? WHERE id = ?', [avatar_url, user_id]);
+        // Gửi email xác nhận
+        try {
+            await sendProfileUpdateEmail(user.email, user.full_name || user.username, 'avatar', req.ip);
+        } catch (emailError) {
+            console.error('Error sending profile update email:', emailError);
+        }
+        res.json({ success: true, message: 'Đổi avatar thành công' });
+    } catch (error) {
+        console.error('Update avatar error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi server nội bộ' });
+    }
+});
+
+// Cập nhật thông tin cá nhân (số điện thoại, mô tả ngắn, liên kết mạng xã hội)
+app.put('/api/user/update-profile-info', async(req, res) => {
+    try {
+        const { user_id, phone, bio, social } = req.body;
+        if (!user_id) {
+            return res.status(400).json({ success: false, message: 'Thiếu user_id' });
+        }
+
+        // Lấy thông tin user để gửi email
+        const [users] = await pool.execute('SELECT * FROM users WHERE id = ?', [user_id]);
+        if (users.length === 0) {
+            return res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
+        }
+        const user = users[0];
+
+        await pool.execute(
+            'UPDATE users SET phone = ?, bio = ?, social = ? WHERE id = ?', [phone || '', bio || '', social || '', user_id]
+        );
+
+        // Gửi email xác nhận
+        try {
+            await sendProfileUpdateEmail(user.email, user.full_name || user.username, 'profile', req.ip);
+        } catch (emailError) {
+            console.error('Error sending profile update email:', emailError);
+        }
+
+        res.json({ success: true, message: 'Cập nhật thông tin cá nhân thành công!' });
+    } catch (error) {
+        console.error('Update profile info error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi server nội bộ' });
+    }
+});
+
+// ========== END USER PROFILE ROUTES ========== //
 
 // Database setup endpoint
 app.get('/api/admin/setup-db', async(req, res) => {
@@ -1059,6 +1433,62 @@ const upload = multer({ storage });
 // Ensure upload dir exists
 if (!fs.existsSync('uploads/scholarship')) fs.mkdirSync('uploads/scholarship', { recursive: true });
 
+// Cấu hình multer cho avatar
+const avatarStorage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        const dir = path.join('uploads', 'avatar');
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
+    filename: function(req, file, cb) {
+        const ext = path.extname(file.originalname);
+        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, 'avatar-' + unique + ext);
+    }
+});
+const uploadAvatar = multer({ storage: avatarStorage });
+
+// API upload avatar
+app.post('/api/user/upload-avatar', uploadAvatar.single('avatar'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'Không có file được upload' });
+    }
+    // Trả về URL file
+    const url = `/uploads/avatar/${req.file.filename}`;
+    res.json({ success: true, url });
+});
+
+// API cập nhật avatar URL vào database
+app.put('/api/user/update-avatar', async(req, res) => {
+    try {
+        const { user_id, avatar_url } = req.body;
+
+        if (!user_id || !avatar_url) {
+            return res.status(400).json({
+                success: false,
+                message: 'Thiếu user_id hoặc avatar_url'
+            });
+        }
+
+        // Cập nhật avatar URL vào database
+        await pool.execute(
+            'UPDATE users SET avatar = ? WHERE id = ?', [avatar_url, user_id]
+        );
+
+        res.json({
+            success: true,
+            message: 'Cập nhật avatar thành công',
+            avatar_url
+        });
+    } catch (error) {
+        console.error('Update avatar error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server khi cập nhật avatar'
+        });
+    }
+});
+
 // Nộp đơn học bổng (có upload file)
 app.post('/api/scholarship/apply', upload.array('attachments', 5), async(req, res) => {
     try {
@@ -1090,6 +1520,18 @@ app.post('/api/scholarship/apply', upload.array('attachments', 5), async(req, re
       (ho_ten, ngay_sinh, gioi_tinh, cccd, dia_chi, phone, email, nganh, lop, khoa, diem_tb, hoc_bong, thanh_tich, kinh_te, so_thanh_vien, ly_do, nguon_thong_tin, attachments)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [ho_ten, ngay_sinh, gioi_tinh, cccd, dia_chi, phone, email, nganh, lop, khoa, diem_tb, hoc_bong, thanh_tich, kinh_te, so_thanh_vien, ly_do, nguon_thong_tin, attachments]
         );
+        // Gửi email xác nhận học bổng
+        try {
+            const scholarshipData = {
+                full_name: ho_ten,
+                scholarship_type: hoc_bong,
+                major: nganh,
+                gpa: diem_tb
+            };
+            await sendScholarshipApplicationEmail(email, ho_ten, scholarshipData);
+        } catch (emailError) {
+            console.error('Error sending scholarship application email:', emailError);
+        }
         res.json({ success: true, message: "Nộp đơn học bổng thành công!" });
     } catch (error) {
         console.error('Scholarship apply error:', error);
@@ -1146,10 +1588,204 @@ app.post('/api/consult/apply', async(req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, [ho_ten, phone, email, dia_chi, van_de, nganh_quan_tam, thoi_gian, phuong_thuc, ghi_chu]
         );
 
+        // Gửi email xác nhận tư vấn
+        try {
+            const consultationData = {
+                full_name: ho_ten,
+                phone,
+                major_interest: nganh_quan_tam,
+                preferred_time: thoi_gian
+            };
+            await sendConsultationRequestEmail(email, ho_ten, consultationData);
+        } catch (emailError) {
+            console.error('Error sending consultation request email:', emailError);
+        }
+
         res.json({ success: true, message: "Gửi yêu cầu tư vấn thành công!" });
     } catch (error) {
         console.error('Consult apply error:', error);
         res.status(500).json({ success: false, message: "Lỗi server khi gửi yêu cầu tư vấn" });
+    }
+});
+
+// API endpoints cho quản lý thiết bị
+app.get('/api/user/devices', authenticateToken, async(req, res) => {
+    try {
+        const devices = await deviceService.getUserDevices(req.user.id);
+        res.json({ success: true, data: devices });
+    } catch (error) {
+        console.error('Error getting user devices:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi lấy danh sách thiết bị' });
+    }
+});
+
+app.delete('/api/user/devices/:sessionToken', authenticateToken, async(req, res) => {
+    try {
+        const { sessionToken } = req.params;
+        const success = await deviceService.deactivateDevice(sessionToken);
+
+        if (success) {
+            res.json({ success: true, message: 'Đã vô hiệu hóa thiết bị' });
+        } else {
+            res.status(404).json({ success: false, message: 'Không tìm thấy thiết bị' });
+        }
+    } catch (error) {
+        console.error('Error deactivating device:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi vô hiệu hóa thiết bị' });
+    }
+});
+
+app.delete('/api/user/devices', authenticateToken, async(req, res) => {
+    try {
+        const currentSessionToken = req.headers.authorization ? req.headers.authorization.split(' ')[1] : null;
+        const count = await deviceService.deactivateOtherDevices(req.user.id, currentSessionToken);
+
+        res.json({
+            success: true,
+            message: `Đã vô hiệu hóa ${count} thiết bị khác`,
+            count
+        });
+    } catch (error) {
+        console.error('Error deactivating other devices:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi vô hiệu hóa thiết bị khác' });
+    }
+});
+
+// API endpoints cho activity logs
+app.get('/api/user/activity-logs', authenticateToken, async(req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 50;
+        const logs = await deviceService.getUserActivityLogs(req.user.id, limit);
+        res.json({ success: true, data: logs });
+    } catch (error) {
+        console.error('Error getting activity logs:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi lấy lịch sử hoạt động' });
+    }
+});
+
+// API cập nhật email
+app.put('/api/user/update-email', async(req, res) => {
+    try {
+        const { user_id, email } = req.body;
+
+        if (!user_id || !email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Thiếu user_id hoặc email'
+            });
+        }
+
+        // Kiểm tra email đã tồn tại chưa
+        const [existingUsers] = await pool.execute(
+            'SELECT id FROM users WHERE email = ? AND id != ?', [email, user_id]
+        );
+
+        if (existingUsers.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email đã được sử dụng bởi tài khoản khác'
+            });
+        }
+
+        // Cập nhật email
+        await pool.execute(
+            'UPDATE users SET email = ? WHERE id = ?', [email, user_id]
+        );
+
+        res.json({
+            success: true,
+            message: 'Cập nhật email thành công',
+            email
+        });
+    } catch (error) {
+        console.error('Update email error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server khi cập nhật email'
+        });
+    }
+});
+
+// API cập nhật mật khẩu
+app.put('/api/user/update-password', async(req, res) => {
+    try {
+        const { user_id, current_password, new_password } = req.body;
+
+        if (!user_id || !current_password || !new_password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Thiếu thông tin cần thiết'
+            });
+        }
+
+        // Kiểm tra mật khẩu hiện tại
+        const [users] = await pool.execute(
+            'SELECT password FROM users WHERE id = ?', [user_id]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy người dùng'
+            });
+        }
+
+        const isValidPassword = await bcrypt.compare(current_password, users[0].password);
+        if (!isValidPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Mật khẩu hiện tại không đúng'
+            });
+        }
+
+        // Hash mật khẩu mới
+        const hashedPassword = await bcrypt.hash(new_password, 10);
+
+        // Cập nhật mật khẩu
+        await pool.execute(
+            'UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user_id]
+        );
+
+        res.json({
+            success: true,
+            message: 'Cập nhật mật khẩu thành công'
+        });
+    } catch (error) {
+        console.error('Update password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server khi cập nhật mật khẩu'
+        });
+    }
+});
+
+// API cập nhật thông tin profile
+app.put('/api/user/update-profile-info', async(req, res) => {
+    try {
+        const { user_id, phone, bio, social } = req.body;
+
+        if (!user_id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Thiếu user_id'
+            });
+        }
+
+        // Cập nhật thông tin profile
+        await pool.execute(
+            'UPDATE users SET phone = ?, bio = ?, social = ? WHERE id = ?', [phone || null, bio || null, social || null, user_id]
+        );
+
+        res.json({
+            success: true,
+            message: 'Cập nhật thông tin cá nhân thành công'
+        });
+    } catch (error) {
+        console.error('Update profile info error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server khi cập nhật thông tin cá nhân'
+        });
     }
 });
 

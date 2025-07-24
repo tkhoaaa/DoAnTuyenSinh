@@ -304,15 +304,26 @@ DoAnTuyenSinh/
 ├── 📁 backend/                    # Backend Node.js
 │   ├── 📁 config/
 │   │   ├── database.js           # Cấu hình MySQL connection
+│   │   ├── emailConfig.js        # Cấu hình email service
 │   │   └── env.example           # Environment variables template
 │   ├── 📁 database/
 │   │   ├── safe_migration.sql    # Script migration an toàn
-│   │   └── cleanup_roles.sql     # Script cleanup roles table
+│   │   ├── cleanup_roles.sql     # Script cleanup roles table
+│   │   ├── add_profile_fields.sql # Thêm trường profile
+│   │   ├── device_sessions.sql   # Quản lý session thiết bị
+│   │   └── password_reset_tokens.sql # Token reset password
+│   ├── 📁 services/
+│   │   ├── emailService.js       # Email service với templates
+│   │   └── deviceService.js      # Device management service
+│   ├── 📁 middleware/
+│   │   └── auth.js               # Authentication middleware
 │   ├── 📁 uploads/               # Thư mục upload files
+│   │   ├── avatar/               # Ảnh đại diện người dùng
 │   │   └── scholarship/          # Upload học bổng
 │   ├── index.js                  # Entry point server
 │   ├── package.json              # Dependencies backend
-│   └── .env                      # Environment variables
+│   ├── package-lock.json         # Lock file backend
+│   └── EMAIL_SETUP.md            # Hướng dẫn cấu hình email
 │
 ├── 📁 src/                       # Frontend React
 │   ├── 📁 accounts/              # Authentication components
@@ -328,7 +339,10 @@ DoAnTuyenSinh/
 │   │   └── 📁 pages/
 │   │       ├── TongQuan.jsx      # Overview dashboard với stats
 │   │       ├── QuanLyHoSo.jsx    # Application management với filters
-│   │       └── QuanLyFAQ.jsx     # FAQ management với CRUD
+│   │       ├── QuanLyFAQ.jsx     # FAQ management với CRUD
+│   │       ├── BaoCao.jsx        # Báo cáo thống kê
+│   │       ├── CaiDat.jsx        # Cài đặt hệ thống
+│   │       └── EditProfile.jsx   # Chỉnh sửa hồ sơ admin
 │   │
 │   ├── 📁 components/            # Shared components
 │   │   ├── ThanhHeader.jsx       # Modern header với animations
@@ -338,6 +352,9 @@ DoAnTuyenSinh/
 │   │   ├── OptimizedImage.jsx    # Optimized images
 │   │   ├── ScrollToTop.jsx       # Auto scroll to top khi chuyển route
 │   │   ├── VideoModal.jsx        # YouTube video modal với animations
+│   │   ├── ActivityLog.jsx       # Activity log component
+│   │   ├── DeviceManager.jsx     # Device management component
+│   │   ├── ThemeToggle.jsx       # Theme toggle component
 │   │   └── 📁 ui/                # Reusable UI components
 │   │       ├── Button.jsx        # Polymorphic button với variants và as prop
 │   │       └── Input.jsx         # Input component với validation
@@ -350,24 +367,53 @@ DoAnTuyenSinh/
 │   │   ├── TraCuuKetQua.jsx      # Result lookup với search và filters
 │   │   ├── ThongTinTuyenSinh.jsx # Admission info
 │   │   ├── FAQ.jsx               # Searchable FAQ page với categories
-│   │   └── LienHe.jsx            # Contact page với form
+│   │   ├── LienHe.jsx            # Contact page với form
+│   │   └── EditProfile.jsx       # Chỉnh sửa hồ sơ user
 │   │
 │   ├── 📁 config/
 │   │   ├── siteConfig.js         # Site configuration
 │   │   ├── apiConfig.js          # API configuration cho dev/prod
 │   │   └── demoData.js           # Mock data cho Demo Mode
+│   ├── 📁 contexts/
+│   │   └── ThemeContext.jsx      # Theme context provider
 │   ├── 📁 utils/
 │   │   ├── apiClient.js          # API client functions
 │   │   └── environment.js        # Environment detection utilities 
 │   ├── App.jsx                   # Main app component
-│   └── main.jsx                  # Entry point
+│   ├── main.jsx                  # Entry point
+│   └── output.css                # Generated CSS output
 │
 ├── 📁 public/                    # Static assets
+│   ├── 📁 icons/                 # Icon files
+│   │   ├── android-chrome-192x192.png
+│   │   ├── android-chrome-512x512.png
+│   │   ├── apple-touch-icon.png
+│   │   ├── favicon-16x16.png
+│   │   ├── favicon-32x32.png
+│   │   ├── favicon.ico
+│   │   ├── browserconfig.xml
+│   │   ├── site.webmanifest
+│   │   ├── README.md
+│   │   └── robots.txt
+│   ├── favicon.ico               # Main favicon
+│   ├── manifest.json             # Web app manifest
+│   ├── robots.txt                # Search engine directives
+│   ├── sitemap.xml               # XML sitemap
+│   └── README-favicon.md         # Favicon documentation
 ├── 📁 css/                       # CSS files
+│   └── tailwind.css              # Tailwind CSS entry
 ├── package.json                  # Frontend dependencies
+├── package-lock.json             # Lock file frontend
 ├── vite.config.js               # Vite configuration
 ├── tailwind.config.js           # Tailwind configuration
 ├── postcss.config.js            # PostCSS configuration
+├── vercel.json                  # Vercel deployment config
+├── index.html                   # HTML entry point
+├── manifest.json                # App manifest
+├── .vercelignore                # Vercel ignore file
+├── KHAC_PHUC_LOI.md             # Troubleshooting guide
+├── MIGRATION_GUIDE.md           # Migration guide
+├── DEPLOYMENT.md                # Deployment guide
 └── README.md                    # This file
 ```
 
@@ -522,6 +568,10 @@ CREATE TABLE hoso (
 - ✅ Role-based access control
 - ✅ Modern admin layout với sidebar
 - ✅ **Demo Mode** cho Vercel deployment (không cần backend)
+- ✅ **[MỚI] Avatar admin hiển thị ở header, dropdown và sidebar (AdminLayout)**
+- ✅ **[MỚI] Khi admin cập nhật avatar ở trang chỉnh sửa hồ sơ, avatar sẽ được cập nhật ngay lập tức trên toàn bộ dashboard**
+- ✅ **[MỚI] Đồng bộ logic xử lý avatar giữa user và admin (URL đầy đủ, cập nhật context)**
+- ✅ **[MỚI] Sửa lỗi avatar không hiển thị hoặc không lưu khi reload trang**
 
 ### 🌐 Cho công chúng
 
@@ -751,6 +801,7 @@ GET  /health                      # Kiểm tra server
 - **`ChanTrang.jsx`**: Footer với social links và contact info
 - **`ScrollToTop.jsx`**: Auto scroll component cho route changes
 - **`VideoModal.jsx`**: YouTube video player modal với animations
+- **[MỚI] Avatar hiển thị đồng bộ cho cả user và admin ở header, dropdown, sidebar**
 
 ### 📄 Page Components
 
@@ -788,11 +839,12 @@ GET  /health                      # Kiểm tra server
 
 ### 🎨 Design Pattern: Modern Sidebar Layout
 
-- **`AdminLayout.jsx`**: Main layout wrapper với responsive sidebar và Demo Mode banner
+- **`AdminLayout.jsx`**: Main layout wrapper với responsive sidebar, Demo Mode banner, và **[MỚI] avatar admin**
 - **Role protection**: Tự động redirect nếu không phải admin
 - **Responsive sidebar**: Collapsible trên mobile với animations
 - **Notification system**: Dropdown notifications với indicators
 - **Demo Mode banner**: Top warning khi ở Demo Mode
+- **[MỚI] Avatar admin cập nhật realtime khi chỉnh sửa hồ sơ**
 
 ### 📊 Dashboard Pages
 
@@ -1774,3 +1826,13 @@ pm2 save
 ---
 
 _Hệ thống Tuyển sinh HUTECH - Giải pháp tuyển sinh trực tuyến hoàn chỉnh với UI/UX hiện đại và 3 phương thức xét tuyển 🎓✨_
+
+## 📝 Changelog
+
+### 2024-07-24
+- [MỚI] Avatar admin hiển thị ở header, dropdown và sidebar (AdminLayout)
+- [MỚI] Khi admin cập nhật avatar ở trang chỉnh sửa hồ sơ, avatar sẽ được cập nhật ngay lập tức trên toàn bộ dashboard
+- [MỚI] Đồng bộ logic xử lý avatar giữa user và admin (URL đầy đủ, cập nhật context)
+- [MỚI] Sửa lỗi avatar không hiển thị hoặc không lưu khi reload trang
+- [MỚI] Cập nhật hướng dẫn sử dụng avatar cho cả user và admin
+- [MỚI] Đảm bảo avatar hiển thị đúng trên cả Demo Mode và tài khoản thật

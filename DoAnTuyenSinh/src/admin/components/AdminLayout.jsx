@@ -27,10 +27,10 @@ import {
   FaMagic,
   FaDesktop,
 } from "react-icons/fa";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const AdminLayout = ({ children }) => {
-  const { isDemoMode } = useContext(UserContext);
+  const { user, isDemoMode } = useContext(UserContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -39,6 +39,7 @@ const AdminLayout = ({ children }) => {
   const location = useLocation();
   const notificationRef = useRef();
   const profileRef = useRef();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -458,6 +459,16 @@ const AdminLayout = ({ children }) => {
             <div className="flex items-center justify-between px-8 py-5">
               {/* Left side */}
               <div className="flex items-center gap-6">
+                <motion.button
+                  onClick={() => navigate("/")}
+                  className="p-3 text-blue-600 hover:bg-blue-100 rounded-2xl transition-all duration-300 shadow-lg font-bold flex items-center gap-2"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Quay về trang chủ"
+                >
+                  <FaHome className="text-lg" />
+                  Trang chủ
+                </motion.button>
                 <motion.button
                   onClick={() => setSidebarOpen(true)}
                   className="lg:hidden p-4 text-gray-500 hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 rounded-2xl transition-all duration-300 shadow-xl"

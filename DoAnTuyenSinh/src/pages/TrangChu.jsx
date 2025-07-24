@@ -131,7 +131,7 @@ function TrangChu() {
                 transition={{ delay: 0.7 }}
               >
                 <span className="bg-gradient-to-r from-yellow-300 to-yellow-100 bg-clip-text text-transparent">
-                                      HUTECH
+                  HUTECH
                 </span>
                 <br />
                 <span className="text-white">Tuyển sinh 2025</span>
@@ -257,16 +257,16 @@ function TrangChu() {
             >
               {[
                 {
-                                  img: "https://file1.hutech.edu.vn/file/editor/homepage1/213688-dat-chung-nhan-qs-stars-4-sao-713x475.jpg",
-                title: "QS Stars 4 Sao chu kỳ 2",
-                desc: "HUTECH đạt chuẩn đánh giá quốc tế QS Stars 4 Sao chu kỳ 2.",
-                link: "https://www.hutech.edu.vn/homepage/tin-hutech/14623064-hutech-don-tin-vui-dau-nam-2025-dat-chung-nhan-qs-stars-4-sao-o-chu-ky-2",
+                  img: "https://file1.hutech.edu.vn/file/editor/homepage1/213688-dat-chung-nhan-qs-stars-4-sao-713x475.jpg",
+                  title: "QS Stars 4 Sao chu kỳ 2",
+                  desc: "HUTECH đạt chuẩn đánh giá quốc tế QS Stars 4 Sao chu kỳ 2.",
+                  link: "https://www.hutech.edu.vn/homepage/tin-hutech/14623064-hutech-don-tin-vui-dau-nam-2025-dat-chung-nhan-qs-stars-4-sao-o-chu-ky-2",
                 },
                 {
-                                  img: "https://file1.hutech.edu.vn/file/editor/tuyensinh/679403-jpeg-optimizer_482063183_992252426347806_2741441194146505700_n.jpg",
-                title: "Chất lượng đào tạo top đầu miền Nam",
-                desc: "Chất lượng đào tạo đứng đầu trong những top đầu của các trường Đại học miền Nam.",
-                link: "https://www.hutech.edu.vn/tuyensinh/moi-truong-hutech/14622762-chat-luong-dao-tao-cua-hutech",
+                  img: "https://file1.hutech.edu.vn/file/editor/tuyensinh/679403-jpeg-optimizer_482063183_992252426347806_2741441194146505700_n.jpg",
+                  title: "Chất lượng đào tạo top đầu miền Nam",
+                  desc: "Chất lượng đào tạo đứng đầu trong những top đầu của các trường Đại học miền Nam.",
+                  link: "https://www.hutech.edu.vn/tuyensinh/moi-truong-hutech/14622762-chat-luong-dao-tao-cua-hutech",
                 },
                 {
                   img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSC2mEQgq-ntbDuSAoMWyZJ1ALx4jU1sExLSA&s",

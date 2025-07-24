@@ -17,12 +17,15 @@ import FAQ from "./pages/FAQ";
 import { UserContextProvider } from "./accounts/UserContext";
 import DangKyHocBong from "./pages/DangKyHocBong";
 import DangKyTuVan from "./pages/DangKyTuVan";
+import EditProfile from "./pages/EditProfile";
 
 // Admin Components
 import AdminLayout from "./admin/components/AdminLayout";
 import TongQuan from "./admin/pages/TongQuan";
 import QuanLyHoSo from "./admin/pages/QuanLyHoSo";
 import QuanLyFAQ from "./admin/pages/QuanLyFAQ";
+import BaoCao from "./admin/pages/BaoCao";
+import CaiDat from "./admin/pages/CaiDat";
 
 function App() {
   return (
@@ -47,6 +50,21 @@ function App() {
                 <QuanLyFAQ />
               </AdminLayout>
             } />
+            <Route path="/admin/bao-cao" element={
+              <AdminLayout currentPage="bao-cao">
+                <BaoCao />
+              </AdminLayout>
+            } />
+            <Route path="/admin/cai-dat" element={
+              <AdminLayout currentPage="cai-dat">
+                <CaiDat />
+              </AdminLayout>
+            } />
+            <Route path="/admin/chinh-sua-ho-so" element={
+              <AdminLayout currentPage="chinh-sua-ho-so">
+                <EditProfile />
+              </AdminLayout>
+            } />
             
             {/* Public Routes */}
             <Route path="/*" element={
@@ -65,6 +83,7 @@ function App() {
                   <Route path="/faq" element={<FAQ />} />
                   <Route path="/dang-ky-hoc-bong" element={<DangKyHocBong />} />
                   <Route path="/dang-ky-tu-van" element={<DangKyTuVan />} />
+                  <Route path="/chinh-sua-ho-so" element={<EditProfile />} />
                 </Routes>
                 <ChanTrang />
               </>

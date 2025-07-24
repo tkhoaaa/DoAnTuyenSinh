@@ -418,8 +418,16 @@ const QuanLyHoSo = () => {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center mb-3">
-                    <div className={`w-12 h-12 bg-gradient-to-r ${getMajorColor(app.major_name || app.major)} rounded-xl flex items-center justify-center mr-4`}>
-                      <FaGraduationCap className="text-white text-lg" />
+                    <div className={`w-12 h-12 bg-gradient-to-r ${getMajorColor(app.major_name || app.major)} rounded-xl flex items-center justify-center mr-4`}> 
+                      {app.avatar || (app.user && app.user.avatar) ? (
+                        <img
+                          src={app.avatar || (app.user && app.user.avatar)}
+                          alt={app.ho_ten || app.studentName}
+                          className="w-12 h-12 rounded-xl object-cover border-2 border-white shadow"
+                        />
+                      ) : (
+                        <FaGraduationCap className="text-white text-lg" />
+                      )}
                     </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-gray-900 mb-1">
@@ -601,18 +609,22 @@ const QuanLyHoSo = () => {
                         Tài liệu đính kèm
                       </h4>
                       <div className="space-y-2">
-                        {selectedApplication.documents.map((doc, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <span className="text-gray-700">{doc}</span>
-                            <motion.button
-                              className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <FaDownload />
-                            </motion.button>
+                        {Array.isArray(selectedApplication.attachments) && selectedApplication.attachments.length > 0 ? (
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {selectedApplication.attachments.map((file, idx) => (
+                              <div key={idx} className="relative group">
+                                <img
+                                  src={file.startsWith('http') ? file : `/uploads/${file}`}
+                                  alt={`attachment-${idx}`}
+                                  className="w-full h-32 object-cover rounded-lg border shadow cursor-pointer hover:scale-105 transition-transform"
+                                  onClick={() => window.open(file.startsWith('http') ? file : `/uploads/${file}`, '_blank')}
+                                />
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        ) : (
+                          <div className="text-gray-500 italic">Không có file đính kèm</div>
+                        )}
                       </div>
                     </div>
                     

@@ -202,7 +202,19 @@ function ThanhHeader() {
                     {role === "admin" ? (
                       <FaCrown className="text-sm" />
                     ) : (
-                      <FaUserCircle className="text-sm" />
+                      user?.avatar ? (
+                        <img 
+                          src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:3001${user.avatar}`} 
+                          alt="User Avatar" 
+                          className="w-full h-full rounded-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null; 
+                            e.target.src = user.avatar || (role === "admin" ? <FaCrown className="text-sm" /> : <FaUserCircle className="text-sm" />);
+                          }}
+                        />
+                      ) : (
+                        <FaUserCircle className="text-sm" />
+                      )
                     )}
                   </div>
                   {role === "admin" && (
@@ -248,7 +260,21 @@ function ThanhHeader() {
                               : "bg-gradient-to-r from-blue-500 to-purple-500"
                           }`}
                         >
-                          {role === "admin" ? <FaCrown /> : <FaUser />}
+                          {role === "admin" ? <FaCrown /> : (
+                            user?.avatar ? (
+                              <img 
+                                src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:3001${user.avatar}`} 
+                                alt="User Avatar" 
+                                className="w-full h-full rounded-full object-cover"
+                                onError={(e) => {
+                                  e.target.onerror = null; 
+                                  e.target.src = user.avatar || (role === "admin" ? <FaCrown /> : <FaUser />);
+                                }}
+                              />
+                            ) : (
+                              <FaUser />
+                            )
+                          )}
                         </div>
                         <div>
                           <p className="font-bold text-gray-900 text-sm">
@@ -273,10 +299,27 @@ function ThanhHeader() {
 
                     {/* Dropdown Menu Items */}
                     <div className="py-2">
+                      {/* Profile Edit Link */}
+                      <Link
+                        to={role === "admin" ? "/admin/chinh-sua-ho-so" : "/chinh-sua-ho-so"}
+                        className="flex items-center gap-3 px-4 py-3 text-blue-700 hover:bg-blue-50 hover:text-blue-900 transition-all duration-200"
+                        onClick={() => setShowUserDropdown(false)}
+                      >
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center text-white shadow-lg">
+                          <FaUserEdit className="text-sm" />
+                        </div>
+                        <div>
+                          <div className="font-semibold">Chỉnh sửa hồ sơ</div>
+                          <div className="text-xs text-gray-500">
+                            Cập nhật thông tin cá nhân
+                          </div>
+                        </div>
+                      </Link>
+
                       {role === "admin" && (
                         <Link
                           to="/admin/tong-quan"
-                          className="flex items-center gap-3 px-4 py-3 text-blue-700 hover:bg-blue-50 hover:text-blue-900 transition-all duration-200"
+                          className="flex items-center gap-3 px-4 py-3 text-green-700 hover:bg-green-50 hover:text-green-900 transition-all duration-200"
                           onClick={() => setShowUserDropdown(false)}
                         >
                           <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center text-white shadow-lg">
@@ -427,6 +470,15 @@ function ThanhHeader() {
                   transition={{ delay: 0.6 }}
                   className="border-t border-gray-200 pt-4 space-y-2"
                 >
+                  <Link
+                    to={role === "admin" ? "/admin/chinh-sua-ho-so" : "/chinh-sua-ho-so"}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-blue-700 hover:bg-blue-50 transition-all duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <FaUserEdit />
+                    <span>Chỉnh sửa hồ sơ</span>
+                  </Link>
+                  
                   {role === "admin" && (
                     <Link
                       to="/admin/tong-quan"

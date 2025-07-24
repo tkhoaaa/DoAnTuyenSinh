@@ -1,7 +1,15 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import { DEMO_USER } from "../config/demoData";
 
 export const UserContext = createContext();
+
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error('useUser must be used within a UserContextProvider');
+  }
+  return context;
+};
 
 export function UserContextProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -30,9 +38,20 @@ export function UserContextProvider({ children }) {
       console.log("Stored username:", storedUsername);
       console.log("Stored role:", storedRole);
 
+      // Xử lý avatar URL
+      let processedUserData = storedUserData ? JSON.parse(storedUserData) : { id: userId, username: storedUsername };
+      const avatarUrl = processedUserData.avatar 
+        ? (processedUserData.avatar.startsWith('http') 
+            ? processedUserData.avatar 
+            : `http://localhost:3001${processedUserData.avatar}`) 
+        : "";
+
       setRole(storedRole);
       setUsername(storedUsername || "");
-      setUser(storedUserData ? JSON.parse(storedUserData) : { id: userId, username: storedUsername });
+      setUser({
+        ...processedUserData,
+        avatar: avatarUrl
+      });
     } else {
       setUser(null);
       setRole(null);
@@ -47,23 +66,43 @@ export function UserContextProvider({ children }) {
     // Xử lý trường hợp username undefined/null
     const validUsername = username || "Người dùng";
 
+    // Xử lý avatar URL
+    const avatarUrl = userData?.avatar 
+      ? (userData.avatar.startsWith('http') 
+          ? userData.avatar 
+          : `http://localhost:3001${userData.avatar}`) 
+      : "";
+
     setIsDemoMode(false);
     setUserId(id);
     setRole(role);
     setUsername(validUsername);
-    setUser(userData || { id, username: validUsername });
+    setUser({
+      ...userData, 
+      username: validUsername, 
+      avatar: avatarUrl
+    });
 
     // Lưu vào localStorage
     localStorage.setItem("userId", id);
     localStorage.setItem("role", role);
     localStorage.setItem("username", validUsername);
-    if (userData) localStorage.setItem("userData", JSON.stringify(userData));
+    if (userData) {
+      // Lưu userData với avatar URL đầy đủ
+      const userDataToStore = {
+        ...userData,
+        username: validUsername,
+        avatar: avatarUrl
+      };
+      localStorage.setItem("userData", JSON.stringify(userDataToStore));
+    }
     localStorage.removeItem("demoMode");
 
     console.log("Login completed. New state:", {
       id,
       role,
       username: validUsername,
+      avatar: avatarUrl
     });
   };
 

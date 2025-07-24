@@ -1,10 +1,4 @@
 import React, { useState, useEffect, useContext } from "react";
-import {
-  motion,
-  AnimatePresence,
-  useMotionValue,
-  useTransform,
-} from "framer-motion";
 import axios from "axios";
 import { UserContext } from "../../accounts/UserContext";
 import { DEMO_DASHBOARD_STATS } from "../../config/demoData";
@@ -36,6 +30,7 @@ import {
   FaGem,
   FaMagic,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const TongQuan = () => {
   const { isDemoMode } = useContext(UserContext);
@@ -55,6 +50,18 @@ const TongQuan = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
+  const navigate = useNavigate();
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+
+  const handleViewProfile = (profile) => {
+    setSelectedProfile(profile);
+    setShowProfileModal(true);
+  };
+
+  const handleEditProfile = (profile) => {
+    navigate(`/admin/quan-ly-ho-so/${profile.id}/edit`);
+  };
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -302,16 +309,12 @@ const TongQuan = () => {
     };
     const { text, color, icon: Icon } = config[status];
     return (
-      <motion.span
+      <span
         className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 ${color} shadow-lg`}
-        whileHover={{ scale: 1.05 }}
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 300 }}
       >
         <Icon />
         {text}
-      </motion.span>
+      </span>
     );
   };
 
@@ -331,7 +334,7 @@ const TongQuan = () => {
       {/* Animated Background */}
       <div className="absolute inset-0">
         {[...Array(6)].map((_, i) => (
-          <motion.div
+          <div
             key={i}
             className="absolute rounded-full bg-gradient-to-r from-blue-400/10 to-purple-400/10"
             style={{
@@ -562,65 +565,42 @@ const TongQuan = () => {
         {/* Charts and Recent Activity */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Top Majors Chart */}
-          <motion.div
+          <div
             className="xl:col-span-2 bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 relative overflow-hidden"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
           >
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-8">
-                <motion.h3
+                <h3
                   className="text-2xl font-bold text-gray-900 flex items-center gap-3"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 }}
                 >
                   <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
                     <FaChartBar className="text-white text-lg" />
                   </div>
                   Top 5 Ngành Học Phổ Biến
-                </motion.h3>
-                <motion.div
+                </h3>
+                <div
                   className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 px-4 py-2 rounded-full"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.7 }}
                 >
                   <FaFire className="text-orange-500" />
                   Hot trends
-                </motion.div>
+                </div>
               </div>
 
               <div className="space-y-6">
                 {topMajors.map((major, index) => (
-                  <motion.div
+                  <div
                     key={major.name}
                     className="group relative"
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{
-                      delay: 0.8 + index * 0.1,
-                      type: "spring",
-                      stiffness: 100,
-                    }}
-                    whileHover={{ scale: 1.02 }}
                   >
                     <div className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 relative overflow-hidden">
                       <div className="relative z-10 flex items-center gap-6">
-                        <motion.div
+                        <div
                           className={`w-16 h-16 bg-gradient-to-r ${getMajorColor(
                             index
                           )} rounded-2xl flex items-center justify-center text-2xl shadow-xl`}
-                          whileHover={{ rotate: 360, scale: 1.1 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 200,
-                            duration: 0.6,
-                          }}
                         >
                           {major.icon}
-                        </motion.div>
+                        </div>
                         <div>
                           <h4 className="text-lg font-bold text-gray-900 mb-1">
                             {major.name}
@@ -638,20 +618,13 @@ const TongQuan = () => {
                       </div>
 
                       <div className="relative z-10 text-right">
-                        <motion.div
+                        <div
                           className="text-2xl font-black text-gray-900 mb-2"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{
-                            delay: 1 + index * 0.1,
-                            type: "spring",
-                            stiffness: 200,
-                          }}
                         >
                           {major.percentage}%
-                        </motion.div>
+                        </div>
                         <div className="w-32 h-3 bg-gray-200 rounded-full overflow-hidden">
-                          <motion.div
+                          <div
                             className={`h-full bg-gradient-to-r ${getMajorColor(
                               index
                             )} shadow-lg`}
@@ -667,59 +640,45 @@ const TongQuan = () => {
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Recent Applications */}
-          <motion.div
+          <div
             className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 relative overflow-hidden"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, type: "spring", stiffness: 100 }}
           >
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-8">
-                <motion.h3
+                <h3
                   className="text-xl font-bold text-gray-900 flex items-center gap-3"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.7 }}
                 >
                   <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
                     <FaBolt className="text-white text-sm" />
                   </div>
                   Hồ Sơ Gần Đây
-                </motion.h3>
-                <motion.div
+                </h3>
+                <div
                   className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.8 }}
                 >
                   {recentApplications.length} hồ sơ
-                </motion.div>
+                </div>
               </div>
 
               <div className="space-y-4">
                 {recentApplications.map((app, index) => (
-                  <motion.div
+                  <div
                     key={app.id}
                     className="group p-4 bg-gradient-to-r from-gray-50 to-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 cursor-pointer relative overflow-hidden"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.9 + index * 0.1 }}
-                    whileHover={{ scale: 1.02, y: -2 }}
                   >
                     <div className="relative z-10">
                       <div className="flex items-center gap-4 mb-3">
-                        <motion.img
+                        <img
                           src={app.avatar}
                           alt={app.studentName}
                           className="w-12 h-12 rounded-full border-2 border-white shadow-lg"
-                          whileHover={{ scale: 1.1 }}
                         />
                         <div className="flex-1">
                           <h4 className="font-bold text-gray-900 text-lg">
@@ -744,67 +703,51 @@ const TongQuan = () => {
                       </div>
 
                       <div className="flex gap-2 mt-3">
-                        <motion.button
+                        <button
                           className="flex-1 py-2 bg-blue-100 text-blue-600 rounded-xl text-xs font-semibold hover:bg-blue-200 transition-all duration-200 flex items-center justify-center gap-1"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleViewProfile(app)}
                         >
                           <FaEye />
                           Xem
-                        </motion.button>
-                        <motion.button
+                        </button>
+                        <button
                           className="flex-1 py-2 bg-green-100 text-green-600 rounded-xl text-xs font-semibold hover:bg-green-200 transition-all duration-200 flex items-center justify-center gap-1"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleEditProfile(app)}
                         >
                           <FaEdit />
                           Sửa
-                        </motion.button>
+                        </button>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
 
-              <motion.button
+              <button
                 className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-bold text-lg shadow-xl"
-                whileHover={{
-                  scale: 1.02,
-                  boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-                }}
-                whileTap={{ scale: 0.98 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.5 }}
               >
                 <span className="flex items-center justify-center gap-2">
                   <FaGem />
                   Xem tất cả hồ sơ
                 </span>
-              </motion.button>
+              </button>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Quick Actions */}
-        <motion.div
+        <div
           className="mt-12 bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 relative overflow-hidden"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, type: "spring", stiffness: 100 }}
         >
           <div className="relative z-10">
-            <motion.h3
+            <h3
               className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.9 }}
             >
               <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl flex items-center justify-center">
                 <FaMagic className="text-white text-lg" />
               </div>
               Thao Tác Nhanh
-            </motion.h3>
+            </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
@@ -837,23 +780,16 @@ const TongQuan = () => {
                   count: "12 báo cáo",
                 },
               ].map((action, index) => (
-                <motion.button
+                <button
                   key={action.title}
                   className={`p-6 bg-gradient-to-r ${action.color} text-white rounded-2xl hover:shadow-2xl transition-all duration-300 group relative overflow-hidden`}
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  whileTap={{ scale: 0.95 }}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1 + index * 0.1 }}
                 >
                   <div className="relative z-10 flex items-start gap-4">
-                    <motion.div
+                    <div
                       className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"
-                      whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.6 }}
                     >
                       <action.icon className="text-xl" />
-                    </motion.div>
+                    </div>
                     <div className="text-left flex-1">
                       <div className="font-bold text-lg mb-1">
                         {action.title}
@@ -866,12 +802,41 @@ const TongQuan = () => {
                       </div>
                     </div>
                   </div>
-                </motion.button>
+                </button>
               ))}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
+      {showProfileModal && selectedProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowProfileModal(false)}
+            >
+              <FaTimes />
+            </button>
+            <h2 className="text-2xl font-bold mb-4">Chi tiết hồ sơ</h2>
+            <div className="space-y-2">
+              <div><b>Họ tên:</b> {selectedProfile.studentName}</div>
+              <div><b>Email:</b> {selectedProfile.email}</div>
+              <div><b>Ngành:</b> {selectedProfile.major}</div>
+              <div><b>GPA:</b> {selectedProfile.gpa}</div>
+              <div><b>Trạng thái:</b> {selectedProfile.status}</div>
+              {/* Thêm các trường khác nếu cần */}
+            </div>
+            <div className="mt-6 text-right">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+                onClick={() => setShowProfileModal(false)}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

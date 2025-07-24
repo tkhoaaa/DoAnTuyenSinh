@@ -57,8 +57,17 @@ function DangNhap() {
         // Lưu thông tin đăng nhập vào localStorage đơn giản (không cần JWT)
         login(user.id, role, username, user);
         setSuccess("Đăng nhập thành công!");
-        if (role === "admin") navigate("/admin");
-        else navigate("/");
+        if (role === "admin") {
+          setSuccess("Đăng nhập admin thành công! Đang chuyển hướng...");
+          setTimeout(() => {
+            navigate("/admin/tong-quan");
+          }, 1000);
+        } else {
+          setSuccess("Đăng nhập user thành công! Đang chuyển hướng...");
+          setTimeout(() => {
+            navigate("/");
+          }, 1000);
+        }
       } else {
         throw new Error(res.data.message || 'Đăng nhập thất bại');
       }

@@ -616,10 +616,10 @@ function DangKyXetTuyen() {
 
                 {/* Đánh giá năng lực */}
                 {phuongThucXetTuyen === "danh_gia_nang_luc" && (
-                  <motion.section
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.9 }}
+                <motion.section
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
                     className="bg-gradient-to-r from-green-50 to-teal-50 p-8 rounded-2xl border border-green-100"
                   >
                     <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
@@ -657,8 +657,8 @@ function DangKyXetTuyen() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.0 }}
-                    className="bg-gradient-to-r from-purple-50 to-pink-50 p-8 rounded-2xl border border-purple-100"
-                  >
+                  className="bg-gradient-to-r from-purple-50 to-pink-50 p-8 rounded-2xl border border-purple-100"
+                >
                   <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
                       <FaGraduationCap className="text-white text-lg" />
