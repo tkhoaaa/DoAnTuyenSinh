@@ -1215,12 +1215,80 @@ DROP TABLE IF EXISTS khoi_thi_thpt;
 
 ### 🌐 Frontend (Vercel)
 
+#### Option 1: Vercel CLI
+
 ```bash
-# Build
+# Install Vercel CLI
+npm install -g vercel
+
+# Build project
 npm run build
 
-# Deploy
+# Deploy to Vercel
 vercel --prod
+```
+
+#### Option 2: GitHub Integration
+
+1. **Push code lên GitHub**:
+```bash
+git add .
+git commit -m "Ready for deployment"
+git push origin main
+```
+
+2. **Connect Vercel với GitHub**:
+   - Truy cập [vercel.com](https://vercel.com)
+   - Import project từ GitHub
+   - Auto deploy khi push code
+
+#### Vercel Configuration
+
+File `vercel.json` đã được cấu hình:
+
+```json
+{
+  "rewrites": [
+    {
+      "source": "/((?!api).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options", 
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
+}
+```
+
+#### Environment Variables trên Vercel
+
+Thêm environment variables sau trên Vercel Dashboard:
+
+```env
+VITE_API_URL=https://your-backend-url.com
+VITE_APP_ENV=production
 ```
 
 ### 🖥️ Backend (VPS/Cloud)
