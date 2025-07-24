@@ -40,7 +40,7 @@ const QuanLyHoSo = () => {
 
   useEffect(() => {
     fetchMajors();
-  }, []);
+  }, [isDemoMode]);
 
   // Debounce search term
   useEffect(() => {
@@ -54,7 +54,7 @@ const QuanLyHoSo = () => {
   // Fetch applications when filters change
   useEffect(() => {
     fetchApplications();
-  }, [statusFilter, majorFilter, debouncedSearchTerm]);
+  }, [statusFilter, majorFilter, debouncedSearchTerm, isDemoMode]);
 
   // Set filtered applications from API response
   useEffect(() => {
@@ -65,10 +65,16 @@ const QuanLyHoSo = () => {
     try {
       setLoading(true);
       setError('');
+      
+      console.log("fetchApplications called with isDemoMode:", isDemoMode);
 
       if (isDemoMode) {
         // Use demo data when in demo mode
-        console.log("Using demo data for applications");
+        console.log("Using demo data for applications", DEMO_APPLICATIONS.length, "items");
+        
+        // Add small delay to prevent race conditions
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         let filteredData = [...DEMO_APPLICATIONS];
 
         // Apply filters to demo data
@@ -228,7 +234,30 @@ const QuanLyHoSo = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-gray-600 text-lg">Đang tải dữ liệu...</p>
+          <p className="text-gray-600 text-lg">
+            {isDemoMode ? 'Đang tải dữ liệu demo...' : 'Đang tải dữ liệu...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-red-600 mb-2">Lỗi tải dữ liệu</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => {
+              setError('');
+              fetchApplications();
+            }}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Thử lại
+          </button>
         </div>
       </div>
     );

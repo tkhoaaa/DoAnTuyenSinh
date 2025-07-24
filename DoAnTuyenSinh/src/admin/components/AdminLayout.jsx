@@ -57,6 +57,11 @@ const AdminLayout = ({ children }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Close sidebar when route changes (mobile)
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location]);
+
   const menuItems = [
     {
       id: "tong-quan",
@@ -290,7 +295,7 @@ const AdminLayout = ({ children }) => {
       {/* Demo Mode Banner */}
       {isDemoMode && (
         <motion.div
-          className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-400 to-orange-500 text-white py-2 px-4 text-center shadow-lg"
+          className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-amber-400 to-orange-500 text-white py-2 px-4 text-center shadow-lg"
           initial={{ y: -100 }}
           animate={{ y: 0 }}
           transition={{ duration: 0.5 }}
@@ -325,9 +330,8 @@ const AdminLayout = ({ children }) => {
         <motion.aside
           className={`fixed inset-y-0 left-0 z-50 w-80 bg-white/90 backdrop-blur-2xl shadow-2xl border-r border-white/30 transform transition-all duration-500 ease-in-out lg:translate-x-0 lg:relative lg:z-10 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-          initial={{ x: -320 }}
-          animate={{ x: 0 }}
+          } ${isDemoMode ? 'top-10' : ''}`}
+          initial={false}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
           <div className="flex flex-col h-full relative">
@@ -443,10 +447,10 @@ const AdminLayout = ({ children }) => {
         </motion.aside>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-h-screen">
+        <div className="flex-1 flex flex-col min-h-screen lg:ml-0">
           {/* Top Navigation Header */}
           <motion.header
-            className="bg-white/85 backdrop-blur-2xl shadow-2xl border-b border-white/30 sticky top-0 z-30"
+            className={`bg-white/85 backdrop-blur-2xl shadow-2xl border-b border-white/30 sticky z-30 ${isDemoMode ? 'top-10' : 'top-0'}`}
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
