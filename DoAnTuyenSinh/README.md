@@ -357,7 +357,8 @@ DoAnTuyenSinh/
 │   │   ├── apiConfig.js          # API configuration cho dev/prod
 │   │   └── demoData.js           # Mock data cho Demo Mode
 │   ├── 📁 utils/
-│   │   └── apiClient.js          # API client functions
+│   │   ├── apiClient.js          # API client functions
+│   │   └── environment.js        # Environment detection utilities 
 │   ├── App.jsx                   # Main app component
 │   └── main.jsx                  # Entry point
 │
@@ -778,6 +779,11 @@ GET  /health                      # Kiểm tra server
 - **`StructuredData.jsx`**: Schema markup cho search engines
 - **`VideoModal.jsx`**: YouTube video modal với backdrop blur và responsive design
 
+### 🛠️ Utility Functions
+
+- **`environment.js`**: Environment detection utilities với smart demo mode logic
+- **`apiClient.js`**: API client functions với error handling
+
 ## 🏛️ Admin Dashboard
 
 ### 🎨 Design Pattern: Modern Sidebar Layout
@@ -1051,6 +1057,7 @@ URL: https://do-an-tuyen-sinh.vercel.app/accounts/dang-nhap
 - **Vị trí**: Dưới form đăng nhập thông thường
 - **Button**: "🎯 Xem Demo Admin Dashboard" (màu vàng cam)
 - **Không cần**: Username/password
+- **⚠️ Chỉ hiển thị trên Vercel**: Button chỉ xuất hiện khi truy cập từ Vercel deployment, không hiện ở localhost
 
 #### Bước 3: Tự động vào Admin Dashboard
 - **Chuyển hướng**: Sau 1 giây → `/admin`
@@ -1110,6 +1117,55 @@ URL: https://do-an-tuyen-sinh.vercel.app/accounts/dang-nhap
 - ✅ **Loading States**: Skeleton loading với animations
 - ✅ **Error Handling**: Graceful error messages
 
+### 🌍 Environment Detection
+
+#### **Smart Demo Button Display:**
+Demo button chỉ hiển thị khi truy cập từ **Vercel deployment**, không hiện ở **localhost development**.
+
+```javascript
+// src/utils/environment.js
+export const shouldShowDemoMode = () => {
+  return isVercelDeployment();
+};
+
+export const isVercelDeployment = () => {
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  
+  // Check for Vercel domains
+  const isVercelDomain = hostname.includes('vercel.app') || hostname.includes('vercel.com');
+  
+  // Check for HTTPS production (excluding localhost HTTPS)
+  const isProductionHTTPS = protocol === 'https:' && !hostname.includes('localhost');
+  
+  return isVercelDomain || isProductionHTTPS;
+};
+```
+
+#### **Environment Logic:**
+```javascript
+// ✅ Localhost Development (http://localhost:5173)
+shouldShowDemoMode() = false → Demo button ẩn
+
+// ✅ Vercel Production (https://do-an-tuyen-sinh.vercel.app)  
+shouldShowDemoMode() = true → Demo button hiển thị
+
+// ✅ Other HTTPS Production
+shouldShowDemoMode() = true → Demo button hiển thị
+```
+
+#### **Implementation trong DangNhap.jsx:**
+```javascript
+import { shouldShowDemoMode } from "../utils/environment";
+
+// Conditional rendering
+{shouldShowDemoMode() && (
+  <Button onClick={handleDemoLogin}>
+    🎯 Xem Demo Admin Dashboard
+  </Button>
+)}
+```
+
 ### 🔧 Technical Implementation
 
 #### **Files được tạo/cập nhật:**
@@ -1117,9 +1173,12 @@ URL: https://do-an-tuyen-sinh.vercel.app/accounts/dang-nhap
 // Mock Data
 ├── src/config/demoData.js       // Comprehensive mock data
 
+// Environment Detection
+├── src/utils/environment.js     // Environment detection utilities
+
 // Authentication 
 ├── src/accounts/UserContext.jsx // Demo mode support
-├── src/accounts/DangNhap.jsx    // Demo login button
+├── src/accounts/DangNhap.jsx    // Demo login button với environment detection
 
 // Admin Components
 ├── src/admin/pages/TongQuan.jsx      // Demo dashboard
@@ -1178,6 +1237,8 @@ export const DEMO_DASHBOARD_STATS = {
 - **Always Available**: No server dependencies  
 - **Full Functional**: All interactions work
 - **Professional UI**: Polished admin interface
+- **Smart Environment Detection**: Demo button chỉ hiện trên production
+- **Clean Development**: Không có confusion khi development
 
 ### 🔗 Demo URLs
 
@@ -1691,6 +1752,7 @@ pm2 save
 - ✅ **Smart navigation** với polymorphic Button component
 - ✅ **Auto scroll management** khi chuyển route
 - ✅ **Demo Mode** cho admin dashboard trên Vercel (không cần backend)
+- ✅ **Environment Detection** - Demo button chỉ hiện trên production deployment
 
 ### 🚀 Deployment:
 - **Frontend**: ✅ [Vercel](https://do-an-tuyen-sinh.vercel.app/) - Live Production
@@ -1707,6 +1769,7 @@ pm2 save
 - AI-powered admission recommendations
 - Demo Mode cho tất cả user features
 - Serverless backend với Vercel Functions
+- Enhanced environment detection cho multiple deployment platforms
 
 ---
 

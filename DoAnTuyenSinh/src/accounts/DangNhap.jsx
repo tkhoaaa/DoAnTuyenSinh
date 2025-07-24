@@ -6,6 +6,7 @@ import { FaUser, FaLock, FaEnvelope, FaEye, FaEyeSlash } from "react-icons/fa";
 import { UserContext } from "./UserContext";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import { shouldShowDemoMode } from "../utils/environment";
 
 function DangNhap() {
   const [form, setForm] = useState({ identifier: "", password: "" });
@@ -28,6 +29,8 @@ function DangNhap() {
       navigate("/admin");
     }, 1000);
   };
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -225,29 +228,33 @@ function DangNhap() {
               {loading ? "Đang xử lý..." : "Đăng nhập"}
             </Button>
 
-            {/* Demo Login Button */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-2 text-gray-500">hoặc</span>
-              </div>
-            </div>
+            {/* Demo Login Button - Only show on Vercel deployment */}
+            {shouldShowDemoMode() && (
+              <>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="bg-white px-2 text-gray-500">hoặc</span>
+                  </div>
+                </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              onClick={handleDemoLogin}
-              disabled={loading}
-              className="w-full text-lg font-semibold border-amber-300 text-amber-600 hover:bg-amber-50"
-            >
-              🎯 Xem Demo Admin Dashboard
-            </Button>
-            <p className="text-xs text-center text-gray-500 mt-2">
-              * Demo mode dành cho Vercel deployment (không cần backend)
-            </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  onClick={handleDemoLogin}
+                  disabled={loading}
+                  className="w-full text-lg font-semibold border-amber-300 text-amber-600 hover:bg-amber-50"
+                >
+                  🎯 Xem Demo Admin Dashboard
+                </Button>
+                <p className="text-xs text-center text-gray-500 mt-2">
+                  * Demo mode dành cho Vercel deployment (không cần backend)
+                </p>
+              </>
+            )}
           </motion.div>
 
           {/* Links */}
