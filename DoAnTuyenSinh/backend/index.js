@@ -856,8 +856,7 @@ app.get('/api/admin/applications', async(req, res) => {
             queryParams.push(searchParam, searchParam, searchParam);
         }
 
-        const whereClause = whereConditions.length > 0 ?
-            'WHERE ' + whereConditions.join(' AND ') : '';
+        const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
 
         // Pagination parameters
         const limitNum = Math.max(1, Math.min(100, parseInt(limit) || 20));
@@ -881,9 +880,9 @@ app.get('/api/admin/applications', async(req, res) => {
 
         // Count query
         const countQuery = `
-            SELECT COUNT(*) as count
-            FROM applications a
-            LEFT JOIN nganh n ON a.nganh_id = n.id
+            SELECT COUNT(DISTINCT u.id) as count
+            FROM users u
+            LEFT JOIN applications a ON u.id = a.user_id
             ${whereClause}
         `;
 
@@ -893,6 +892,30 @@ app.get('/api/admin/applications', async(req, res) => {
         // Debug parameters before execution
         const mainParams = [...cleanQueryParams, limitNum, offsetNum];
         const countParams = [...cleanQueryParams];
+
+        // Debug logging
+        console.log('Users query debug:');
+        console.log('mainQuery:', mainQuery);
+        console.log('countQuery:', countQuery);
+        console.log('mainParams:', mainParams);
+        console.log('countParams:', countParams);
+        console.log('mainQuery placeholders:', (mainQuery.match(/\?/g) || []).length);
+        console.log('countQuery placeholders:', (countQuery.match(/\?/g) || []).length);
+
+        // Convert parameters to correct types
+        const cleanMainParams = mainParams.map(param => {
+            if (typeof param === 'number') return param;
+            if (param === null || param === undefined) return null;
+            return String(param);
+        });
+
+        const cleanCountParams = countParams.map(param => {
+            if (param === null || param === undefined) return null;
+            return String(param);
+        });
+
+        console.log('Clean mainParams:', cleanMainParams);
+        console.log('Clean countParams:', cleanCountParams);
 
         // Kiểm tra và sửa lỗi parameter mismatch
         const mainQueryPlaceholders = (mainQuery.match(/\?/g) || []).length;
@@ -921,8 +944,8 @@ app.get('/api/admin/applications', async(req, res) => {
                 throw new Error(`Count parameter mismatch: expected ${countQueryPlaceholders}, got ${countParams.length}`);
             }
 
-            [applications] = await pool.execute(mainQuery, mainParams);
-            [totalCount] = await pool.execute(countQuery, countParams);
+            [applications] = await pool.execute(mainQuery, cleanMainParams);
+            [totalCount] = await pool.execute(countQuery, cleanCountParams);
         } catch (paramError) {
             console.warn('❌ Parameter error, using fallback query:', paramError.message);
 
@@ -1137,131 +1160,766 @@ function getMajorIcon(majorName) {
 // Đổi mật khẩu
 app.put('/api/user/update-password', async(req, res) => {
     try {
-        const { user_id, old_password, new_password } = req.body;
-        if (!user_id || !old_password || !new_password) {
-            return res.status(400).json({ success: false, message: 'Thiếu thông tin' });
+        const { user_id, current_password, new_password } = req.body;
+
+        if (!user_id || !current_password || !new_password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Thiếu thông tin cần thiết'
+            });
         }
-        // Lấy user
-        const [users] = await pool.execute('SELECT * FROM users WHERE id = ?', [user_id]);
+
+        // Kiểm tra mật khẩu hiện tại
+        const [users] = await pool.execute(
+            'SELECT password FROM users WHERE id = ?', [user_id]
+        );
+
         if (users.length === 0) {
-            return res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy người dùng'
+            });
         }
-        const user = users[0];
-        // Kiểm tra mật khẩu cũ
-        const isValid = await bcrypt.compare(old_password, user.password);
-        if (!isValid) {
-            return res.status(401).json({ success: false, message: 'Mật khẩu cũ không đúng' });
+
+        const isValidPassword = await bcrypt.compare(current_password, users[0].password);
+        if (!isValidPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Mật khẩu hiện tại không đúng'
+            });
         }
+
         // Hash mật khẩu mới
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(new_password, saltRounds);
-        await pool.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user_id]);
-        // Gửi email xác nhận
-        try {
-            await sendProfileUpdateEmail(user.email, user.full_name || user.username, 'password', req.ip);
-        } catch (emailError) {
-            console.error('Error sending profile update email:', emailError);
-        }
-        res.json({ success: true, message: 'Đổi mật khẩu thành công' });
+        const hashedPassword = await bcrypt.hash(new_password, 10);
+
+        // Cập nhật mật khẩu
+        await pool.execute(
+            'UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user_id]
+        );
+
+        res.json({
+            success: true,
+            message: 'Cập nhật mật khẩu thành công'
+        });
     } catch (error) {
         console.error('Update password error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi server nội bộ' });
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server khi cập nhật mật khẩu'
+        });
     }
 });
 
-// Đổi email
+// Cập nhật email
 app.put('/api/user/update-email', async(req, res) => {
     try {
-        const { user_id, new_email } = req.body;
-        if (!user_id || !new_email) {
-            return res.status(400).json({ success: false, message: 'Thiếu thông tin' });
+        const { user_id, email } = req.body;
+
+        if (!user_id || !email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Thiếu user_id hoặc email'
+            });
         }
+
         // Kiểm tra email đã tồn tại chưa
-        const [existing] = await pool.execute('SELECT id FROM users WHERE email = ?', [new_email]);
-        if (existing.length > 0) {
-            return res.status(400).json({ success: false, message: 'Email đã được sử dụng' });
+        const [existingUsers] = await pool.execute(
+            'SELECT id FROM users WHERE email = ? AND id != ?', [email, user_id]
+        );
+
+        if (existingUsers.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email đã được sử dụng bởi tài khoản khác'
+            });
         }
-        // Lấy user
-        const [users] = await pool.execute('SELECT * FROM users WHERE id = ?', [user_id]);
-        if (users.length === 0) {
-            return res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
-        }
-        const user = users[0];
-        await pool.execute('UPDATE users SET email = ? WHERE id = ?', [new_email, user_id]);
-        // Gửi email xác nhận
-        try {
-            await sendProfileUpdateEmail(new_email, user.full_name || user.username, 'email', req.ip);
-        } catch (emailError) {
-            console.error('Error sending profile update email:', emailError);
-        }
-        res.json({ success: true, message: 'Đổi email thành công' });
+
+        // Cập nhật email
+        await pool.execute(
+            'UPDATE users SET email = ? WHERE id = ?', [email, user_id]
+        );
+
+        res.json({
+            success: true,
+            message: 'Cập nhật email thành công',
+            email
+        });
     } catch (error) {
         console.error('Update email error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi server nội bộ' });
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server khi cập nhật email'
+        });
     }
 });
 
-// Đổi avatar
-app.put('/api/user/update-avatar', async(req, res) => {
-    try {
-        const { user_id, avatar_url } = req.body;
-        if (!user_id || !avatar_url) {
-            return res.status(400).json({ success: false, message: 'Thiếu thông tin' });
-        }
-        // Lấy user
-        const [users] = await pool.execute('SELECT * FROM users WHERE id = ?', [user_id]);
-        if (users.length === 0) {
-            return res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
-        }
-        const user = users[0];
-        await pool.execute('UPDATE users SET avatar = ? WHERE id = ?', [avatar_url, user_id]);
-        // Gửi email xác nhận
-        try {
-            await sendProfileUpdateEmail(user.email, user.full_name || user.username, 'avatar', req.ip);
-        } catch (emailError) {
-            console.error('Error sending profile update email:', emailError);
-        }
-        res.json({ success: true, message: 'Đổi avatar thành công' });
-    } catch (error) {
-        console.error('Update avatar error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi server nội bộ' });
-    }
-});
-
-// Cập nhật thông tin cá nhân (số điện thoại, mô tả ngắn, liên kết mạng xã hội)
+// Cập nhật thông tin profile
 app.put('/api/user/update-profile-info', async(req, res) => {
     try {
         const { user_id, phone, bio, social } = req.body;
+
         if (!user_id) {
-            return res.status(400).json({ success: false, message: 'Thiếu user_id' });
+            return res.status(400).json({
+                success: false,
+                message: 'Thiếu user_id'
+            });
         }
 
-        // Lấy thông tin user để gửi email
-        const [users] = await pool.execute('SELECT * FROM users WHERE id = ?', [user_id]);
-        if (users.length === 0) {
-            return res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
-        }
-        const user = users[0];
-
+        // Cập nhật thông tin profile
         await pool.execute(
-            'UPDATE users SET phone = ?, bio = ?, social = ? WHERE id = ?', [phone || '', bio || '', social || '', user_id]
+            'UPDATE users SET phone = ?, bio = ?, social = ? WHERE id = ?', [phone || null, bio || null, social || null, user_id]
         );
 
-        // Gửi email xác nhận
-        try {
-            await sendProfileUpdateEmail(user.email, user.full_name || user.username, 'profile', req.ip);
-        } catch (emailError) {
-            console.error('Error sending profile update email:', emailError);
-        }
-
-        res.json({ success: true, message: 'Cập nhật thông tin cá nhân thành công!' });
+        res.json({
+            success: true,
+            message: 'Cập nhật thông tin cá nhân thành công'
+        });
     } catch (error) {
         console.error('Update profile info error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi server nội bộ' });
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server khi cập nhật thông tin cá nhân'
+        });
     }
 });
 
 // ========== END USER PROFILE ROUTES ========== //
+
+// ========== REPORTS API ========== //
+
+// Thống kê tổng quan cho báo cáo
+app.get('/api/admin/reports/overview', async(req, res) => {
+    try {
+        const { year, month, industry, status } = req.query;
+
+        // Build WHERE conditions
+        let whereConditions = [];
+        let queryParams = [];
+
+        if (year) {
+            whereConditions.push('YEAR(a.created_at) = ?');
+            queryParams.push(parseInt(year));
+        }
+
+        if (month && month !== 'all') {
+            whereConditions.push('MONTH(a.created_at) = ?');
+            queryParams.push(parseInt(month));
+        }
+
+        if (industry && industry !== 'all') {
+            whereConditions.push('n.ten_nganh = ?');
+            queryParams.push(industry);
+        }
+
+        if (status && status !== 'all') {
+            whereConditions.push('a.status = ?');
+            queryParams.push(status);
+        }
+
+        const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
+
+        // Tổng hồ sơ
+        const [totalApps] = await pool.execute(
+            `SELECT COUNT(*) as total FROM applications a LEFT JOIN nganh n ON a.nganh_id = n.id ${whereClause}`,
+            queryParams
+        );
+
+        // Hồ sơ đã duyệt
+        const [approvedApps] = await pool.execute(
+            `SELECT COUNT(*) as approved FROM applications a LEFT JOIN nganh n ON a.nganh_id = n.id ${whereClause} AND a.status = 'approved'`,
+            queryParams
+        );
+
+        // Hồ sơ chờ duyệt
+        const [pendingApps] = await pool.execute(
+            `SELECT COUNT(*) as pending FROM applications a LEFT JOIN nganh n ON a.nganh_id = n.id ${whereClause} AND a.status = 'pending'`,
+            queryParams
+        );
+
+        // Hồ sơ từ chối
+        const [rejectedApps] = await pool.execute(
+            `SELECT COUNT(*) as rejected FROM applications a LEFT JOIN nganh n ON a.nganh_id = n.id ${whereClause} AND a.status = 'rejected'`,
+            queryParams
+        );
+
+        res.json({
+            success: true,
+            data: {
+                total: totalApps[0].total,
+                approved: approvedApps[0].approved,
+                pending: pendingApps[0].pending,
+                rejected: rejectedApps[0].rejected,
+                approvalRate: totalApps[0].total > 0 ? ((approvedApps[0].approved / totalApps[0].total) * 100).toFixed(1) : 0
+            }
+        });
+    } catch (error) {
+        console.error('Reports overview error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy thống kê tổng quan',
+            error: error.message
+        });
+    }
+});
+
+// Thống kê theo ngành học
+app.get('/api/admin/reports/industry-stats', async(req, res) => {
+    try {
+        const { year, month, status } = req.query;
+
+        let whereConditions = [];
+        let queryParams = [];
+
+        if (year) {
+            whereConditions.push('YEAR(a.created_at) = ?');
+            queryParams.push(parseInt(year));
+        }
+
+        if (month && month !== 'all') {
+            whereConditions.push('MONTH(a.created_at) = ?');
+            queryParams.push(parseInt(month));
+        }
+
+        if (status && status !== 'all') {
+            whereConditions.push('a.status = ?');
+            queryParams.push(status);
+        }
+
+        const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
+
+        // Get total count first
+        const [totalCount] = await pool.execute(`
+            SELECT COUNT(*) as total
+            FROM applications a2 
+            LEFT JOIN nganh n2 ON a2.nganh_id = n2.id 
+            ${whereClause}
+        `, queryParams);
+
+        const total = totalCount[0].total;
+
+        const [industryStats] = await pool.execute(`
+            SELECT 
+                n.ten_nganh as name,
+                n.ma_nganh as code,
+                COUNT(a.id) as applications,
+                ROUND(COUNT(a.id) * 100.0 / ?, 1) as percentage
+            FROM nganh n
+            LEFT JOIN applications a ON n.id = a.nganh_id ${whereClause ? 'AND ' + whereConditions.join(' AND ') : ''}
+            GROUP BY n.id, n.ten_nganh, n.ma_nganh
+            HAVING applications > 0
+            ORDER BY applications DESC
+        `, [...queryParams, total]);
+
+        res.json({
+            success: true,
+            data: industryStats
+        });
+    } catch (error) {
+        console.error('Industry stats error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy thống kê ngành học',
+            error: error.message
+        });
+    }
+});
+
+// Thống kê trạng thái
+app.get('/api/admin/reports/status-stats', async(req, res) => {
+    try {
+        const { year, month, industry } = req.query;
+
+        let whereConditions = [];
+        let queryParams = [];
+
+        if (year) {
+            whereConditions.push('YEAR(a.created_at) = ?');
+            queryParams.push(parseInt(year));
+        }
+
+        if (month && month !== 'all') {
+            whereConditions.push('MONTH(a.created_at) = ?');
+            queryParams.push(parseInt(month));
+        }
+
+        if (industry && industry !== 'all') {
+            whereConditions.push('n.ten_nganh = ?');
+            queryParams.push(industry);
+        }
+
+        const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
+
+        const [statusStats] = await pool.execute(`
+            SELECT 
+                CASE 
+                    WHEN a.status = 'pending' THEN 'Chờ duyệt'
+                    WHEN a.status = 'approved' THEN 'Đã duyệt'
+                    WHEN a.status = 'rejected' THEN 'Từ chối'
+                    ELSE a.status
+                END as name,
+                a.status as status_key,
+                COUNT(*) as value,
+                CASE 
+                    WHEN a.status = 'pending' THEN '#fbbf24'
+                    WHEN a.status = 'approved' THEN '#10b981'
+                    WHEN a.status = 'rejected' THEN '#ef4444'
+                    ELSE '#6b7280'
+                END as color
+            FROM applications a
+            LEFT JOIN nganh n ON a.nganh_id = n.id
+            ${whereClause}
+            GROUP BY a.status
+            ORDER BY value DESC
+        `, queryParams);
+
+        res.json({
+            success: true,
+            data: statusStats
+        });
+    } catch (error) {
+        console.error('Status stats error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy thống kê trạng thái',
+            error: error.message
+        });
+    }
+});
+
+// Thống kê theo thời gian
+app.get('/api/admin/reports/time-series', async(req, res) => {
+    try {
+        const { year, industry, status } = req.query;
+
+        let whereConditions = [];
+        let queryParams = [];
+
+        if (year) {
+            whereConditions.push('YEAR(a.created_at) = ?');
+            queryParams.push(parseInt(year));
+        }
+
+        if (industry && industry !== 'all') {
+            whereConditions.push('n.ten_nganh = ?');
+            queryParams.push(industry);
+        }
+
+        if (status && status !== 'all') {
+            whereConditions.push('a.status = ?');
+            queryParams.push(status);
+        }
+
+        const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
+
+        const [timeSeriesData] = await pool.execute(`
+            SELECT 
+                DATE_FORMAT(a.created_at, '%m') as month_num,
+                CONCAT('T', DATE_FORMAT(a.created_at, '%m')) as month,
+                COUNT(*) as applications,
+                SUM(CASE WHEN a.status = 'approved' THEN 1 ELSE 0 END) as approved,
+                SUM(CASE WHEN a.status = 'rejected' THEN 1 ELSE 0 END) as rejected
+            FROM applications a
+            LEFT JOIN nganh n ON a.nganh_id = n.id
+            ${whereClause}
+            GROUP BY DATE_FORMAT(a.created_at, '%Y-%m'), DATE_FORMAT(a.created_at, '%m')
+            ORDER BY month_num
+        `, queryParams);
+
+        res.json({
+            success: true,
+            data: timeSeriesData
+        });
+    } catch (error) {
+        console.error('Time series error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy thống kê theo thời gian',
+            error: error.message
+        });
+    }
+});
+
+// Top trường THPT
+app.get('/api/admin/reports/top-schools', async(req, res) => {
+    try {
+        const { year, month, industry, status } = req.query;
+
+        let whereConditions = [];
+        let queryParams = [];
+
+        if (year) {
+            whereConditions.push('YEAR(a.created_at) = ?');
+            queryParams.push(parseInt(year));
+        }
+
+        if (month && month !== 'all') {
+            whereConditions.push('MONTH(a.created_at) = ?');
+            queryParams.push(parseInt(month));
+        }
+
+        if (industry && industry !== 'all') {
+            whereConditions.push('n.ten_nganh = ?');
+            queryParams.push(industry);
+        }
+
+        if (status && status !== 'all') {
+            whereConditions.push('a.status = ?');
+            queryParams.push(status);
+        }
+
+        const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
+
+        const [topSchools] = await pool.execute(`
+            SELECT 
+                a.truong_thpt as name,
+                COUNT(*) as applications,
+                'TP.HCM' as city
+            FROM applications a
+            LEFT JOIN nganh n ON a.nganh_id = n.id
+            ${whereClause}
+            GROUP BY a.truong_thpt
+            HAVING applications > 0
+            ORDER BY applications DESC
+            LIMIT 10
+        `, queryParams);
+
+        res.json({
+            success: true,
+            data: topSchools
+        });
+    } catch (error) {
+        console.error('Top schools error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy top trường THPT',
+            error: error.message
+        });
+    }
+});
+
+// Thống kê phương thức xét tuyển
+app.get('/api/admin/reports/admission-methods', async(req, res) => {
+    try {
+        const { year, month, industry, status } = req.query;
+
+        let whereConditions = [];
+        let queryParams = [];
+
+        if (year) {
+            whereConditions.push('YEAR(a.created_at) = ?');
+            queryParams.push(parseInt(year));
+        }
+
+        if (month && month !== 'all') {
+            whereConditions.push('MONTH(a.created_at) = ?');
+            queryParams.push(parseInt(month));
+        }
+
+        if (industry && industry !== 'all') {
+            whereConditions.push('n.ten_nganh = ?');
+            queryParams.push(industry);
+        }
+
+        if (status && status !== 'all') {
+            whereConditions.push('a.status = ?');
+            queryParams.push(status);
+        }
+
+        const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
+
+        // Get total count first
+        const [totalCount] = await pool.execute(`
+            SELECT COUNT(*) as total
+            FROM applications a2 
+            LEFT JOIN nganh n2 ON a2.nganh_id = n2.id 
+            ${whereClause}
+        `, queryParams);
+
+        const total = totalCount[0].total;
+
+        const [admissionMethods] = await pool.execute(`
+            SELECT 
+                CASE 
+                    WHEN a.phuong_thuc_xet_tuyen = 'hoc_ba' THEN 'Học bạ THPT'
+                    WHEN a.phuong_thuc_xet_tuyen = 'thi_thpt' THEN 'Thi THPT'
+                    WHEN a.phuong_thuc_xet_tuyen = 'danh_gia_nang_luc' THEN 'Đánh giá năng lực'
+                    ELSE 'Không xác định'
+                END as method,
+                a.phuong_thuc_xet_tuyen as method_key,
+                COUNT(*) as count,
+                ROUND(COUNT(*) * 100.0 / ?, 1) as percentage
+            FROM applications a
+            LEFT JOIN nganh n ON a.nganh_id = n.id
+            ${whereClause}
+            GROUP BY a.phuong_thuc_xet_tuyen
+            ORDER BY count DESC
+        `, [...queryParams, total]);
+
+        res.json({
+            success: true,
+            data: admissionMethods
+        });
+    } catch (error) {
+        console.error('Admission methods error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy thống kê phương thức xét tuyển',
+            error: error.message
+        });
+    }
+});
+
+// ========== USER MANAGEMENT API ========== //
+
+// Lấy danh sách users (không phải admin)
+app.get('/api/admin/users', async(req, res) => {
+    try {
+        // Test query first
+        console.log('Testing database connection...');
+        const [testResult] = await pool.execute('SELECT COUNT(*) as total FROM users');
+        console.log('Total users in database:', testResult[0].total);
+
+        const [allUsers] = await pool.execute('SELECT * FROM users LIMIT 5');
+        console.log('Sample users:', allUsers);
+
+        const { page = 1, limit = 20, search, status } = req.query;
+
+        let whereConditions = [];
+        let queryParams = [];
+
+        // Always filter by user role
+        whereConditions.push('u.role = ?');
+        queryParams.push('user');
+
+        if (search && search.trim()) {
+            whereConditions.push('(u.username LIKE ? OR u.email LIKE ?)');
+            const searchParam = `%${search.trim()}%`;
+            queryParams.push(searchParam, searchParam);
+        }
+
+        if (status && status !== 'all') {
+            whereConditions.push('u.is_active = ?');
+            queryParams.push(status === 'active' ? 1 : 0);
+        }
+
+        const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
+
+        const limitNum = Math.max(1, Math.min(100, parseInt(limit) || 20));
+        const pageNum = Math.max(1, parseInt(page) || 1);
+        const offsetNum = (pageNum - 1) * limitNum;
+
+        const mainQuery = `
+            SELECT 
+                u.id, u.username, u.email, u.phone, u.role,
+                u.is_active, u.created_at, u.updated_at
+            FROM users u
+            ${whereClause}
+            ORDER BY u.created_at DESC
+            LIMIT ? OFFSET ?
+        `;
+
+        const countQuery = `
+            SELECT COUNT(*) as count
+            FROM users u
+            ${whereClause}
+        `;
+
+        const mainParams = [...queryParams, limitNum, offsetNum];
+        const countParams = [...queryParams];
+
+        // Debug logging
+        console.log('Users query debug:');
+        console.log('mainQuery:', mainQuery);
+        console.log('countQuery:', countQuery);
+        console.log('mainParams:', mainParams);
+        console.log('countParams:', countParams);
+        console.log('mainQuery placeholders:', (mainQuery.match(/\?/g) || []).length);
+        console.log('countQuery placeholders:', (countQuery.match(/\?/g) || []).length);
+
+        // Convert parameters to correct types
+        const cleanMainParams = mainParams.map(param => {
+            if (typeof param === 'number') return param;
+            if (param === null || param === undefined) return null;
+            return String(param);
+        });
+
+        const cleanCountParams = countParams.map(param => {
+            if (param === null || param === undefined) return null;
+            return String(param);
+        });
+
+        console.log('Clean mainParams:', cleanMainParams);
+        console.log('Clean countParams:', cleanCountParams);
+
+        // Try using query instead of execute
+        const [users] = await pool.query(mainQuery, cleanMainParams);
+        const [totalCount] = await pool.query(countQuery, cleanCountParams);
+
+        res.json({
+            success: true,
+            data: {
+                users: users.map(user => ({
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    fullName: user.username, // Sử dụng username thay vì full_name
+                    phone: user.phone,
+                    role: user.role,
+                    isActive: user.is_active === 1,
+                    createdAt: user.created_at,
+                    updatedAt: user.updated_at
+                })),
+                total: totalCount[0].count,
+                page: pageNum,
+                limit: limitNum,
+                totalPages: Math.ceil(totalCount[0].count / limitNum)
+            }
+        });
+    } catch (error) {
+        console.error('Users list error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy danh sách users',
+            error: error.message
+        });
+    }
+});
+
+
+
+
+
+
+
+// Cập nhật trạng thái user/admin
+app.put('/api/admin/users/:id/status', async(req, res) => {
+    try {
+        const { id } = req.params;
+        const { isActive } = req.body;
+
+        await pool.execute(
+            'UPDATE users SET is_active = ? WHERE id = ?', [isActive ? 1 : 0, id]
+        );
+
+        res.json({
+            success: true,
+            message: 'Cập nhật trạng thái thành công'
+        });
+    } catch (error) {
+        console.error('Update user status error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi cập nhật trạng thái',
+            error: error.message
+        });
+    }
+});
+
+// Xóa user/admin
+app.delete('/api/admin/users/:id', async(req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Kiểm tra user có hồ sơ không
+        const [applications] = await pool.execute(
+            'SELECT id FROM applications WHERE user_id = ?', [id]
+        );
+
+        if (applications.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Không thể xóa user đã có hồ sơ xét tuyển'
+            });
+        }
+
+        await pool.execute('DELETE FROM users WHERE id = ?', [id]);
+
+        res.json({
+            success: true,
+            message: 'Xóa user thành công'
+        });
+    } catch (error) {
+        console.error('Delete user error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi xóa user',
+            error: error.message
+        });
+    }
+});
+
+// ========== SETTINGS API ========== //
+
+// Lấy cài đặt hệ thống
+app.get('/api/admin/settings', async(req, res) => {
+    try {
+        // TODO: Implement settings table
+        const settings = {
+            systemInfo: {
+                schoolName: 'Trường Đại học Công nghệ TP.HCM (HUTECH)',
+                schoolCode: 'HUTECH',
+                contactEmail: 'tuyensinh@hutech.edu.vn',
+                contactPhone: '028 5445 7777',
+                website: 'https://hutech.edu.vn',
+                address: '475A Điện Biên Phủ, P.25, Q.Bình Thạnh, TP.HCM',
+                description: 'Trường Đại học Công nghệ TP.HCM - HUTECH là một trong những trường đại học hàng đầu về đào tạo công nghệ và kinh tế tại Việt Nam.'
+            },
+            notificationSettings: {
+                emailNotifications: true,
+                applicationSubmitted: true,
+                applicationStatusChanged: true,
+                newUserRegistered: false,
+                systemAlerts: true,
+                dailyReports: false,
+                weeklyReports: true,
+                emailTemplate: 'default'
+            },
+            uploadSettings: {
+                maxFileSize: 10,
+                allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
+                avatarMaxSize: 5,
+                documentMaxSize: 20,
+                autoCompress: true,
+                storagePath: '/uploads',
+                backupEnabled: true
+            }
+        };
+
+        res.json({
+            success: true,
+            data: settings
+        });
+    } catch (error) {
+        console.error('Get settings error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy cài đặt',
+            error: error.message
+        });
+    }
+});
+
+// Cập nhật cài đặt hệ thống
+app.put('/api/admin/settings', async(req, res) => {
+    try {
+        const { section, data } = req.body;
+
+        // TODO: Implement settings table
+        console.log(`Updating ${section} settings:`, data);
+
+        res.json({
+            success: true,
+            message: 'Cập nhật cài đặt thành công'
+        });
+    } catch (error) {
+        console.error('Update settings error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi cập nhật cài đặt',
+            error: error.message
+        });
+    }
+});
 
 // Database setup endpoint
 app.get('/api/admin/setup-db', async(req, res) => {
@@ -1706,88 +2364,7 @@ app.put('/api/user/update-email', async(req, res) => {
     }
 });
 
-// API cập nhật mật khẩu
-app.put('/api/user/update-password', async(req, res) => {
-    try {
-        const { user_id, current_password, new_password } = req.body;
 
-        if (!user_id || !current_password || !new_password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Thiếu thông tin cần thiết'
-            });
-        }
-
-        // Kiểm tra mật khẩu hiện tại
-        const [users] = await pool.execute(
-            'SELECT password FROM users WHERE id = ?', [user_id]
-        );
-
-        if (users.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Không tìm thấy người dùng'
-            });
-        }
-
-        const isValidPassword = await bcrypt.compare(current_password, users[0].password);
-        if (!isValidPassword) {
-            return res.status(400).json({
-                success: false,
-                message: 'Mật khẩu hiện tại không đúng'
-            });
-        }
-
-        // Hash mật khẩu mới
-        const hashedPassword = await bcrypt.hash(new_password, 10);
-
-        // Cập nhật mật khẩu
-        await pool.execute(
-            'UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user_id]
-        );
-
-        res.json({
-            success: true,
-            message: 'Cập nhật mật khẩu thành công'
-        });
-    } catch (error) {
-        console.error('Update password error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Lỗi server khi cập nhật mật khẩu'
-        });
-    }
-});
-
-// API cập nhật thông tin profile
-app.put('/api/user/update-profile-info', async(req, res) => {
-    try {
-        const { user_id, phone, bio, social } = req.body;
-
-        if (!user_id) {
-            return res.status(400).json({
-                success: false,
-                message: 'Thiếu user_id'
-            });
-        }
-
-        // Cập nhật thông tin profile
-        await pool.execute(
-            'UPDATE users SET phone = ?, bio = ?, social = ? WHERE id = ?', [phone || null, bio || null, social || null, user_id]
-        );
-
-        res.json({
-            success: true,
-            message: 'Cập nhật thông tin cá nhân thành công'
-        });
-    } catch (error) {
-        console.error('Update profile info error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Lỗi server khi cập nhật thông tin cá nhân'
-        });
-    }
-});
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
@@ -1807,6 +2384,65 @@ app.use((error, req, res, next) => {
         success: false,
         message: error.message || 'Internal server error'
     });
+});
+
+// Test database connection
+app.get('/api/test-db', async(req, res) => {
+    try {
+        console.log('Testing database connection...');
+        const [result] = await pool.execute('SELECT 1 as test');
+        console.log('Database test result:', result);
+
+        res.json({
+            success: true,
+            message: 'Database connection successful',
+            data: result
+        });
+    } catch (error) {
+        console.error('Database test error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Database connection failed',
+            error: error.message
+        });
+    }
+});
+
+// Test endpoint for users
+app.get('/api/test-users', async(req, res) => {
+    try {
+        console.log('Testing simple users query...');
+
+        // Simple query without parameters
+        const [users] = await pool.query('SELECT id, username, email, phone, role, is_active, created_at, updated_at FROM users WHERE role = "user" LIMIT 10');
+
+        console.log('Users found:', users.length);
+
+        res.json({
+            success: true,
+            message: 'Users retrieved successfully',
+            data: {
+                users: users.map(user => ({
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    phone: user.phone,
+                    role: user.role,
+                    isActive: user.is_active === 1,
+                    createdAt: user.created_at,
+                    updatedAt: user.updated_at
+                })),
+                total: users.length
+            }
+        });
+    } catch (error) {
+        console.error('Test users error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error getting test users',
+            error: error.message
+        });
+    }
 });
 
 // Start server
