@@ -13,7 +13,10 @@ const PORT = 3001;
 
 // CORS configuration
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: [
+        'http://localhost:5173', // Development
+        'https://do-an-tuyen-sinh.vercel.app' // Production
+    ],
     credentials: true
 }));
 

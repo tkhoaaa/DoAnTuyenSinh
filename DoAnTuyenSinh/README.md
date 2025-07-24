@@ -24,6 +24,7 @@ Một hệ thống quản lý tuyển sinh trực tuyến hoàn chỉnh cho trư
 - [🛠️ Troubleshooting](#️-troubleshooting)
 - [📈 Migration Guide](#-migration-guide)
 - [🚀 Deploy](#-deploy)
+- [📋 Deployment Guide](./DEPLOYMENT.md)
 
 ## 🚀 Tạo dự án từ đầu
 
@@ -213,7 +214,7 @@ npm run dev
 
 #### Bước 6: Truy cập ứng dụng
 
-- **Frontend**: http://localhost:5173
+- **Frontend**: https://do-an-tuyen-sinh.vercel.app (Production) | http://localhost:5173 (Development)
 - **Backend API**: http://localhost:3001
 - **Admin Login**: 
   - Email: `admin@hutech.edu.vn`
@@ -417,7 +418,7 @@ npm run dev
 
 **Truy cập:**
 
-- Frontend: http://localhost:5173
+- Frontend: https://do-an-tuyen-sinh.vercel.app (Production) | http://localhost:5173 (Development)
 - Backend API: http://localhost:3001
 
 ## 🔧 Cấu hình Database
@@ -1041,7 +1042,7 @@ node index.js
 
 **Kiểm tra**:
 - ✅ Backend đang chạy trên port 3001
-- ✅ CORS đã cấu hình cho localhost:5173
+- ✅ CORS đã cấu hình cho localhost:5173 và do-an-tuyen-sinh.vercel.app
 - ✅ MySQL đang chạy
 
 **Debug**:
@@ -1412,10 +1413,10 @@ pm2 save
 - ✅ **Production ready** với error handling và validation
 
 ### 🚀 Deployment:
-- **Frontend**: Vercel/Netlify
-- **Backend**: VPS/Cloud với PM2
-- **Database**: MySQL 8.0 Cloud
-- **CDN**: Images và assets optimization
+- **Frontend**: ✅ [Vercel](https://do-an-tuyen-sinh.vercel.app/) - Live Production
+- **Backend**: ⚠️ Local Development (localhost:3001)
+- **Database**: MySQL 8.0 Local
+- **CORS**: Configured for both local and production domains
 
 ### 📈 Future Enhancements:
 - Real-time notifications với WebSocket

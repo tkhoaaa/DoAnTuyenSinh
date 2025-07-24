@@ -83,7 +83,7 @@ npm run dev
 ### **Bước 4: Test hệ thống**
 
 1. **Truy cập ứng dụng**:
-   - Frontend: http://localhost:5173
+   - Frontend: https://do-an-tuyen-sinh.vercel.app (Production) | http://localhost:5173 (Development)
    - Backend API: http://localhost:3001
 
 2. **Đăng nhập Admin**:
@@ -191,7 +191,7 @@ CREATE DATABASE tuyensinh CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ### **Nếu Frontend không kết nối được Backend:**
 
 1. **Kiểm tra Backend đang chạy** trên port 3001
-2. **Kiểm tra CORS** - đã cấu hình cho localhost:5173
+2. **Kiểm tra CORS** - đã cấu hình cho localhost:5173 và do-an-tuyen-sinh.vercel.app
 3. **Clear browser cache** và reload
 
 ### **Nếu QuanLyHoSo vẫn trống:**
