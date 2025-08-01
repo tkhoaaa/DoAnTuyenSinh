@@ -145,7 +145,13 @@ const QuanLyFAQ = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6 relative overflow-hidden">
+      {/* Modern Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+      <div className="relative z-10">
       {/* Header */}
       <motion.div
         className="mb-8"
@@ -155,10 +161,10 @@ const QuanLyFAQ = () => {
       >
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-2">
               Quản Lý FAQ
             </h1>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-300 text-lg">
               Quản lý câu hỏi thường gặp trên website
             </p>
           </div>
@@ -175,12 +181,12 @@ const QuanLyFAQ = () => {
       </motion.div>
 
       {/* Filters */}
-      <motion.div
-        className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8"
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
+              <motion.div
+          className="bg-white/5 backdrop-blur-xl rounded-2xl shadow-xl p-6 mb-8 border border-white/10"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Search */}
           <div className="relative">
@@ -512,6 +518,7 @@ const QuanLyFAQ = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 };

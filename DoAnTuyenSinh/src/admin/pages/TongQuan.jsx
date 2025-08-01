@@ -75,26 +75,11 @@ const TongQuan = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setError("");
 
-      if (isDemoMode) {
-        // Use demo data when in demo mode
-        console.log("Using demo data for dashboard");
-        setStats({
-          totalApplications: DEMO_DASHBOARD_STATS.total_applications,
-          pendingApplications: DEMO_DASHBOARD_STATS.pending_applications,
-          approvedApplications: DEMO_DASHBOARD_STATS.approved_applications,
-          rejectedApplications: DEMO_DASHBOARD_STATS.rejected_applications,
-          totalStudents: DEMO_DASHBOARD_STATS.total_users,
-          totalMajors: DEMO_DASHBOARD_STATS.total_majors,
-          averageGPA: 7.8,
-          completionRate: 85,
-        });
-        setRecentApplications(DEMO_DASHBOARD_STATS.recent_applications);
-        setTopMajors(DEMO_DASHBOARD_STATS.top_majors);
-        setError("");
-        return;
-      }
-
+      // Always fetch real data from database
+      console.log("Fetching real data from database...");
+      
       // Fetch all dashboard data in parallel
       const [statsResponse, recentResponse, majorsResponse] = await Promise.all(
         [
@@ -104,36 +89,87 @@ const TongQuan = () => {
         ]
       );
 
+      // Process stats response
       if (statsResponse.data.success) {
         setStats(statsResponse.data.data);
+        console.log("Stats loaded successfully:", statsResponse.data.data);
+      } else {
+        console.warn("Stats API returned unsuccessful response");
       }
 
+      // Process recent applications response
       if (recentResponse.data.success) {
         setRecentApplications(recentResponse.data.data);
+        console.log("Recent applications loaded successfully:", recentResponse.data.data.length, "items");
+      } else {
+        console.warn("Recent applications API returned unsuccessful response");
       }
 
+      // Process top majors response
       if (majorsResponse.data.success) {
         setTopMajors(majorsResponse.data.data);
+        console.log("Top majors loaded successfully:", majorsResponse.data.data.length, "items");
+      } else {
+        console.warn("Top majors API returned unsuccessful response");
       }
+
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
-      setError(
-        "Không thể tải dữ liệu dashboard. Vui lòng kiểm tra kết nối server."
-      );
+      
+      // Show specific error message based on error type
+      if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
+        setError("Không thể kết nối đến server. Vui lòng kiểm tra server có đang chạy không.");
+      } else if (error.response?.status === 404) {
+        setError("API endpoint không tồn tại. Vui lòng kiểm tra cấu hình server.");
+      } else if (error.response?.status === 500) {
+        setError("Lỗi server nội bộ. Vui lòng kiểm tra logs server.");
+      } else {
+        setError(`Lỗi tải dữ liệu: ${error.message}`);
+      }
 
-      // Set empty arrays instead of mock data
+      // Set sample data for testing when API fails
+      console.log("Setting sample data for testing...");
       setStats({
-        totalApplications: 0,
-        pendingApplications: 0,
-        approvedApplications: 0,
-        rejectedApplications: 0,
-        totalStudents: 0,
-        totalMajors: 0,
-        averageGPA: 0,
-        completionRate: 0,
+        totalApplications: 1250,
+        pendingApplications: 89,
+        approvedApplications: 1089,
+        rejectedApplications: 72,
+        totalStudents: 1089,
+        totalMajors: 25,
+        averageGPA: 7.8,
+        completionRate: 85,
       });
-      setRecentApplications([]);
-      setTopMajors([]);
+      
+      setRecentApplications([
+        {
+          id: 1,
+          studentName: "Nguyễn Văn A",
+          email: "nguyenvana@example.com",
+          major: "Công nghệ thông tin",
+          gpa: 8.5,
+          status: "pending",
+          submittedAt: new Date().toISOString(),
+          avatar: "https://ui-avatars.com/api/?name=Nguyen+Van+A&background=3b82f6&color=fff"
+        },
+        {
+          id: 2,
+          studentName: "Trần Thị B",
+          email: "tranthib@example.com",
+          major: "Quản trị kinh doanh",
+          gpa: 7.8,
+          status: "approved",
+          submittedAt: new Date(Date.now() - 86400000).toISOString(),
+          avatar: "https://ui-avatars.com/api/?name=Tran+Thi+B&background=10b981&color=fff"
+        }
+      ]);
+      
+      setTopMajors([
+        { name: "Công nghệ thông tin", count: 450, percentage: 36, trend: "+12%", icon: "💻" },
+        { name: "Quản trị kinh doanh", count: 320, percentage: 26, trend: "+8%", icon: "📊" },
+        { name: "Kế toán", count: 280, percentage: 22, trend: "+5%", icon: "💰" },
+        { name: "Marketing", count: 150, percentage: 12, trend: "+15%", icon: "📈" },
+        { name: "Thiết kế đồ họa", count: 50, percentage: 4, trend: "+20%", icon: "🎨" }
+      ]);
     } finally {
       setLoading(false);
     }
@@ -153,7 +189,7 @@ const TongQuan = () => {
         className="relative group cursor-pointer stat-card"
         style={{ animationDelay: `${delay}s` }}
       >
-        <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 overflow-hidden transition-all duration-300 hover:shadow-3xl hover:scale-105">
+        <div className="relative bg-white/5 backdrop-blur-xl rounded-2xl shadow-xl p-8 border border-white/10 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:bg-white/10 group">
           {/* Simple hover background */}
           <div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-3xl"
@@ -168,12 +204,12 @@ const TongQuan = () => {
 
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-sm text-gray-600 mb-2 font-medium">{title}</p>
-              <p className={`text-4xl font-black ${color} mb-1 stat-number`}>
+              <p className="text-sm text-gray-300 mb-2 font-medium">{title}</p>
+              <p className={`text-4xl font-black text-white mb-1 stat-number`}>
                 {typeof value === "number" ? value.toLocaleString() : value}
               </p>
               {subtitle && (
-                <p className="text-xs text-gray-500 mb-3">{subtitle}</p>
+                <p className="text-xs text-gray-400 mb-3">{subtitle}</p>
               )}
               {trend && (
                 <div className="flex items-center gap-2 stat-trend">
@@ -191,7 +227,7 @@ const TongQuan = () => {
                     )}
                     {trend}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-400">
                     so với tháng trước
                   </span>
                 </div>
@@ -206,7 +242,7 @@ const TongQuan = () => {
                 .replace(
                   "-600",
                   "-600"
-                )} rounded-2xl flex items-center justify-center shadow-2xl stat-icon transition-all duration-300 group-hover:scale-110 group-hover:rotate-12`}
+                )} rounded-xl flex items-center justify-center shadow-lg stat-icon transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-xl`}
             >
               <Icon className="text-white text-2xl" />
             </div>
@@ -215,74 +251,43 @@ const TongQuan = () => {
 
         <style jsx>{`
           .stat-card {
-            animation: slideInUp 0.6s ease-out forwards;
-            opacity: 0;
-            transform: translateY(30px);
+            opacity: 1;
+            transform: none;
           }
 
           .stat-number {
-            animation: countUp 0.8s ease-out forwards;
-            animation-delay: calc(${delay}s + 0.3s);
+            opacity: 1;
+            transform: none;
           }
 
           .stat-trend {
-            animation: fadeInLeft 0.6s ease-out forwards;
-            animation-delay: calc(${delay}s + 0.5s);
-            opacity: 0;
-            transform: translateX(-20px);
+            opacity: 1;
+            transform: none;
           }
 
           .stat-icon {
-            animation: iconBounce 0.6s ease-out forwards;
-            animation-delay: calc(${delay}s + 0.2s);
-            transform: scale(0.8);
-          }
-
-          @keyframes slideInUp {
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          @keyframes countUp {
-            from {
-              transform: scale(0.5);
-              opacity: 0;
-            }
-            to {
-              transform: scale(1);
-              opacity: 1;
-            }
-          }
-
-          @keyframes fadeInLeft {
-            to {
-              opacity: 1;
-              transform: translateX(0);
-            }
-          }
-
-          @keyframes iconBounce {
-            0% {
-              transform: scale(0.8);
-            }
-            50% {
-              transform: scale(1.1);
-            }
-            100% {
-              transform: scale(1);
-            }
+            opacity: 1;
+            transform: none;
+            transition: all 0.3s ease;
           }
 
           .stat-card:hover .stat-icon {
-            animation: iconRotate 0.3s ease-in-out forwards;
+            transform: scale(1.1) rotate(6deg);
           }
 
-          @keyframes iconRotate {
-            to {
-              transform: scale(1.1) rotate(12deg);
-            }
+          .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+          }
+
+          .stat-card:hover::before {
+            left: 100%;
           }
         `}</style>
       </div>
@@ -330,31 +335,12 @@ const TongQuan = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0">
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-gradient-to-r from-blue-400/10 to-purple-400/10"
-            style={{
-              width: `${100 + i * 50}px`,
-              height: `${100 + i * 50}px`,
-              left: `${10 + i * 15}%`,
-              top: `${5 + i * 12}%`,
-            }}
-            animate={{
-              y: [0, -20, 0],
-              x: [0, 10, 0],
-              rotate: [0, 180, 360],
-            }}
-            transition={{
-              duration: 10 + i * 2,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-          />
-        ))}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Modern Animated Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
 
       <div className="relative z-10 p-8">
@@ -362,34 +348,34 @@ const TongQuan = () => {
         <div className="mb-12">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div className="header-content">
-              <h1 className="text-5xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4 relative">
+              <h1 className="text-5xl font-black bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4 relative">
                 Dashboard Tổng Quan
-                <span className="inline-block ml-3 text-yellow-500 sparkle-icon">
+                <span className="inline-block ml-3 text-purple-400 sparkle-icon">
                   <FaMagic />
                 </span>
               </h1>
-              <p className="text-xl text-gray-600 flex items-center gap-2">
-                <span className="rocket-icon text-blue-500">
+              <p className="text-xl text-gray-300 flex items-center gap-2">
+                <span className="rocket-icon text-cyan-400">
                   <FaRocket />
                 </span>
                 Hệ thống quản lý tuyển sinh HUTECH 2025
               </p>
             </div>
 
-            <div className="bg-white/80 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-xl border border-white/20 relative overflow-hidden clock-container">
+            <div className="bg-white/5 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-xl border border-white/10 relative overflow-hidden clock-container">
               {/* Static background with subtle gradient */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl"></div>
 
               <div className="text-right relative z-10">
-                <p className="text-sm text-gray-600 mb-1 flex items-center justify-end gap-2">
+                <p className="text-sm text-gray-300 mb-1 flex items-center justify-end gap-2">
                   <span className="text-base clock-emoji">🕐</span>
                   Thời gian thực
                 </p>
-                <div className="text-2xl font-bold text-blue-600 font-mono tracking-wider">
+                <div className="text-2xl font-bold text-white font-mono tracking-wider">
                   {currentTime.toLocaleTimeString("vi-VN")}
                 </div>
-                <p className="text-sm text-gray-500 flex items-center justify-end gap-2 mt-1">
-                  <FaCalendarAlt className="text-blue-500" />
+                <p className="text-sm text-gray-400 flex items-center justify-end gap-2 mt-1">
+                  <FaCalendarAlt className="text-purple-400" />
                   {currentTime.toLocaleDateString("vi-VN")}
                 </p>
               </div>
@@ -481,6 +467,52 @@ const TongQuan = () => {
             }
           }
         `}</style>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-8 bg-red-50 border-l-4 border-red-400 p-6 rounded-lg shadow-lg">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <FaTimes className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  Lỗi tải dữ liệu
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                </div>
+                <div className="mt-4">
+                  <button
+                    onClick={fetchDashboardData}
+                    className="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                  >
+                    Thử lại
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="mb-8 bg-blue-50 border-l-4 border-blue-400 p-6 rounded-lg shadow-lg">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <FaClock className="h-5 w-5 text-blue-400 animate-spin" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Đang tải dữ liệu...
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>Vui lòng chờ trong giây lát</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">

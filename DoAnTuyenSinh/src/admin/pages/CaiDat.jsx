@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaCog, FaSave, FaUndo, FaUpload, FaBell, FaUsers, FaBuilding, 
   FaEnvelope, FaPhone, FaGlobe, FaFileUpload, FaTrash, FaEdit,
-  FaCheckCircle, FaTimesCircle, FaExclamationTriangle
+  FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaSearch,
+  FaFilter, FaEye, FaEyeSlash, FaUserShield, FaChartLine,
+  FaCloud, FaShieldAlt, FaPalette, FaMoon, FaSun
 } from 'react-icons/fa';
 import { useUser } from '../../accounts/UserContext';
 import { buildApiUrl } from '../../config/apiConfig';
@@ -13,6 +15,7 @@ const CaiDat = () => {
   const [activeTab, setActiveTab] = useState('system');
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
+  const [darkMode, setDarkMode] = useState(false);
 
   // System Information
   const [systemInfo, setSystemInfo] = useState({
@@ -48,8 +51,6 @@ const CaiDat = () => {
     backupEnabled: true
   });
 
-
-
   // User Management State
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -61,8 +62,6 @@ const CaiDat = () => {
   });
   const [usersSearch, setUsersSearch] = useState('');
   const [usersStatus, setUsersStatus] = useState('all');
-
-
 
   useEffect(() => {
     if (isDemoMode) {
@@ -227,661 +226,748 @@ const CaiDat = () => {
   };
 
   const tabs = [
-    { id: 'system', name: 'Thông tin hệ thống', icon: FaBuilding },
-    { id: 'users', name: 'Quản lý Users', icon: FaUsers },
-    { id: 'notifications', name: 'Thông báo', icon: FaBell },
-    { id: 'upload', name: 'Cấu hình Upload', icon: FaUpload }
+    { id: 'system', name: 'Thông tin hệ thống', icon: FaBuilding, color: 'from-blue-500 to-cyan-500' },
+    { id: 'users', name: 'Quản lý Users', icon: FaUsers, color: 'from-purple-500 to-pink-500' },
+    { id: 'notifications', name: 'Thông báo', icon: FaBell, color: 'from-orange-500 to-red-500' },
+    { id: 'upload', name: 'Cấu hình Upload', icon: FaUpload, color: 'from-green-500 to-teal-500' }
   ];
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100
+      }
+    }
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-12 bg-gray-300 rounded"></div>
-              ))}
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center justify-center min-h-screen"
+          >
+            <div className="relative">
+              <div className="w-20 h-20 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+              <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-cyan-400 rounded-full animate-spin animate-reverse"></div>
+              <div className="mt-4 text-center">
+                <p className="text-white text-lg font-medium">Đang tải cài đặt...</p>
+              </div>
             </div>
-            <div className="h-96 bg-gray-300 rounded"></div>
-          </div>
+          </motion.div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
           className="mb-8"
         >
-          <div className="flex items-center gap-3 mb-2">
-            <FaCog className="text-3xl text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Cài đặt hệ thống</h1>
+          <div className="relative overflow-hidden bg-gradient-to-r from-purple-600/20 to-cyan-600/20 backdrop-blur-xl rounded-3xl p-8 border border-white/10">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-cyan-600/10"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-2xl flex items-center justify-center">
+                      <FaCog className="text-2xl text-white animate-spin-slow" />
+                    </div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-2xl blur opacity-30"></div>
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                      Cài đặt hệ thống
+                    </h1>
+                    <p className="text-gray-300 mt-2 text-lg">
+                      Quản lý cấu hình hệ thống với giao diện hiện đại
+                    </p>
+                  </div>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 text-white hover:bg-white/20 transition-all duration-300"
+                >
+                  {darkMode ? <FaSun className="text-xl" /> : <FaMoon className="text-xl" />}
+                </motion.button>
+              </div>
+            </div>
           </div>
-          <p className="text-gray-600">
-            Quản lý cấu hình hệ thống, tài khoản admin và các thiết lập khác
-          </p>
         </motion.div>
 
         {/* Tabs */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-lg p-6 mb-8"
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="mb-8"
         >
-          <div className="flex flex-wrap gap-2">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <Icon />
-                  {tab.name}
-                </button>
-              );
-            })}
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-2 border border-white/10">
+            <div className="flex flex-wrap gap-2">
+              {tabs.map((tab, index) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <motion.button
+                    key={tab.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`relative flex items-center gap-3 px-6 py-4 rounded-xl transition-all duration-300 ${
+                      isActive
+                        ? 'bg-gradient-to-r ' + tab.color + ' text-white shadow-lg shadow-purple-500/25'
+                        : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    <Icon className={`text-lg ${isActive ? 'animate-pulse' : ''}`} />
+                    <span className="font-medium">{tab.name}</span>
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-xl"
+                      />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
           </div>
         </motion.div>
 
         {/* Tab Content */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl shadow-lg p-6"
-        >
-          {/* System Information */}
-          {activeTab === 'system' && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Thông tin hệ thống</h2>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => saveSettings('system')}
-                    disabled={loading}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  >
-                    <FaSave />
-                    Lưu thay đổi
-                  </button>
-                  <button
-                    onClick={() => fetchSettings()}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                  >
-                    <FaUndo />
-                    Khôi phục
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <FaBuilding className="inline mr-2" />
-                    Tên trường
-                  </label>
-                  <input
-                    type="text"
-                    value={systemInfo.schoolName}
-                    onChange={(e) => setSystemInfo({...systemInfo, schoolName: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mã trường
-                  </label>
-                  <input
-                    type="text"
-                    value={systemInfo.schoolCode}
-                    onChange={(e) => setSystemInfo({...systemInfo, schoolCode: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <FaEnvelope className="inline mr-2" />
-                    Email liên hệ
-                  </label>
-                  <input
-                    type="email"
-                    value={systemInfo.contactEmail}
-                    onChange={(e) => setSystemInfo({...systemInfo, contactEmail: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <FaPhone className="inline mr-2" />
-                    Số điện thoại
-                  </label>
-                  <input
-                    type="text"
-                    value={systemInfo.contactPhone}
-                    onChange={(e) => setSystemInfo({...systemInfo, contactPhone: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <FaGlobe className="inline mr-2" />
-                    Website
-                  </label>
-                  <input
-                    type="url"
-                    value={systemInfo.website}
-                    onChange={(e) => setSystemInfo({...systemInfo, website: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Địa chỉ
-                  </label>
-                  <input
-                    type="text"
-                    value={systemInfo.address}
-                    onChange={(e) => setSystemInfo({...systemInfo, address: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mô tả
-                  </label>
-                  <textarea
-                    value={systemInfo.description}
-                    onChange={(e) => setSystemInfo({...systemInfo, description: e.target.value})}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* User Management */}
-          {activeTab === 'users' && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Quản lý Users</h2>
-              </div>
-
-              {/* Search and Filter */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Tìm kiếm user..."
-                    value={usersSearch}
-                    onChange={(e) => setUsersSearch(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <select
-                    value={usersStatus}
-                    onChange={(e) => setUsersStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="active">Hoạt động</option>
-                    <option value="inactive">Không hoạt động</option>
-                  </select>
-                </div>
-                <div>
-                  <select
-                    value={usersPagination.limit}
-                    onChange={(e) => setUsersPagination({...usersPagination, page: 1, limit: parseInt(e.target.value)})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value={10}>10 items/page</option>
-                    <option value={20}>20 items/page</option>
-                    <option value={50}>50 items/page</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Users Table */}
-              {usersLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-2 text-gray-600">Đang tải...</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3">Tài khoản</th>
-                        <th className="px-6 py-3">Email</th>
-                        <th className="px-6 py-3">Số điện thoại</th>
-                        <th className="px-6 py-3">Vai trò</th>
-                        <th className="px-6 py-3">Trạng thái</th>
-                        <th className="px-6 py-3">Ngày tạo</th>
-                        <th className="px-6 py-3">Thao tác</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((user) => (
-                        <tr key={user.id} className="bg-white border-b hover:bg-gray-50">
-                          <td className="px-6 py-4 font-medium text-gray-900">
-                            {user.username}
-                          </td>
-                          <td className="px-6 py-4">{user.email}</td>
-                          <td className="px-6 py-4">{user.phone}</td>
-                          <td className="px-6 py-4">
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              user.role === 'admin' 
-                                ? 'bg-purple-100 text-purple-800' 
-                                : 'bg-blue-100 text-blue-800'
-                            }`}>
-                              {user.role === 'admin' ? 'Admin' : 'User'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              user.isActive 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {user.isActive ? 'Hoạt động' : 'Không hoạt động'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">
-                            {new Date(user.createdAt).toLocaleDateString('vi-VN')}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => toggleUserStatus(user.id, user.isActive)}
-                                className={`p-1 rounded ${
-                                  user.isActive 
-                                    ? 'text-red-600 hover:bg-red-100' 
-                                    : 'text-green-600 hover:bg-green-100'
-                                }`}
-                                title={user.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}
-                              >
-                                {user.isActive ? <FaTimesCircle /> : <FaCheckCircle />}
-                              </button>
-                              <button
-                                onClick={() => deleteUser(user.id)}
-                                className="p-1 text-red-600 hover:bg-red-100 rounded"
-                                title="Xóa"
-                              >
-                                <FaTrash />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Pagination */}
-              {usersPagination.totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="text-sm text-gray-700">
-                    Hiển thị {((usersPagination.page - 1) * usersPagination.limit) + 1} đến{' '}
-                    {Math.min(usersPagination.page * usersPagination.limit, usersPagination.total)} trong tổng số{' '}
-                    {usersPagination.total} users
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setUsersPagination({...usersPagination, page: usersPagination.page - 1})}
-                      disabled={usersPagination.page === 1}
-                      className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Trước
-                    </button>
-                    <span className="px-3 py-1 text-sm">
-                      Trang {usersPagination.page} / {usersPagination.totalPages}
-                    </span>
-                    <button
-                      onClick={() => setUsersPagination({...usersPagination, page: usersPagination.page + 1})}
-                      disabled={usersPagination.page === usersPagination.totalPages}
-                      className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Sau
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Notification Settings */}
-          {activeTab === 'notifications' && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Cấu hình thông báo</h2>
-                <button
-                  onClick={() => saveSettings('notifications')}
-                  disabled={loading}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  <FaSave />
-                  Lưu thay đổi
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-900">Thông báo Email</h3>
-                  
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900">Bật thông báo email</p>
-                      <p className="text-sm text-gray-600">Gửi thông báo qua email</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={notificationSettings.emailNotifications}
-                        onChange={(e) => setNotificationSettings({
-                          ...notificationSettings, 
-                          emailNotifications: e.target.checked
-                        })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900">Hồ sơ mới được nộp</p>
-                      <p className="text-sm text-gray-600">Thông báo khi có hồ sơ mới</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={notificationSettings.applicationSubmitted}
-                        onChange={(e) => setNotificationSettings({
-                          ...notificationSettings, 
-                          applicationSubmitted: e.target.checked
-                        })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900">Trạng thái hồ sơ thay đổi</p>
-                      <p className="text-sm text-gray-600">Thông báo khi trạng thái hồ sơ thay đổi</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={notificationSettings.applicationStatusChanged}
-                        onChange={(e) => setNotificationSettings({
-                          ...notificationSettings, 
-                          applicationStatusChanged: e.target.checked
-                        })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-900">Báo cáo tự động</h3>
-                  
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900">Báo cáo hàng ngày</p>
-                      <p className="text-sm text-gray-600">Gửi báo cáo thống kê hàng ngày</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={notificationSettings.dailyReports}
-                        onChange={(e) => setNotificationSettings({
-                          ...notificationSettings, 
-                          dailyReports: e.target.checked
-                        })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900">Báo cáo hàng tuần</p>
-                      <p className="text-sm text-gray-600">Gửi báo cáo thống kê hàng tuần</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={notificationSettings.weeklyReports}
-                        onChange={(e) => setNotificationSettings({
-                          ...notificationSettings, 
-                          weeklyReports: e.target.checked
-                        })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Template email
-                    </label>
-                    <select
-                      value={notificationSettings.emailTemplate}
-                      onChange={(e) => setNotificationSettings({
-                        ...notificationSettings, 
-                        emailTemplate: e.target.value
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="default">Mặc định</option>
-                      <option value="custom">Tùy chỉnh</option>
-                      <option value="minimal">Tối giản</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Upload Settings */}
-          {activeTab === 'upload' && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Cấu hình Upload</h2>
-                <button
-                  onClick={() => saveSettings('upload')}
-                  disabled={loading}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  <FaSave />
-                  Lưu thay đổi
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-900">Giới hạn kích thước</h3>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Kích thước file tối đa (MB)
-                    </label>
-                    <input
-                      type="number"
-                      value={uploadSettings.maxFileSize}
-                      onChange={(e) => setUploadSettings({
-                        ...uploadSettings, 
-                        maxFileSize: parseInt(e.target.value)
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Kích thước avatar tối đa (MB)
-                    </label>
-                    <input
-                      type="number"
-                      value={uploadSettings.avatarMaxSize}
-                      onChange={(e) => setUploadSettings({
-                        ...uploadSettings, 
-                        avatarMaxSize: parseInt(e.target.value)
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Kích thước tài liệu tối đa (MB)
-                    </label>
-                    <input
-                      type="number"
-                      value={uploadSettings.documentMaxSize}
-                      onChange={(e) => setUploadSettings({
-                        ...uploadSettings, 
-                        documentMaxSize: parseInt(e.target.value)
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-900">Cấu hình khác</h3>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Định dạng file được phép
-                    </label>
-                    <input
-                      type="text"
-                      value={uploadSettings.allowedExtensions.join(', ')}
-                      onChange={(e) => setUploadSettings({
-                        ...uploadSettings, 
-                        allowedExtensions: e.target.value.split(',').map(ext => ext.trim())
-                      })}
-                      placeholder="jpg, jpeg, png, pdf, doc, docx"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Thư mục lưu trữ
-                    </label>
-                    <input
-                      type="text"
-                      value={uploadSettings.storagePath}
-                      onChange={(e) => setUploadSettings({
-                        ...uploadSettings, 
-                        storagePath: e.target.value
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900">Tự động nén ảnh</p>
-                      <p className="text-sm text-gray-600">Nén ảnh để tiết kiệm dung lượng</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={uploadSettings.autoCompress}
-                        onChange={(e) => setUploadSettings({
-                          ...uploadSettings, 
-                          autoCompress: e.target.checked
-                        })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900">Sao lưu tự động</p>
-                      <p className="text-sm text-gray-600">Tự động sao lưu file upload</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={uploadSettings.backupEnabled}
-                        onChange={(e) => setUploadSettings({
-                          ...uploadSettings, 
-                          backupEnabled: e.target.checked
-                        })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </motion.div>
-
-        {/* Save Status */}
-        {saveStatus && (
+        <AnimatePresence mode="wait">
           <motion.div 
+            key={activeTab}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${
-              saveStatus === 'success' 
-                ? 'bg-green-500 text-white' 
-                : saveStatus === 'error' 
-                ? 'bg-red-500 text-white' 
-                : 'bg-blue-500 text-white'
-            }`}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4 }}
+            className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
           >
-            <div className="flex items-center gap-2">
-              {saveStatus === 'success' && <FaCheckCircle />}
-              {saveStatus === 'error' && <FaExclamationTriangle />}
-              {saveStatus === 'saving' && <FaSave className="animate-spin" />}
-              <span>
-                {saveStatus === 'success' && 'Lưu thành công!'}
-                {saveStatus === 'error' && 'Lỗi khi lưu!'}
-                {saveStatus === 'saving' && 'Đang lưu...'}
-              </span>
-            </div>
+            {/* System Information */}
+            {activeTab === 'system' && (
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="p-8"
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <motion.div variants={itemVariants} className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                      <FaBuilding className="text-white text-xl" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">Thông tin hệ thống</h2>
+                  </motion.div>
+                  <motion.div variants={itemVariants} className="flex gap-3">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => saveSettings('system')}
+                      disabled={loading}
+                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-300 disabled:opacity-50 shadow-lg shadow-green-500/25"
+                    >
+                      <FaSave className="animate-pulse" />
+                      Lưu thay đổi
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => fetchSettings()}
+                      className="flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-300 border border-white/20"
+                    >
+                      <FaUndo />
+                      Khôi phục
+                    </motion.button>
+                  </motion.div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {[
+                    { label: 'Tên trường', key: 'schoolName', icon: FaBuilding, type: 'text' },
+                    { label: 'Mã trường', key: 'schoolCode', icon: FaBuilding, type: 'text' },
+                    { label: 'Email liên hệ', key: 'contactEmail', icon: FaEnvelope, type: 'email' },
+                    { label: 'Số điện thoại', key: 'contactPhone', icon: FaPhone, type: 'text' },
+                    { label: 'Website', key: 'website', icon: FaGlobe, type: 'url' },
+                    { label: 'Địa chỉ', key: 'address', icon: FaBuilding, type: 'text' }
+                  ].map((field, index) => {
+                    const Icon = field.icon;
+                    return (
+                      <motion.div
+                        key={field.key}
+                        variants={itemVariants}
+                        className="group"
+                      >
+                        <label className="block text-sm font-medium text-gray-300 mb-3">
+                          <Icon className="inline mr-2 text-purple-400" />
+                          {field.label}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={field.type}
+                            value={systemInfo[field.key]}
+                            onChange={(e) => setSystemInfo({...systemInfo, [field.key]: e.target.value})}
+                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-300 group-hover:bg-white/10"
+                          />
+                          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/0 to-cyan-500/0 group-hover:from-purple-500/5 group-hover:to-cyan-500/5 transition-all duration-300 pointer-events-none"></div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                  
+                  <motion.div variants={itemVariants} className="lg:col-span-2 group">
+                    <label className="block text-sm font-medium text-gray-300 mb-3">
+                      <FaEdit className="inline mr-2 text-purple-400" />
+                      Mô tả
+                    </label>
+                    <div className="relative">
+                      <textarea
+                        value={systemInfo.description}
+                        onChange={(e) => setSystemInfo({...systemInfo, description: e.target.value})}
+                        rows={4}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-300 group-hover:bg-white/10 resize-none"
+                      />
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/0 to-cyan-500/0 group-hover:from-purple-500/5 group-hover:to-cyan-500/5 transition-all duration-300 pointer-events-none"></div>
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* User Management */}
+            {activeTab === 'users' && (
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="p-8"
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <motion.div variants={itemVariants} className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                      <FaUsers className="text-white text-xl" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">Quản lý Users</h2>
+                  </motion.div>
+                </div>
+
+                {/* Search and Filter */}
+                <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  <div className="relative group">
+                    <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-purple-400 transition-colors duration-300" />
+                    <input
+                      type="text"
+                      placeholder="Tìm kiếm user..."
+                      value={usersSearch}
+                      onChange={(e) => setUsersSearch(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-300 group-hover:bg-white/10"
+                    />
+                  </div>
+                  <div className="relative group">
+                    <FaFilter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-purple-400 transition-colors duration-300" />
+                    <select
+                      value={usersStatus}
+                      onChange={(e) => setUsersStatus(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white transition-all duration-300 group-hover:bg-white/10 appearance-none"
+                    >
+                      <option value="all">Tất cả trạng thái</option>
+                      <option value="active">Hoạt động</option>
+                      <option value="inactive">Không hoạt động</option>
+                    </select>
+                  </div>
+                  <div className="relative group">
+                    <select
+                      value={usersPagination.limit}
+                      onChange={(e) => setUsersPagination({...usersPagination, page: 1, limit: parseInt(e.target.value)})}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white transition-all duration-300 group-hover:bg-white/10 appearance-none"
+                    >
+                      <option value={10}>10 items/page</option>
+                      <option value={20}>20 items/page</option>
+                      <option value={50}>50 items/page</option>
+                    </select>
+                  </div>
+                </motion.div>
+
+                {/* Users Table */}
+                <motion.div variants={itemVariants} className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                  {usersLoading ? (
+                    <div className="text-center py-12">
+                      <div className="relative inline-block">
+                        <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 w-12 h-12 border-4 border-transparent border-t-cyan-400 rounded-full animate-spin animate-reverse"></div>
+                      </div>
+                      <p className="mt-4 text-gray-300 text-lg">Đang tải dữ liệu...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-left">
+                        <thead className="text-xs uppercase bg-white/5 border-b border-white/10">
+                          <tr>
+                            {['Tài khoản', 'Email', 'Số điện thoại', 'Vai trò', 'Trạng thái', 'Ngày tạo', 'Thao tác'].map((header) => (
+                              <th key={header} className="px-6 py-4 text-gray-300 font-medium">{header}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {users.map((user, index) => (
+                            <motion.tr 
+                              key={user.id}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              className="border-b border-white/5 hover:bg-white/5 transition-all duration-300"
+                            >
+                              <td className="px-6 py-4 font-medium text-white">{user.username}</td>
+                              <td className="px-6 py-4 text-gray-300">{user.email}</td>
+                              <td className="px-6 py-4 text-gray-300">{user.phone}</td>
+                              <td className="px-6 py-4">
+                                <span className={`px-3 py-1 text-xs rounded-full font-medium ${
+                                  user.role === 'admin' 
+                                    ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-500/30' 
+                                    : 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-blue-300 border border-blue-500/30'
+                                }`}>
+                                  {user.role === 'admin' ? 'Admin' : 'User'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={`px-3 py-1 text-xs rounded-full font-medium ${
+                                  user.isActive 
+                                    ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/30' 
+                                    : 'bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-300 border border-red-500/30'
+                                }`}>
+                                  {user.isActive ? 'Hoạt động' : 'Không hoạt động'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-gray-300">
+                                {new Date(user.createdAt).toLocaleDateString('vi-VN')}
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex gap-2">
+                                  <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => toggleUserStatus(user.id, user.isActive)}
+                                    className={`p-2 rounded-lg transition-all duration-300 ${
+                                      user.isActive 
+                                        ? 'text-red-400 hover:bg-red-500/20 hover:text-red-300' 
+                                        : 'text-green-400 hover:bg-green-500/20 hover:text-green-300'
+                                    }`}
+                                    title={user.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}
+                                  >
+                                    {user.isActive ? <FaTimesCircle /> : <FaCheckCircle />}
+                                  </motion.button>
+                                  <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => deleteUser(user.id)}
+                                    className="p-2 text-red-400 hover:bg-red-500/20 hover:text-red-300 rounded-lg transition-all duration-300"
+                                    title="Xóa"
+                                  >
+                                    <FaTrash />
+                                  </motion.button>
+                                </div>
+                              </td>
+                            </motion.tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </motion.div>
+
+                {/* Pagination */}
+                {usersPagination.totalPages > 1 && (
+                  <motion.div variants={itemVariants} className="flex items-center justify-between mt-8">
+                    <div className="text-sm text-gray-300">
+                      Hiển thị {((usersPagination.page - 1) * usersPagination.limit) + 1} đến{' '}
+                      {Math.min(usersPagination.page * usersPagination.limit, usersPagination.total)} trong tổng số{' '}
+                      {usersPagination.total} users
+                    </div>
+                    <div className="flex gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setUsersPagination({...usersPagination, page: usersPagination.page - 1})}
+                        disabled={usersPagination.page === 1}
+                        className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-white hover:bg-white/20 transition-all duration-300"
+                      >
+                        Trước
+                      </motion.button>
+                      <span className="px-4 py-2 text-sm text-gray-300 flex items-center">
+                        Trang {usersPagination.page} / {usersPagination.totalPages}
+                      </span>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setUsersPagination({...usersPagination, page: usersPagination.page + 1})}
+                        disabled={usersPagination.page === usersPagination.totalPages}
+                        className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-white hover:bg-white/20 transition-all duration-300"
+                      >
+                        Sau
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Notification Settings */}
+            {activeTab === 'notifications' && (
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="p-8"
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <motion.div variants={itemVariants} className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                      <FaBell className="text-white text-xl animate-pulse" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">Cấu hình thông báo</h2>
+                  </motion.div>
+                  <motion.button
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => saveSettings('notifications')}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-300 disabled:opacity-50 shadow-lg shadow-green-500/25"
+                  >
+                    <FaSave className="animate-pulse" />
+                    Lưu thay đổi
+                  </motion.button>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <motion.div variants={itemVariants} className="space-y-6">
+                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                      <FaEnvelope className="text-orange-400" />
+                      Thông báo Email
+                    </h3>
+                    
+                    {[
+                      { key: 'emailNotifications', title: 'Bật thông báo email', desc: 'Gửi thông báo qua email' },
+                      { key: 'applicationSubmitted', title: 'Hồ sơ mới được nộp', desc: 'Thông báo khi có hồ sơ mới' },
+                      { key: 'applicationStatusChanged', title: 'Trạng thái hồ sơ thay đổi', desc: 'Thông báo khi trạng thái hồ sơ thay đổi' }
+                    ].map((setting, index) => (
+                      <motion.div
+                        key={setting.key}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="group p-6 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all duration-300"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-white group-hover:text-purple-300 transition-colors duration-300">{setting.title}</p>
+                            <p className="text-sm text-gray-400 mt-1">{setting.desc}</p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={notificationSettings[setting.key]}
+                              onChange={(e) => setNotificationSettings({
+                                ...notificationSettings, 
+                                [setting.key]: e.target.checked
+                              })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-14 h-7 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
+                          </label>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+
+                  <motion.div variants={itemVariants} className="space-y-6">
+                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                      <FaChartLine className="text-orange-400" />
+                      Báo cáo tự động
+                    </h3>
+                    
+                    {[
+                      { key: 'dailyReports', title: 'Báo cáo hàng ngày', desc: 'Gửi báo cáo thống kê hàng ngày' },
+                      { key: 'weeklyReports', title: 'Báo cáo hàng tuần', desc: 'Gửi báo cáo thống kê hàng tuần' }
+                    ].map((setting, index) => (
+                      <motion.div
+                        key={setting.key}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="group p-6 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all duration-300"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-white group-hover:text-purple-300 transition-colors duration-300">{setting.title}</p>
+                            <p className="text-sm text-gray-400 mt-1">{setting.desc}</p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={notificationSettings[setting.key]}
+                              onChange={(e) => setNotificationSettings({
+                                ...notificationSettings, 
+                                [setting.key]: e.target.checked
+                              })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-14 h-7 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
+                          </label>
+                        </div>
+                      </motion.div>
+                    ))}
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="group"
+                    >
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        <FaPalette className="inline mr-2 text-orange-400" />
+                        Template email
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={notificationSettings.emailTemplate}
+                          onChange={(e) => setNotificationSettings({
+                            ...notificationSettings, 
+                            emailTemplate: e.target.value
+                          })}
+                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white transition-all duration-300 group-hover:bg-white/10 appearance-none"
+                        >
+                          <option value="default">Mặc định</option>
+                          <option value="custom">Tùy chỉnh</option>
+                          <option value="minimal">Tối giản</option>
+                        </select>
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/0 to-cyan-500/0 group-hover:from-purple-500/5 group-hover:to-cyan-500/5 transition-all duration-300 pointer-events-none"></div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Upload Settings */}
+            {activeTab === 'upload' && (
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="p-8"
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <motion.div variants={itemVariants} className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl flex items-center justify-center">
+                      <FaUpload className="text-white text-xl" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">Cấu hình Upload</h2>
+                  </motion.div>
+                  <motion.button
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => saveSettings('upload')}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-300 disabled:opacity-50 shadow-lg shadow-green-500/25"
+                  >
+                    <FaSave className="animate-pulse" />
+                    Lưu thay đổi
+                  </motion.button>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <motion.div variants={itemVariants} className="space-y-6">
+                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                      <FaFileUpload className="text-green-400" />
+                      Giới hạn kích thước
+                    </h3>
+                    
+                    {[
+                      { key: 'maxFileSize', label: 'Kích thước file tối đa (MB)', type: 'number' },
+                      { key: 'avatarMaxSize', label: 'Kích thước avatar tối đa (MB)', type: 'number' },
+                      { key: 'documentMaxSize', label: 'Kích thước tài liệu tối đa (MB)', type: 'number' }
+                    ].map((field, index) => (
+                      <motion.div
+                        key={field.key}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="group"
+                      >
+                        <label className="block text-sm font-medium text-gray-300 mb-3">
+                          {field.label}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={field.type}
+                            value={uploadSettings[field.key]}
+                            onChange={(e) => setUploadSettings({
+                              ...uploadSettings, 
+                              [field.key]: parseInt(e.target.value)
+                            })}
+                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-white transition-all duration-300 group-hover:bg-white/10"
+                          />
+                          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-500/0 to-teal-500/0 group-hover:from-green-500/5 group-hover:to-teal-500/5 transition-all duration-300 pointer-events-none"></div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+
+                  <motion.div variants={itemVariants} className="space-y-6">
+                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                      <FaShieldAlt className="text-green-400" />
+                      Cấu hình khác
+                    </h3>
+                    
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="group"
+                    >
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        Định dạng file được phép
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={uploadSettings.allowedExtensions.join(', ')}
+                          onChange={(e) => setUploadSettings({
+                            ...uploadSettings, 
+                            allowedExtensions: e.target.value.split(',').map(ext => ext.trim())
+                          })}
+                          placeholder="jpg, jpeg, png, pdf, doc, docx"
+                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-300 group-hover:bg-white/10"
+                        />
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-500/0 to-teal-500/0 group-hover:from-green-500/5 group-hover:to-teal-500/5 transition-all duration-300 pointer-events-none"></div>
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="group"
+                    >
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        <FaCloud className="inline mr-2 text-green-400" />
+                        Thư mục lưu trữ
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={uploadSettings.storagePath}
+                          onChange={(e) => setUploadSettings({
+                            ...uploadSettings, 
+                            storagePath: e.target.value
+                          })}
+                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-white transition-all duration-300 group-hover:bg-white/10"
+                        />
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-500/0 to-teal-500/0 group-hover:from-green-500/5 group-hover:to-teal-500/5 transition-all duration-300 pointer-events-none"></div>
+                      </div>
+                    </motion.div>
+
+                    {[
+                      { key: 'autoCompress', title: 'Tự động nén ảnh', desc: 'Nén ảnh để tiết kiệm dung lượng' },
+                      { key: 'backupEnabled', title: 'Sao lưu tự động', desc: 'Tự động sao lưu file upload' }
+                    ].map((setting, index) => (
+                      <motion.div
+                        key={setting.key}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 + index * 0.1 }}
+                        className="group p-6 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all duration-300"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-white group-hover:text-green-300 transition-colors duration-300">{setting.title}</p>
+                            <p className="text-sm text-gray-400 mt-1">{setting.desc}</p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={uploadSettings[setting.key]}
+                              onChange={(e) => setUploadSettings({
+                                ...uploadSettings, 
+                                [setting.key]: e.target.checked
+                              })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-14 h-7 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-green-500 peer-checked:to-teal-500"></div>
+                          </label>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
           </motion.div>
-        )}
+        </AnimatePresence>
+
+        {/* Save Status */}
+        <AnimatePresence>
+          {saveStatus && (
+            <motion.div 
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 50, scale: 0.9 }}
+              className={`fixed bottom-6 right-6 p-6 rounded-2xl shadow-2xl backdrop-blur-xl border ${
+                saveStatus === 'success' 
+                  ? 'bg-gradient-to-r from-green-500/90 to-emerald-500/90 border-green-400/50' 
+                  : saveStatus === 'error' 
+                  ? 'bg-gradient-to-r from-red-500/90 to-pink-500/90 border-red-400/50' 
+                  : 'bg-gradient-to-r from-blue-500/90 to-purple-500/90 border-blue-400/50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  {saveStatus === 'success' && <FaCheckCircle className="text-2xl text-white" />}
+                  {saveStatus === 'error' && <FaExclamationTriangle className="text-2xl text-white" />}
+                  {saveStatus === 'saving' && <FaSave className="text-2xl text-white animate-spin" />}
+                  <div className="absolute -inset-1 bg-white/20 rounded-full blur opacity-50"></div>
+                </div>
+                <span className="text-white font-medium text-lg">
+                  {saveStatus === 'success' && 'Lưu thành công!'}
+                  {saveStatus === 'error' && 'Lỗi khi lưu!'}
+                  {saveStatus === 'saving' && 'Đang lưu...'}
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
 };
 
-export default CaiDat; 
+export default CaiDat;

@@ -156,8 +156,13 @@ const BaoCao = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6 relative overflow-hidden">
+      {/* Modern Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -166,10 +171,10 @@ const BaoCao = () => {
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-2">
                 📊 Báo cáo thống kê
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-300">
                 Thống kê chi tiết về hồ sơ tuyển sinh và hiệu suất hệ thống
               </p>
             </div>
@@ -197,12 +202,12 @@ const BaoCao = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-lg p-6 mb-8"
+          className="bg-white/5 backdrop-blur-xl rounded-2xl shadow-xl p-6 mb-8 border border-white/10"
         >
-          <div className="flex items-center gap-2 mb-4">
-            <FaFilter className="text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Bộ lọc</h3>
-          </div>
+                      <div className="flex items-center gap-2 mb-4">
+              <FaFilter className="text-purple-400" />
+              <h3 className="text-lg font-semibold text-white">Bộ lọc</h3>
+            </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -503,3 +508,4 @@ const BaoCao = () => {
 };
 
 export default BaoCao;
+ 

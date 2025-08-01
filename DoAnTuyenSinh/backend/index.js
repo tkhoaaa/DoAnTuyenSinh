@@ -858,12 +858,17 @@ app.get('/api/admin/applications', async(req, res) => {
 
         const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
 
+        // Reset queryParams if no WHERE clause
+        if (whereConditions.length === 0) {
+            queryParams = [];
+        }
+
         // Pagination parameters
         const limitNum = Math.max(1, Math.min(100, parseInt(limit) || 20));
         const pageNum = Math.max(1, parseInt(page) || 1);
         const offsetNum = (pageNum - 1) * limitNum;
 
-        // Main query with JOIN to nganh table
+        // Main query with JOIN to nganh table - LIMIT/OFFSET không dùng prepared statement
         const mainQuery = `
             SELECT 
                 a.id, a.application_code, a.ho_ten, a.ngay_sinh, a.cccd, a.sdt, a.email,
@@ -875,22 +880,23 @@ app.get('/api/admin/applications', async(req, res) => {
             LEFT JOIN nganh n ON a.nganh_id = n.id
             ${whereClause}
             ORDER BY a.created_at DESC
-            LIMIT ? OFFSET ?
+            LIMIT ${limitNum} OFFSET ${offsetNum}
         `;
 
-        // Count query
+        // Count query - should match the main query structure
         const countQuery = `
-            SELECT COUNT(DISTINCT u.id) as count
-            FROM users u
-            LEFT JOIN applications a ON u.id = a.user_id
+            SELECT COUNT(DISTINCT a.id) as count
+            FROM applications a
+            LEFT JOIN nganh n ON a.nganh_id = n.id
             ${whereClause}
         `;
 
         // Làm sạch parameters - chuyển undefined/null thành null
         const cleanQueryParams = queryParams.map(param => param === undefined ? null : param);
 
-        // Debug parameters before execution
-        const mainParams = [...cleanQueryParams, limitNum, offsetNum];
+        // Debug parameters before execution - không bao gồm LIMIT/OFFSET
+        const mainParams = [...cleanQueryParams];
+        // Count params should only include query params if there's a WHERE clause
         const countParams = [...cleanQueryParams];
 
         // Debug logging
@@ -910,12 +916,15 @@ app.get('/api/admin/applications', async(req, res) => {
         });
 
         const cleanCountParams = countParams.map(param => {
+            if (typeof param === 'number') return param;
             if (param === null || param === undefined) return null;
             return String(param);
         });
 
         console.log('Clean mainParams:', cleanMainParams);
         console.log('Clean countParams:', cleanCountParams);
+        console.log('Clean mainParams types:', cleanMainParams.map(p => typeof p));
+        console.log('Clean countParams types:', cleanCountParams.map(p => typeof p));
 
         // Kiểm tra và sửa lỗi parameter mismatch
         const mainQueryPlaceholders = (mainQuery.match(/\?/g) || []).length;
@@ -929,23 +938,39 @@ app.get('/api/admin/applications', async(req, res) => {
             mainParams: mainParams.length,
             mainQueryPlaceholders,
             countQueryPlaceholders,
-            countParams: countParams.length
+            countParams: countParams.length,
+            cleanMainParams: cleanMainParams.length,
+            cleanCountParams: cleanCountParams.length
         });
 
         // Execute queries - với fallback nếu có lỗi
         let applications, totalCount;
 
         try {
-            // Kiểm tra parameter count trước khi execute
-            if (mainParams.length !== mainQueryPlaceholders) {
-                throw new Error(`Parameter mismatch: expected ${mainQueryPlaceholders}, got ${mainParams.length}`);
+            // Đảm bảo parameters đúng số lượng
+            const finalMainParams = cleanMainParams.slice(0, mainQueryPlaceholders);
+            const finalCountParams = cleanCountParams.slice(0, countQueryPlaceholders);
+
+            // Thêm padding nếu thiếu parameters
+            while (finalMainParams.length < mainQueryPlaceholders) {
+                finalMainParams.push(null);
             }
-            if (countParams.length !== countQueryPlaceholders) {
-                throw new Error(`Count parameter mismatch: expected ${countQueryPlaceholders}, got ${countParams.length}`);
+            while (finalCountParams.length < countQueryPlaceholders) {
+                finalCountParams.push(null);
             }
 
-            [applications] = await pool.execute(mainQuery, cleanMainParams);
-            [totalCount] = await pool.execute(countQuery, cleanCountParams);
+            // Execute queries với hoặc không có parameters
+            if (finalMainParams.length > 0) {
+                [applications] = await pool.execute(mainQuery, finalMainParams);
+            } else {
+                [applications] = await pool.execute(mainQuery);
+            }
+
+            if (finalCountParams.length > 0) {
+                [totalCount] = await pool.execute(countQuery, finalCountParams);
+            } else {
+                [totalCount] = await pool.execute(countQuery);
+            }
         } catch (paramError) {
             console.warn('❌ Parameter error, using fallback query:', paramError.message);
 
@@ -957,11 +982,11 @@ app.get('/api/admin/applications', async(req, res) => {
                     a.nganh_id, a.diem_hk1, a.diem_ca_nam, a.status, a.assigned_to,
                     a.created_at, a.updated_at,
                     n.ten_nganh as major_name, n.ma_nganh as major_code
-                FROM applications a
-                LEFT JOIN nganh n ON a.nganh_id = n.id
+            FROM applications a
+            LEFT JOIN nganh n ON a.nganh_id = n.id
                 ORDER BY a.created_at DESC
                 LIMIT 20
-            `;
+        `;
 
             [applications] = await pool.execute(fallbackQuery);
             [totalCount] = await pool.execute('SELECT COUNT(*) as count FROM applications');
@@ -1388,11 +1413,12 @@ app.get('/api/admin/reports/industry-stats', async(req, res) => {
         const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
 
         // Get total count first
+        const totalCountWhereClause = whereClause.replace(/\ba\./g, 'a2.');
         const [totalCount] = await pool.execute(`
             SELECT COUNT(*) as total
             FROM applications a2 
             LEFT JOIN nganh n2 ON a2.nganh_id = n2.id 
-            ${whereClause}
+            ${totalCountWhereClause}
         `, queryParams);
 
         const total = totalCount[0].total;
@@ -1521,7 +1547,7 @@ app.get('/api/admin/reports/time-series', async(req, res) => {
             FROM applications a
             LEFT JOIN nganh n ON a.nganh_id = n.id
             ${whereClause}
-            GROUP BY DATE_FORMAT(a.created_at, '%Y-%m'), DATE_FORMAT(a.created_at, '%m')
+            GROUP BY DATE_FORMAT(a.created_at, '%m'), CONCAT('T', DATE_FORMAT(a.created_at, '%m'))
             ORDER BY month_num
         `, queryParams);
 
@@ -1628,11 +1654,12 @@ app.get('/api/admin/reports/admission-methods', async(req, res) => {
         const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
 
         // Get total count first
+        const totalCountWhereClause = whereClause.replace(/\ba\./g, 'a2.');
         const [totalCount] = await pool.execute(`
             SELECT COUNT(*) as total
             FROM applications a2 
             LEFT JOIN nganh n2 ON a2.nganh_id = n2.id 
-            ${whereClause}
+            ${totalCountWhereClause}
         `, queryParams);
 
         const total = totalCount[0].total;

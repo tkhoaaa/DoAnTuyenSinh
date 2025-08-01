@@ -26,6 +26,7 @@ import QuanLyHoSo from "./admin/pages/QuanLyHoSo";
 import QuanLyFAQ from "./admin/pages/QuanLyFAQ";
 import BaoCao from "./admin/pages/BaoCao";
 import CaiDat from "./admin/pages/CaiDat";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
 
 function App() {
   return (
@@ -35,35 +36,54 @@ function App() {
           <ScrollToTop />
           <Routes>
             {/* Admin Routes */}
+            <Route path="/admin" element={
+              <AdminProtectedRoute>
+                <AdminLayout currentPage="tong-quan">
+                  <TongQuan />
+                </AdminLayout>
+              </AdminProtectedRoute>
+            } />
             <Route path="/admin/tong-quan" element={
-              <AdminLayout currentPage="tong-quan">
-                <TongQuan />
-              </AdminLayout>
+              <AdminProtectedRoute>
+                <AdminLayout currentPage="tong-quan">
+                  <TongQuan />
+                </AdminLayout>
+              </AdminProtectedRoute>
             } />
             <Route path="/admin/quan-ly-ho-so" element={
-              <AdminLayout currentPage="quan-ly-ho-so">
-                <QuanLyHoSo />
-              </AdminLayout>
+              <AdminProtectedRoute>
+                <AdminLayout currentPage="quan-ly-ho-so">
+                  <QuanLyHoSo />
+                </AdminLayout>
+              </AdminProtectedRoute>
             } />
             <Route path="/admin/quan-ly-faq" element={
-              <AdminLayout currentPage="quan-ly-faq">
-                <QuanLyFAQ />
-              </AdminLayout>
+              <AdminProtectedRoute>
+                <AdminLayout currentPage="quan-ly-faq">
+                  <QuanLyFAQ />
+                </AdminLayout>
+              </AdminProtectedRoute>
             } />
             <Route path="/admin/bao-cao" element={
-              <AdminLayout currentPage="bao-cao">
-                <BaoCao />
-              </AdminLayout>
+              <AdminProtectedRoute>
+                <AdminLayout currentPage="bao-cao">
+                  <BaoCao />
+                </AdminLayout>
+              </AdminProtectedRoute>
             } />
             <Route path="/admin/cai-dat" element={
-              <AdminLayout currentPage="cai-dat">
-                <CaiDat />
-              </AdminLayout>
+              <AdminProtectedRoute>
+                <AdminLayout currentPage="cai-dat">
+                  <CaiDat />
+                </AdminLayout>
+              </AdminProtectedRoute>
             } />
             <Route path="/admin/chinh-sua-ho-so" element={
-              <AdminLayout currentPage="chinh-sua-ho-so">
-                <EditProfile />
-              </AdminLayout>
+              <AdminProtectedRoute>
+                <AdminLayout currentPage="chinh-sua-ho-so">
+                  <EditProfile />
+                </AdminLayout>
+              </AdminProtectedRoute>
             } />
             
             {/* Public Routes */}

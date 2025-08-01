@@ -904,7 +904,7 @@ GET  /health                      # Kiểm tra server
 - nganh_id (FK → nganh.id)
 - phuong_thuc_xet_tuyen ENUM('hoc_ba', 'thi_thpt', 'danh_gia_nang_luc')
 - khoi_thi VARCHAR(10)
-- diem_hk1, diem_ca_nam (JSON) 
+- diem_hk1, diem_ca_nam (JSON)
 - diem_thi_thpt (JSON)
 - diem_danh_gia_nang_luc DECIMAL(7,2)
 - status ('pending'|'approved'|'rejected')

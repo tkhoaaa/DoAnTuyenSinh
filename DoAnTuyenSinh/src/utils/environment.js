@@ -64,9 +64,9 @@ export const getEnvironment = () => {
 
 /**
  * Check if demo mode should be available
- * Demo mode should only be available on Vercel deployment
+ * Demo mode should be available on Vercel deployment and localhost for testing
  * @returns {boolean} True if demo mode should be shown
  */
 export const shouldShowDemoMode = () => {
-    return isVercelDeployment();
+    return isVercelDeployment() || isDevelopment();
 };
