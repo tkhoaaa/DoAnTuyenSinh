@@ -1,33 +1,55 @@
 import React from 'react';
-import { useTheme } from '../contexts/ThemeContext';
+import { motion } from 'framer-motion';
+import { useDarkMode } from '../contexts/DarkModeContext';
 import { FaSun, FaMoon } from 'react-icons/fa';
 
 const ThemeToggle = ({ className = '' }) => {
-  const { isDark, toggleTheme } = useTheme();
+  const { darkMode, toggleDarkMode } = useDarkMode();
 
   return (
-    <button
-      onClick={toggleTheme}
-      className={`relative inline-flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ease-in-out ${
-        isDark 
-          ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700' 
-          : 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
+    <motion.button
+      onClick={toggleDarkMode}
+      className={`relative inline-flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ease-in-out shadow-lg ${
+        darkMode 
+          ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700 border border-gray-600' 
+          : 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200 border border-yellow-200'
       } ${className}`}
-      title={isDark ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
+      title={darkMode ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      initial={false}
+      animate={{
+        rotate: darkMode ? 180 : 0,
+      }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
     >
       <div className="relative w-6 h-6">
-        <FaSun 
-          className={`absolute inset-0 w-6 h-6 transition-all duration-300 ${
-            isDark ? 'opacity-0 rotate-90 scale-0' : 'opacity-100 rotate-0 scale-100'
-          }`}
-        />
-        <FaMoon 
-          className={`absolute inset-0 w-6 h-6 transition-all duration-300 ${
-            isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-0'
-          }`}
-        />
+        <motion.div
+          initial={false}
+          animate={{
+            scale: darkMode ? 0 : 1,
+            opacity: darkMode ? 0 : 1,
+            rotate: darkMode ? 90 : 0,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <FaSun className="w-5 h-5" />
+        </motion.div>
+        <motion.div
+          initial={false}
+          animate={{
+            scale: darkMode ? 1 : 0,
+            opacity: darkMode ? 1 : 0,
+            rotate: darkMode ? 0 : -90,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <FaMoon className="w-5 h-5" />
+        </motion.div>
       </div>
-    </button>
+    </motion.button>
   );
 };
 

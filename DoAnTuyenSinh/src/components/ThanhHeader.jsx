@@ -1,6 +1,11 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import {
   FaHome,
   FaUserPlus,
@@ -21,8 +26,14 @@ import {
   FaShieldAlt,
   FaCrown,
   FaUser,
+  FaMoon,
+  FaSun,
+  FaDesktop,
 } from "react-icons/fa";
 import { UserContext } from "../accounts/UserContext";
+import Button from "./ui/Button";
+import { Card } from "./ui/Card";
+import { debugUserAvatar, getAvatarUrl } from "../utils/avatarUtils";
 
 const menu = [
   { label: "Trang chủ", path: "/", icon: <FaHome /> },
@@ -31,10 +42,64 @@ const menu = [
     path: "/dang-ky-xet-tuyen",
     icon: <FaUserPlus />,
   },
-  { label: "Tra cứu hồ sơ", path: "/tra-cuu-ket-qua", icon: <FaSearch /> },
-  { label: "FAQ", path: "/faq", icon: <FaQuestionCircle /> },
+  { label: "Thông tin tuyển sinh", path: "/thong-tin-tuyen-sinh", icon: <FaGraduationCap /> },
+  { label: "Câu hỏi thường gặp", path: "/cau-hoi-thuong-gap", icon: <FaQuestionCircle /> },
   { label: "Liên hệ", path: "/lien-he", icon: <FaEnvelope /> },
 ];
+
+import { useDarkMode } from "../contexts/DarkModeContext";
+
+// Optimized animation variants
+const headerVariants = {
+  hidden: { y: -100, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 30,
+      mass: 0.8,
+    },
+  },
+};
+
+const menuItemVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.05, // Reduced delay for better performance
+      duration: 0.3,
+      ease: "easeOut",
+    },
+  }),
+  hover: {
+    y: -2,
+    transition: { duration: 0.2, ease: "easeOut" },
+  },
+};
+
+const dropdownVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.95,
+    y: -10,
+    transition: { duration: 0.2 },
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 25,
+      mass: 0.5,
+    },
+  },
+};
 
 function ThanhHeader() {
   const location = useLocation();
@@ -42,69 +107,152 @@ function ThanhHeader() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const { darkMode, toggleDarkMode } = useDarkMode();
+
+  // Optimized scroll effects with reduced calculations
+  const { scrollY } = useScroll();
+  const headerOpacity = useTransform(scrollY, [0, 100], [0.95, 1]);
+  const headerBlur = useTransform(scrollY, [0, 100], [8, 16]);
+
+  // Throttled scroll handler for better performance
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 50);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Debug: log để kiểm tra giá trị
-  console.log("User context:", { user, username, role });
+  console.log("ThanhHeader - User context:", { user, username, role });
+  
+  // Debug avatar
+  useEffect(() => {
+    if (user) {
+      debugUserAvatar(user, "ThanhHeader");
+    }
+  }, [user]);
 
   // Fallback để hiển thị tên người dùng
   const displayName =
     username || user?.username || user?.name || user?.email || "Người dùng";
 
+  // Xử lý URL avatar đúng cách
+  const avatarUrl = getAvatarUrl(user);
+
   return (
     <motion.header
-      className="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 shadow-2xl sticky top-0 z-50 backdrop-blur-sm"
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        isScrolled 
+          ? "bg-white/95 dark:bg-gray-900/90 backdrop-blur-xl shadow-2xl border-b border-gray-200/60 dark:border-gray-700/60 py-2" 
+          : "bg-white/85 dark:bg-gray-900/70 backdrop-blur-lg shadow-lg border-b border-gray-200/30 dark:border-gray-700/30 py-3"
+      }`}
+      style={{
+        backdropFilter: isScrolled ? 'blur(20px) saturate(180%)' : 'blur(12px) saturate(150%)',
+        WebkitBackdropFilter: isScrolled ? 'blur(20px) saturate(180%)' : 'blur(12px) saturate(150%)',
+      }}
+      variants={headerVariants}
+      initial="hidden"
+      animate="visible"
     >
-      <div className="container mx-auto flex items-center justify-between px-4 md:px-6 py-3">
+      <div className="container mx-auto flex items-center justify-between px-4 md:px-6">
         {/* Logo */}
-        <motion.div
-          className="flex items-center gap-3 flex-shrink-0"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
+        <Link to="/" className="flex items-center">
           <motion.div
-            className="relative"
-            whileHover={{ rotate: 360 }}
-            transition={{ duration: 0.6 }}
+            className="flex items-center gap-3 flex-shrink-0"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.2 }}
           >
-            <img
-              src="https://upload.wikimedia.org/wikipedia/vi/8/81/Logo_Tr%C6%B0%E1%BB%9Dng_%C4%90%E1%BA%A1i_h%E1%BB%8Dc_C%C3%B4ng_ngh%E1%BB%87_Th%C3%A0nh_ph%E1%BB%91_H%E1%BB%93_Ch%C3%AD_Minh.png"
-              alt="Logo HUTECH"
-              className="h-12 w-12 object-contain rounded-2xl border-2 border-white/20 shadow-lg bg-white/10 backdrop-blur-sm"
-              style={{ minWidth: 48, minHeight: 48 }}
-            />
+            <motion.div
+              className="relative"
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+            >
+              <motion.img
+                src="https://upload.wikimedia.org/wikipedia/vi/8/81/Logo_Tr%C6%B0%E1%BB%9Dng_%C4%90%E1%BA%A1i_h%E1%BB%8Dc_C%C3%B4ng_ngh%E1%BB%87_Th%C3%A0nh_ph%E1%BB%91_H%E1%BB%93_Ch%C3%AD_Minh.png"
+                alt="Logo HUTECH"
+                className={`object-contain rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-soft bg-white dark:bg-neutral-800 transition-all duration-300 ${
+                  isScrolled ? "h-10 w-10" : "h-12 w-12"
+                }`}
+                style={{
+                  minWidth: isScrolled ? 40 : 48,
+                  minHeight: isScrolled ? 40 : 48,
+                }}
+                animate={{
+                  scale: isScrolled ? 0.85 : 1,
+                }}
+                transition={{
+                  scale: { duration: 0.3, ease: "easeOut" },
+                }}
+              />
+            </motion.div>
+            <motion.div
+              className="flex flex-col"
+              animate={{ scale: isScrolled ? 0.9 : 1 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <span
+                className={`text-neutral-900 dark:text-neutral-100 font-bold tracking-wide transition-all duration-300 ${
+                  isScrolled ? "text-lg" : "text-xl"
+                }`}
+              >
+                HUTECH
+              </span>
+              <span
+                className={`text-primary-600 dark:text-primary-400 font-medium transition-all duration-300 ${
+                  isScrolled ? "text-xs" : "text-xs"
+                }`}
+              >
+                Tuyển sinh 2025
+              </span>
+            </motion.div>
           </motion.div>
-          <div className="flex flex-col">
-            <span className="text-white font-bold text-xl tracking-wide">
-              HUTECH
-            </span>
-            <span className="text-blue-200 text-xs font-medium">
-              Tuyển sinh 2025
-            </span>
-          </div>
-        </motion.div>
+        </Link>
 
         {/* Desktop Menu */}
         <nav className="hidden lg:flex items-center justify-center gap-1 flex-1 max-w-4xl mx-6">
           {menu.map((item, index) => (
             <motion.div
-              key={item.path}
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              key={item.path || item.label}
+              custom={index}
+              variants={menuItemVariants}
+              initial="hidden"
+              animate="visible"
+              whileHover="hover"
+              className="relative"
             >
               <Link
                 to={item.path}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300 text-sm ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all duration-200 text-neutral-700 dark:text-neutral-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-300 text-sm relative overflow-hidden group ${
                   location.pathname === item.path
-                    ? "bg-white/20 text-yellow-300 shadow-lg"
+                    ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
                     : ""
                 }`}
               >
-                <span className="text-base">{item.icon}</span>
-                <span className="hidden xl:block">{item.label}</span>
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-secondary-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  layoutId="navHover"
+                />
+                <motion.span
+                  className="text-base relative z-10"
+                  whileHover={{ scale: 1.2, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  {item.icon}
+                </motion.span>
+                <span className="hidden xl:block relative z-10">
+                  {item.label}
+                </span>
               </Link>
             </motion.div>
           ))}
@@ -112,24 +260,35 @@ function ThanhHeader() {
           {/* Dropdown Tư vấn & Học bổng */}
           <motion.div
             className="relative"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            custom={5}
+            variants={menuItemVariants}
+            initial="hidden"
+            animate="visible"
+            whileHover="hover"
           >
             <motion.button
-              className="flex items-center gap-2 px-3 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300 text-sm"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all duration-200 text-neutral-700 dark:text-neutral-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-300 text-sm relative overflow-hidden group"
               onClick={() => setShowDropdown((v) => !v)}
               onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 0.2 }}
             >
-              <span className="text-base">
+              <motion.div className="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-secondary-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              <motion.span
+                className="text-base relative z-10"
+                whileHover={{ scale: 1.2, rotate: 5 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
                 <FaQuestionCircle />
+              </motion.span>
+              <span className="hidden xl:block relative z-10">
+                Tư vấn & Học bổng
               </span>
-              <span className="hidden xl:block">Tư vấn & Học bổng</span>
               <motion.div
                 animate={{ rotate: showDropdown ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.3, type: "spring", damping: 20 }}
+                className="relative z-10"
               >
                 <FaChevronDown className="ml-1 text-xs" />
               </motion.div>
@@ -138,95 +297,173 @@ function ThanhHeader() {
             <AnimatePresence>
               {showDropdown && (
                 <motion.div
-                  className="absolute left-0 mt-2 w-64 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 z-50 overflow-hidden"
-                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="absolute left-0 mt-2 w-64 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 dark:border-gray-600/20 z-50 overflow-hidden"
+                  variants={dropdownVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="hidden"
                 >
-                  <Link
-                    to="/dang-ky-tu-van"
-                    className="flex items-center gap-3 px-4 py-3 text-blue-700 hover:bg-blue-50 hover:text-blue-900 transition-all duration-200"
-                    onClick={() => setShowDropdown(false)}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.1, duration: 0.2 }}
                   >
-                    <FaQuestionCircle className="text-blue-500" />
-                    <div>
-                      <div className="font-semibold">Đăng ký tư vấn</div>
-                      <div className="text-xs text-gray-500">
-                        Hỗ trợ tư vấn tuyển sinh
+                    <Link
+                      to="/dang-ky-tu-van"
+                      className="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/50 hover:text-blue-900 dark:hover:text-blue-100 transition-all duration-200 group"
+                      onClick={() => setShowDropdown(false)}
+                    >
+                      <motion.div
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 20,
+                        }}
+                      >
+                        <FaQuestionCircle className="text-blue-500 dark:text-blue-400" />
+                      </motion.div>
+                      <div>
+                        <div className="font-semibold group-hover:text-blue-900 dark:group-hover:text-blue-100">
+                          Đăng ký tư vấn
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          Hỗ trợ tư vấn tuyển sinh
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                  <Link
-                    to="/dang-ky-hoc-bong"
-                    className="flex items-center gap-3 px-4 py-3 text-blue-700 hover:bg-blue-50 hover:text-blue-900 transition-all duration-200"
-                    onClick={() => setShowDropdown(false)}
-                  >
-                    <FaTrophy className="text-yellow-500" />
-                    <div>
-                      <div className="font-semibold">Đăng ký học bổng</div>
-                      <div className="text-xs text-gray-500">
-                        Cơ hội nhận học bổng
+                    </Link>
+                    <Link
+                      to="/dang-ky-hoc-bong"
+                      className="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/50 hover:text-blue-900 dark:hover:text-blue-100 transition-all duration-200 group"
+                      onClick={() => setShowDropdown(false)}
+                    >
+                      <motion.div
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 20,
+                        }}
+                      >
+                        <FaTrophy className="text-yellow-500 dark:text-yellow-400" />
+                      </motion.div>
+                      <div>
+                        <div className="font-semibold group-hover:text-blue-900 dark:group-hover:text-blue-100">
+                          Đăng ký học bổng
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          Cơ hội nhận học bổng
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
           </motion.div>
         </nav>
 
-        {/* Compact Auth Section */}
+        {/* Right Section: Dark Mode + Auth */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Dark Mode Toggle */}
+          <motion.button
+            onClick={toggleDarkMode}
+                          className={`p-2 rounded-xl hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-300 group ${
+                darkMode ? 'text-gray-100' : 'text-gray-900'
+              }`}
+              style={{ 
+                color: darkMode ? '#f3f4f6' : '#111827',
+                WebkitTextFillColor: darkMode ? '#f3f4f6' : '#111827'
+              }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+            title={
+              darkMode ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"
+            }
+          >
+            <motion.div
+              animate={{ rotate: darkMode ? 180 : 0 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+            >
+              {darkMode ? (
+                <FaSun className="text-yellow-400 group-hover:text-yellow-300" />
+              ) : (
+                <FaMoon className="text-blue-200 group-hover:text-blue-100" />
+              )}
+            </motion.div>
+          </motion.button>
+
           {user ? (
             <motion.div
               className="relative"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.6, duration: 0.3 }}
             >
               <motion.button
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
-                className="flex items-center gap-3 px-4 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300 bg-white/10 backdrop-blur-sm"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                                  className={`flex items-center gap-3 px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:bg-white/20 dark:hover:bg-white/10 hover:text-yellow-600 dark:hover:text-yellow-400 bg-white/10 dark:bg-white/5 backdrop-blur-sm hover:shadow-lg group relative overflow-hidden ${
+                    darkMode ? 'text-white' : 'text-gray-900'
+                  }`}
+                  style={{ 
+                    color: darkMode ? '#ffffff' : '#111827',
+                    WebkitTextFillColor: darkMode ? '#ffffff' : '#111827'
+                  }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
               >
-                <motion.div className="relative" whileHover={{ scale: 1.1 }}>
+                <motion.div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <motion.div
+                  className="relative z-10"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg ${
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-300 overflow-hidden ${
                       role === "admin"
                         ? "bg-gradient-to-r from-yellow-500 to-orange-500"
                         : "bg-gradient-to-r from-blue-500 to-purple-500"
                     }`}
                   >
-                    {role === "admin" ? (
-                      <FaCrown className="text-sm" />
-                    ) : (
-                      user?.avatar ? (
-                        <img 
-                          src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:3001${user.avatar}`} 
-                          alt="User Avatar" 
-                          className="w-full h-full rounded-full object-cover"
-                          onError={(e) => {
-                            e.target.onerror = null; 
-                            e.target.src = user.avatar || (role === "admin" ? <FaCrown className="text-sm" /> : <FaUserCircle className="text-sm" />);
-                          }}
-                        />
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="User Avatar"
+                        className="w-full h-full rounded-full object-cover"
+                        onError={(e) => {
+                          console.log("Avatar failed to load:", avatarUrl);
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className={`w-full h-full flex items-center justify-center ${avatarUrl ? 'hidden' : 'flex'}`}>
+                      {role === "admin" ? (
+                        <FaCrown className="text-sm" />
                       ) : (
                         <FaUserCircle className="text-sm" />
-                      )
-                    )}
+                      )}
+                    </div>
                   </div>
                   {role === "admin" && (
                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border border-white"></div>
                   )}
                 </motion.div>
-                <div className="hidden md:block text-left">
-                  <p className="text-sm font-bold leading-none">
-                    Xin chào, {displayName}
-                  </p>
+                <div className="hidden md:block text-left relative z-10">
+                                      <p 
+                      className={`text-sm font-bold leading-none ${darkMode ? 'text-white' : 'text-gray-900'}`}
+                      style={{ 
+                        color: darkMode ? '#ffffff' : '#111827',
+                        WebkitTextFillColor: darkMode ? '#ffffff' : '#111827'
+                      }}
+                    >
+                      Xin chào, {displayName}
+                    </p>
                   {role === "admin" && (
-                    <p className="text-xs text-yellow-300 leading-none mt-1 flex items-center gap-1">
+                    <p className="text-xs text-yellow-300 dark:text-yellow-400 leading-none mt-1 flex items-center gap-1">
                       <FaShieldAlt className="text-xs" />
                       Quản trị viên
                     </p>
@@ -234,7 +471,8 @@ function ThanhHeader() {
                 </div>
                 <motion.div
                   animate={{ rotate: showUserDropdown ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.3, type: "spring", damping: 20 }}
+                  className="relative z-10"
                 >
                   <FaChevronDown className="text-xs" />
                 </motion.div>
@@ -244,43 +482,44 @@ function ThanhHeader() {
               <AnimatePresence>
                 {showUserDropdown && (
                   <motion.div
-                    className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 z-50 overflow-hidden"
-                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 dark:border-gray-600/20 z-50 overflow-hidden"
+                    variants={dropdownVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
                   >
                     {/* User Info Header */}
-                    <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
+                    <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800 border-b border-gray-100 dark:border-gray-600">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg ${
+                          className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg overflow-hidden ${
                             role === "admin"
                               ? "bg-gradient-to-r from-yellow-500 to-orange-500"
                               : "bg-gradient-to-r from-blue-500 to-purple-500"
                           }`}
                         >
-                          {role === "admin" ? <FaCrown /> : (
-                            user?.avatar ? (
-                              <img 
-                                src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:3001${user.avatar}`} 
-                                alt="User Avatar" 
-                                className="w-full h-full rounded-full object-cover"
-                                onError={(e) => {
-                                  e.target.onerror = null; 
-                                  e.target.src = user.avatar || (role === "admin" ? <FaCrown /> : <FaUser />);
-                                }}
-                              />
-                            ) : (
-                              <FaUser />
-                            )
-                          )}
+                          {avatarUrl ? (
+                            <img
+                              src={avatarUrl}
+                              alt="User Avatar"
+                              className="w-full h-full rounded-full object-cover"
+                              onError={(e) => {
+                                console.log("Dropdown avatar failed to load:", avatarUrl);
+                                e.target.onerror = null;
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div className={`w-full h-full flex items-center justify-center ${avatarUrl ? 'hidden' : 'flex'}`}>
+                            {role === "admin" ? <FaCrown /> : <FaUser />}
+                          </div>
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900 text-sm">
+                          <p className="font-bold text-gray-900 dark:text-gray-100 text-sm">
                             {displayName}
                           </p>
-                          <p className="text-xs text-gray-600 flex items-center gap-1">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
                             {role === "admin" ? (
                               <>
                                 <FaShieldAlt className="text-yellow-500" />
@@ -301,17 +540,40 @@ function ThanhHeader() {
                     <div className="py-2">
                       {/* Profile Edit Link */}
                       <Link
-                        to={role === "admin" ? "/admin/chinh-sua-ho-so" : "/chinh-sua-ho-so"}
-                        className="flex items-center gap-3 px-4 py-3 text-blue-700 hover:bg-blue-50 hover:text-blue-900 transition-all duration-200"
+                        to={
+                          role === "admin"
+                            ? "/admin/ho-so-quan-ly"
+                            : "/ho-so-nguoi-dung"
+                        }
+                        className="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/50 hover:text-blue-900 dark:hover:text-blue-100 transition-all duration-200"
                         onClick={() => setShowUserDropdown(false)}
                       >
                         <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center text-white shadow-lg">
                           <FaUserEdit className="text-sm" />
                         </div>
                         <div>
-                          <div className="font-semibold">Chỉnh sửa hồ sơ</div>
-                          <div className="text-xs text-gray-500">
+                          <div className="font-semibold">
+                            {role === "admin" ? "Hồ sơ quản lý" : "Hồ sơ người dùng"}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
                             Cập nhật thông tin cá nhân
+                          </div>
+                        </div>
+                      </Link>
+
+                      {/* Tra cứu kết quả Link */}
+                      <Link
+                        to="/tra-cuu-ket-qua"
+                        className="flex items-center gap-3 px-4 py-3 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/50 hover:text-purple-900 dark:hover:text-purple-100 transition-all duration-200"
+                        onClick={() => setShowUserDropdown(false)}
+                      >
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg flex items-center justify-center text-white shadow-lg">
+                          <FaSearch className="text-sm" />
+                        </div>
+                        <div>
+                          <div className="font-semibold">Tra cứu kết quả</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Kiểm tra kết quả xét tuyển
                           </div>
                         </div>
                       </Link>
@@ -319,7 +581,7 @@ function ThanhHeader() {
                       {role === "admin" && (
                         <Link
                           to="/admin/tong-quan"
-                          className="flex items-center gap-3 px-4 py-3 text-green-700 hover:bg-green-50 hover:text-green-900 transition-all duration-200"
+                          className="flex items-center gap-3 px-4 py-3 text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/50 hover:text-green-900 dark:hover:text-green-100 transition-all duration-200"
                           onClick={() => setShowUserDropdown(false)}
                         >
                           <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center text-white shadow-lg">
@@ -327,7 +589,7 @@ function ThanhHeader() {
                           </div>
                           <div>
                             <div className="font-semibold">Admin Dashboard</div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
                               Quản lý hệ thống
                             </div>
                           </div>
@@ -339,14 +601,14 @@ function ThanhHeader() {
                           logout();
                           setShowUserDropdown(false);
                         }}
-                        className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 w-full text-left"
+                        className="flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/50 hover:text-red-700 dark:hover:text-red-300 transition-all duration-200 w-full text-left"
                       >
                         <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg flex items-center justify-center text-white shadow-lg">
                           <FaSignOutAlt className="text-sm" />
                         </div>
                         <div>
                           <div className="font-semibold">Đăng xuất</div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
                             Thoát khỏi tài khoản
                           </div>
                         </div>
@@ -361,11 +623,17 @@ function ThanhHeader() {
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
+                transition={{ delay: 0.6, duration: 0.3 }}
               >
                 <Link
                   to="/accounts/dang-nhap"
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300 text-sm"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl font-semibold transition-all duration-200 hover:bg-white/10 dark:hover:bg-white/5 hover:text-yellow-600 dark:hover:text-yellow-400 text-sm ${
+                    darkMode ? 'text-gray-100' : 'text-gray-900'
+                  }`}
+                  style={{ 
+                    color: darkMode ? '#f3f4f6' : '#111827',
+                    WebkitTextFillColor: darkMode ? '#f3f4f6' : '#111827'
+                  }}
                 >
                   <span className="text-base">
                     <FaSignInAlt />
@@ -377,11 +645,17 @@ function ThanhHeader() {
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 }}
+                transition={{ delay: 0.7, duration: 0.3 }}
               >
                 <Link
                   to="/accounts/dang-ky"
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl font-semibold transition-all duration-200 text-white hover:bg-white/10 hover:text-yellow-300 text-sm"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl font-semibold transition-all duration-200 hover:bg-white/10 dark:hover:bg-white/5 hover:text-yellow-600 dark:hover:text-yellow-400 text-sm ${
+                    darkMode ? 'text-gray-100' : 'text-gray-900'
+                  }`}
+                  style={{ 
+                    color: darkMode ? '#f3f4f6' : '#111827',
+                    WebkitTextFillColor: darkMode ? '#f3f4f6' : '#111827'
+                  }}
                 >
                   <span className="text-base">
                     <FaUserEdit />
@@ -394,10 +668,17 @@ function ThanhHeader() {
 
           {/* Mobile Menu Button */}
           <motion.button
-            className="lg:hidden p-2 text-white hover:bg-white/10 rounded-xl transition-all duration-200 ml-2"
+            className={`lg:hidden p-2 hover:bg-white/10 dark:hover:bg-white/5 rounded-xl transition-all duration-200 ml-2 ${
+              darkMode ? 'text-gray-100' : 'text-gray-900'
+            }`}
+            style={{ 
+              color: darkMode ? '#f3f4f6' : '#111827',
+              WebkitTextFillColor: darkMode ? '#f3f4f6' : '#111827'
+            }}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
+            transition={{ duration: 0.2 }}
           >
             {mobileMenuOpen ? <FaTimes /> : <FaBars />}
           </motion.button>
@@ -408,11 +689,11 @@ function ThanhHeader() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            className="lg:hidden bg-white/95 backdrop-blur-sm border-t border-white/20"
+            className="lg:hidden bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-t border-white/20 dark:border-gray-600/20"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <div className="container mx-auto px-4 py-4 space-y-2">
               {menu.map((item, index) => (
@@ -420,14 +701,14 @@ function ThanhHeader() {
                   key={item.path}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.05, duration: 0.3 }}
                 >
                   <Link
                     to={item.path}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-200 ${
                       location.pathname === item.path
-                        ? "bg-blue-600 text-white"
-                        : "text-blue-700 hover:bg-blue-50"
+                        ? "bg-blue-600 dark:bg-blue-700 text-white"
+                        : "text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/50"
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -441,12 +722,12 @@ function ThanhHeader() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: 0.25, duration: 0.3 }}
                 className="space-y-2"
               >
                 <Link
                   to="/dang-ky-tu-van"
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-blue-700 hover:bg-blue-50 transition-all duration-200"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-all duration-200"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <FaQuestionCircle />
@@ -454,7 +735,7 @@ function ThanhHeader() {
                 </Link>
                 <Link
                   to="/dang-ky-hoc-bong"
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-blue-700 hover:bg-blue-50 transition-all duration-200"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-all duration-200"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <FaTrophy />
@@ -467,22 +748,35 @@ function ThanhHeader() {
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 }}
-                  className="border-t border-gray-200 pt-4 space-y-2"
+                  transition={{ delay: 0.3, duration: 0.3 }}
+                  className="border-t border-gray-200 dark:border-gray-600 pt-4 space-y-2"
                 >
                   <Link
-                    to={role === "admin" ? "/admin/chinh-sua-ho-so" : "/chinh-sua-ho-so"}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-blue-700 hover:bg-blue-50 transition-all duration-200"
+                    to={
+                      role === "admin"
+                        ? "/admin/ho-so-quan-ly"
+                        : "/ho-so-nguoi-dung"
+                    }
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-all duration-200"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <FaUserEdit />
-                    <span>Chỉnh sửa hồ sơ</span>
+                    <span>{role === "admin" ? "Hồ sơ quản lý" : "Hồ sơ người dùng"}</span>
                   </Link>
-                  
+
+                  <Link
+                    to="/tra-cuu-ket-qua"
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/50 transition-all duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <FaSearch />
+                    <span>Tra cứu kết quả</span>
+                  </Link>
+
                   {role === "admin" && (
                     <Link
                       to="/admin/tong-quan"
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-green-700 hover:bg-green-50 transition-all duration-200"
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/50 transition-all duration-200"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <FaCog />
@@ -494,7 +788,7 @@ function ThanhHeader() {
                       logout();
                       setMobileMenuOpen(false);
                     }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-red-700 hover:bg-red-50 transition-all duration-200 w-full text-left"
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/50 transition-all duration-200 w-full text-left"
                   >
                     <FaSignOutAlt />
                     <span>Đăng xuất</span>

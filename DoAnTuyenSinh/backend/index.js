@@ -145,7 +145,8 @@ app.post(`${authPrefix}/login`, [
                     full_name: user.full_name || user.username,
                     username: user.username,
                     role: user.role,
-                    phone: user.phone
+                    phone: user.phone,
+                    avatar: user.avatar
                 }
             }
         });

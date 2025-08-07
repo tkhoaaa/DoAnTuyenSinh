@@ -245,11 +245,21 @@ Hệ thống Tuyển sinh HUTECH là một ứng dụng web full-stack hiện đ
 - **Vite** - Build tool & Development server
 - **React Router DOM** - Client-side routing
 - **Framer Motion** - Advanced animations & transitions
-- **Tailwind CSS** - Utility-first CSS framework
+- **Tailwind CSS** - Utility-first CSS framework với custom design system
+- **Headless UI** - Unstyled, accessible UI components
+- **Heroicons** - Beautiful hand-crafted SVG icons
 - **Axios** - HTTP client với interceptors
 - **React Helmet Async** - SEO management
 - **React Icons** - Comprehensive icon library
 - **PostCSS** - CSS processing & optimization
+- **GSAP** - Professional animation library
+- **Lottie React** - After Effects animations
+- **React Spring** - Spring-physics based animations
+- **TSParticles** - Particle effects và backgrounds
+- **Flowbite** - Component library
+- **Lucide React** - Beautiful icons
+- **Recharts** - Charts và data visualization
+- **Clsx** - Utility for constructing className strings
 
 ### Backend
 
@@ -675,21 +685,36 @@ CREATE TABLE nganh_khoi_thi (
 
 ## 🎨 UI/UX & Animations
 
-### 🎭 Framer Motion Integration
+### 🎭 Modern Animation System
 
-- **Page Transitions**: Smooth entrance animations
-- **Component Animations**: Hover effects, scale transforms
-- **Staggered Animations**: Sequential element reveals
-- **AnimatePresence**: Mount/unmount animations
-- **Motion Variants**: Reusable animation states
+- **Framer Motion**: Advanced page transitions và component animations
+- **GSAP**: Professional timeline-based animations
+- **React Spring**: Spring-physics based micro-interactions
+- **Lottie**: After Effects animations integration
+- **TSParticles**: Dynamic particle effects và backgrounds
+- **Custom Keyframes**: Tailwind CSS custom animations
 
 ### 🎨 Modern Design System
 
-- **Gradient Backgrounds**: Blue to indigo gradients
-- **Glassmorphism Effects**: Backdrop blur với transparency
-- **Rounded Corners**: Consistent border-radius
-- **Shadow System**: Layered shadows cho depth
-- **Color Palette**: Blue, yellow, white theme
+- **Color Palette**: Extended color system với semantic colors
+  - Primary: Blue gradient system (50-950)
+  - Secondary: Yellow/Orange accent colors
+  - Success, Warning, Error: Semantic color variants
+  - Glass: Transparent overlay colors
+- **Typography**: Inter font family với display variants
+- **Spacing**: Extended spacing scale (18, 88, 128, 144)
+- **Border Radius**: Extended radius scale (4xl, 5xl)
+- **Shadows**: Custom shadow system
+  - Glass shadows với backdrop blur
+  - Glow effects cho interactive elements
+  - Soft shadows cho cards và elevation
+
+### 🔮 Glassmorphism Effects
+
+- **Backdrop Blur**: Multi-level blur effects (xs, sm, md, lg)
+- **Transparency**: RGBA color system với opacity variants
+- **Border Effects**: Subtle border với transparency
+- **Glass Components**: Cards, modals, buttons với glass effects
 
 ### 📱 Responsive Design
 
@@ -709,14 +734,37 @@ CREATE TABLE nganh_khoi_thi (
 - **Navigation**: Polymorphic routing với React Router DOM
 - **Scroll Management**: Auto scroll to top khi chuyển route
 
-### 🎨 Component Library
+### 🎨 Modern Component Library
 
-- **Button Component**: Polymorphic variants, icons, loading states, `as` prop support
-- **Input Component**: Validation, icons, error states
-- **Card Components**: Gradient backgrounds, hover effects
-- **Navigation**: Animated headers, mobile menus
-- **VideoModal Component**: YouTube integration, backdrop blur, responsive player
-- **ScrollToTop Component**: Route-based auto scroll với smooth behavior
+#### **Core Components**
+- **Button**: Polymorphic với 10+ variants (primary, secondary, glass, gradient, neon)
+  - Sizes: xs, sm, md, lg, xl, 2xl
+  - States: loading, disabled, hover effects
+  - Icons: left/right icon support
+  - Animations: scale, glow, shimmer effects
+- **Input**: Advanced form input với validation
+  - Variants: default, error, success, glass
+  - Features: password toggle, icons, real-time validation
+  - Animations: focus rings, error states
+- **Card**: Flexible card system với sub-components
+  - Variants: default, glass, gradient, elevated
+  - Sub-components: Header, Title, Description, Content, Footer
+  - Hover effects: lift, glow, scale
+- **Modal**: Full-featured modal system
+  - Sizes: xs to 6xl và full
+  - Features: backdrop blur, escape key, focus management
+  - Animations: spring-based entrance/exit
+- **Loading**: Comprehensive loading system
+  - Types: spinner, dots, pulse, skeleton
+  - Skeleton variants: card, table, text
+  - Overlay: full-page loading với backdrop
+
+#### **Advanced Features**
+- **Polymorphic Components**: `as` prop support cho flexible rendering
+- **Animation Integration**: Framer Motion built-in
+- **Accessibility**: ARIA labels, keyboard navigation, focus management
+- **TypeScript Ready**: Full type definitions (planned)
+- **Theme System**: Consistent design tokens
 
 ## 🔐 Hệ thống Authentication
 

@@ -12,8 +12,11 @@ import {
   FaExclamationTriangle,
   FaSpinner,
   FaRocket,
-  FaMagic
+  FaMagic,
+  FaStar,
+  FaKey
 } from "react-icons/fa";
+import { useDarkMode } from "../contexts/DarkModeContext";
 
 function QuenMatKhau() {
   const [email, setEmail] = useState("");
@@ -24,6 +27,7 @@ function QuenMatKhau() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [step, setStep] = useState(1); // 1: email, 2: reset password
+  const { darkMode } = useDarkMode();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -67,35 +71,74 @@ function QuenMatKhau() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden p-4">
-      {/* Animated Background */}
+    <div className={`min-h-screen flex items-center justify-center relative overflow-hidden p-4 ${
+      darkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-purple-900 to-pink-900' 
+        : 'bg-gradient-to-br from-purple-50 via-pink-50 to-red-50'
+    }`}>
+      {/* Enhanced Animated Background */}
       <div className="absolute inset-0">
-        {[...Array(8)].map((_, i) => (
+        {[...Array(12)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full bg-gradient-to-r from-blue-400/10 to-purple-400/10"
+            className={`absolute rounded-full ${
+              darkMode 
+                ? 'bg-gradient-to-r from-purple-500/10 to-pink-500/10' 
+                : 'bg-gradient-to-r from-purple-400/20 to-pink-400/20'
+            }`}
             style={{
-              width: `${80 + i * 40}px`,
-              height: `${80 + i * 40}px`,
-              left: `${5 + i * 12}%`,
-              top: `${10 + i * 8}%`,
+              width: `${60 + i * 20}px`,
+              height: `${60 + i * 20}px`,
+              left: `${5 + i * 8}%`,
+              top: `${10 + i * 7}%`,
             }}
             animate={{
-              y: [0, -30, 0],
-              x: [0, 20, 0],
+              y: [0, -40, 0],
+              x: [0, 25, 0],
               rotate: [0, 180, 360],
+              scale: [1, 1.2, 1],
             }}
             transition={{
-              duration: 8 + i * 1.5,
+              duration: 8 + i * 1.2,
               repeat: Infinity,
-              ease: "linear",
+              ease: "easeInOut",
+              delay: i * 0.3,
             }}
           />
         ))}
       </div>
 
+      {/* Floating key icons */}
+      <div className="absolute inset-0">
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className={`absolute ${
+              darkMode ? 'text-purple-400/30' : 'text-purple-500/40'
+            }`}
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [-30, -100],
+              opacity: [0, 1, 0],
+              rotate: [0, 360],
+              scale: [0.5, 1, 0.5],
+            }}
+            transition={{
+              duration: 4 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          >
+            <FaKey className="text-lg" />
+          </motion.div>
+        ))}
+      </div>
+
       <motion.div
-        className="relative z-10 w-full max-w-md"
+        className="relative z-10 w-full max-w-lg"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
@@ -108,15 +151,55 @@ function QuenMatKhau() {
           transition={{ delay: 0.2 }}
         >
           <motion.div
-            className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl"
+            className="relative w-24 h-24 mx-auto mb-6"
             whileHover={{ scale: 1.1, rotate: 360 }}
             transition={{ duration: 0.6 }}
           >
-            <FaShieldAlt className="text-white text-3xl" />
+            <motion.div
+              className="w-full h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-2xl"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            >
+              <FaShieldAlt className="text-white text-3xl" />
+            </motion.div>
+            <motion.div
+              className="absolute -inset-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full opacity-20 blur"
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
+            />
+            {/* Floating mini stars */}
+            {[...Array(4)].map((_, i) => (
+              <motion.div
+                key={i}
+                className={`absolute ${
+                  darkMode ? 'text-purple-300' : 'text-purple-600'
+                }`}
+                style={{
+                  left: `${15 + i * 20}%`,
+                  top: `${10 + i * 15}%`,
+                }}
+                animate={{
+                  y: [0, -8, 0],
+                  rotate: [0, 180, 360],
+                  scale: [0.8, 1.2, 0.8],
+                }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  delay: i * 0.3,
+                }}
+              >
+                <FaStar className="text-xs" />
+              </motion.div>
+            ))}
           </motion.div>
           
           <motion.h1 
-            className="text-3xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3"
+            className={`text-3xl font-black mb-3 ${
+              darkMode 
+                ? 'bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent' 
+                : 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'
+            }`}
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
@@ -125,7 +208,9 @@ function QuenMatKhau() {
           </motion.h1>
           
           <motion.p 
-            className="text-gray-600 text-lg"
+            className={`text-lg ${
+              darkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
@@ -144,10 +229,10 @@ function QuenMatKhau() {
           {[1, 2].map((stepNumber) => (
             <div key={stepNumber} className="flex items-center">
               <motion.div
-                className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-lg ${
+                className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-bold shadow-xl ${
                   step >= stepNumber 
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-500' 
-                    : 'bg-gray-300'
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500' 
+                    : darkMode ? 'bg-gray-700' : 'bg-gray-300'
                 }`}
                 whileHover={{ scale: 1.1 }}
                 transition={{ type: "spring", stiffness: 300 }}
@@ -165,9 +250,17 @@ function QuenMatKhau() {
                 )}
               </motion.div>
               {stepNumber < 2 && (
-                <div className={`w-16 h-1 mx-2 rounded-full ${
-                  step > stepNumber ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gray-300'
-                }`} />
+                <motion.div 
+                  className={`w-20 h-2 mx-3 rounded-full ${
+                    step > stepNumber 
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500' 
+                      : darkMode ? 'bg-gray-700' : 'bg-gray-300'
+                  }`}
+                  animate={{ 
+                    scaleX: step > stepNumber ? 1 : 0.3,
+                  }}
+                  transition={{ duration: 0.5 }}
+                />
               )}
             </div>
           ))}
@@ -175,16 +268,20 @@ function QuenMatKhau() {
 
         {/* Form */}
         <motion.div
-          className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 relative overflow-hidden"
+          className={`backdrop-blur-xl rounded-3xl shadow-2xl border p-8 relative overflow-hidden ${
+            darkMode 
+              ? 'bg-gray-900/85 border-purple-700/50' 
+              : 'bg-white/90 border-purple-200/50'
+          }`}
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6, type: "spring", stiffness: 100 }}
         >
-          {/* Shine Effect */}
+          {/* Animated shine effect */}
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 hover:opacity-100 -skew-x-12"
-            animate={{ x: [-100, 300] }}
-            transition={{ duration: 1.2, ease: "easeInOut" }}
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 hover:opacity-100 -skew-x-12"
+            animate={{ x: [-100, 400] }}
+            transition={{ duration: 1.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 3 }}
           />
 
           <div className="relative z-10">
@@ -204,27 +301,38 @@ function QuenMatKhau() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                   >
-                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                      <FaEnvelope className="text-blue-500" />
+                    <label className={`block text-sm font-semibold mb-3 flex items-center gap-2 ${
+                      darkMode ? 'text-gray-200' : 'text-gray-700'
+                    }`}>
+                      <FaEnvelope className={darkMode ? 'text-purple-400' : 'text-purple-500'} />
                       Email đăng ký
                     </label>
                     <div className="relative group">
-                      <input
+                      <motion.input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="w-full px-4 py-4 pl-12 border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all duration-300 bg-white/70 backdrop-blur-sm text-gray-800 placeholder-gray-500"
+                        className={`w-full px-4 py-4 pl-12 border-2 rounded-2xl focus:outline-none transition-all duration-300 ${
+                          darkMode 
+                            ? 'bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500' 
+                            : 'bg-white/70 border-gray-200 text-gray-800 placeholder-gray-500 focus:border-purple-500'
+                        }`}
                         placeholder="Nhập email của bạn"
+                        whileFocus={{ scale: 1.02 }}
                       />
-                      <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors duration-300" />
+                      <FaEnvelope className={`absolute left-4 top-1/2 transform -translate-y-1/2 transition-colors duration-300 ${
+                        darkMode 
+                          ? 'text-gray-400 group-focus-within:text-purple-400' 
+                          : 'text-gray-400 group-focus-within:text-purple-500'
+                      }`} />
                     </div>
                   </motion.div>
 
                   <motion.button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     initial={{ opacity: 0, y: 20 }}
@@ -261,24 +369,39 @@ function QuenMatKhau() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                   >
-                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                      <FaLock className="text-blue-500" />
+                    <label className={`block text-sm font-semibold mb-3 flex items-center gap-2 ${
+                      darkMode ? 'text-gray-200' : 'text-gray-700'
+                    }`}>
+                      <FaLock className={darkMode ? 'text-purple-400' : 'text-purple-500'} />
                       Mật khẩu mới
                     </label>
                     <div className="relative group">
-                      <input
+                      <motion.input
                         type={showPassword ? "text" : "password"}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         required
-                        className="w-full px-4 py-4 pl-12 pr-12 border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all duration-300 bg-white/70 backdrop-blur-sm text-gray-800 placeholder-gray-500"
+                        className={`w-full px-4 py-4 pl-12 pr-12 border-2 rounded-2xl focus:outline-none transition-all duration-300 ${
+                          darkMode 
+                            ? 'bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500' 
+                            : 'bg-white/70 border-gray-200 text-gray-800 placeholder-gray-500 focus:border-purple-500'
+                        }`}
                         placeholder="Nhập mật khẩu mới"
+                        whileFocus={{ scale: 1.02 }}
                       />
-                      <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors duration-300" />
+                      <FaLock className={`absolute left-4 top-1/2 transform -translate-y-1/2 transition-colors duration-300 ${
+                        darkMode 
+                          ? 'text-gray-400 group-focus-within:text-purple-400' 
+                          : 'text-gray-400 group-focus-within:text-purple-500'
+                      }`} />
                       <motion.button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                        className={`absolute right-4 top-1/2 transform -translate-y-1/2 transition-colors duration-200 ${
+                          darkMode 
+                            ? 'text-gray-400 hover:text-gray-200' 
+                            : 'text-gray-400 hover:text-gray-600'
+                        }`}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                       >
@@ -292,24 +415,39 @@ function QuenMatKhau() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                      <FaLock className="text-blue-500" />
+                    <label className={`block text-sm font-semibold mb-3 flex items-center gap-2 ${
+                      darkMode ? 'text-gray-200' : 'text-gray-700'
+                    }`}>
+                      <FaLock className={darkMode ? 'text-purple-400' : 'text-purple-500'} />
                       Xác nhận mật khẩu
-            </label>
+                    </label>
                     <div className="relative group">
-                      <input
+                      <motion.input
                         type={showPassword ? "text" : "password"}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
-                        className="w-full px-4 py-4 pl-12 pr-12 border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all duration-300 bg-white/70 backdrop-blur-sm text-gray-800 placeholder-gray-500"
+                        className={`w-full px-4 py-4 pl-12 pr-12 border-2 rounded-2xl focus:outline-none transition-all duration-300 ${
+                          darkMode 
+                            ? 'bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500' 
+                            : 'bg-white/70 border-gray-200 text-gray-800 placeholder-gray-500 focus:border-purple-500'
+                        }`}
                         placeholder="Nhập lại mật khẩu mới"
+                        whileFocus={{ scale: 1.02 }}
                       />
-                      <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors duration-300" />
+                      <FaLock className={`absolute left-4 top-1/2 transform -translate-y-1/2 transition-colors duration-300 ${
+                        darkMode 
+                          ? 'text-gray-400 group-focus-within:text-purple-400' 
+                          : 'text-gray-400 group-focus-within:text-purple-500'
+                      }`} />
                       <motion.button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                        className={`absolute right-4 top-1/2 transform -translate-y-1/2 transition-colors duration-200 ${
+                          darkMode 
+                            ? 'text-gray-400 hover:text-gray-200' 
+                            : 'text-gray-400 hover:text-gray-600'
+                        }`}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                       >
@@ -350,7 +488,11 @@ function QuenMatKhau() {
             {step === 2 && (
               <motion.button
                 onClick={() => setStep(1)}
-                className="w-full mt-4 py-3 text-gray-600 hover:text-gray-800 font-semibold rounded-2xl hover:bg-gray-100 transition-all duration-300 flex items-center justify-center gap-2"
+                className={`w-full mt-4 py-3 font-semibold rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 ${
+                  darkMode 
+                    ? 'text-gray-300 hover:text-white hover:bg-gray-800' 
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 initial={{ opacity: 0, y: 20 }}
@@ -368,7 +510,11 @@ function QuenMatKhau() {
         <AnimatePresence>
           {success && (
             <motion.div
-              className="mt-6 p-4 bg-gradient-to-r from-green-100 to-emerald-100 border border-green-200 rounded-2xl shadow-lg"
+              className={`mt-6 p-4 rounded-2xl shadow-lg border ${
+                darkMode 
+                  ? 'bg-green-900/50 border-green-700 text-green-300' 
+                  : 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-200 text-green-800'
+              }`}
               initial={{ opacity: 0, y: 20, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.9 }}
@@ -379,16 +525,20 @@ function QuenMatKhau() {
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 0.5 }}
                 >
-                  <FaCheckCircle className="text-green-600 text-xl" />
+                  <FaCheckCircle className="text-green-600" />
                 </motion.div>
-                <p className="text-green-800 font-semibold">{success}</p>
+                <p className="font-semibold">{success}</p>
               </div>
             </motion.div>
           )}
 
           {error && (
             <motion.div
-              className="mt-6 p-4 bg-gradient-to-r from-red-100 to-pink-100 border border-red-200 rounded-2xl shadow-lg"
+              className={`mt-6 p-4 rounded-2xl shadow-lg border ${
+                darkMode 
+                  ? 'bg-red-900/50 border-red-700 text-red-300' 
+                  : 'bg-gradient-to-r from-red-100 to-pink-100 border-red-200 text-red-800'
+              }`}
               initial={{ opacity: 0, y: 20, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.9 }}
@@ -396,13 +546,13 @@ function QuenMatKhau() {
             >
               <div className="flex items-center gap-3">
                 <motion.div
-                  animate={{ shake: [0, -10, 10, -10, 10, 0] }}
+                  animate={{ rotate: [0, -10, 10, 0] }}
                   transition={{ duration: 0.5 }}
                 >
-                  <FaExclamationTriangle className="text-red-600 text-xl" />
+                  <FaExclamationTriangle className="text-red-600" />
                 </motion.div>
-                <p className="text-red-800 font-semibold">{error}</p>
-        </div>
+                <p className="font-semibold">{error}</p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -414,11 +564,17 @@ function QuenMatKhau() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
         >
-          <p className="text-gray-600 text-sm">
+          <p className={`text-sm ${
+            darkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
             Đã có tài khoản?{" "}
             <motion.a
-              href="/dang-nhap"
-              className="text-blue-600 hover:text-blue-700 font-semibold underline"
+              href="/accounts/dang-nhap"
+              className={`font-semibold underline transition-colors ${
+                darkMode 
+                  ? 'text-purple-400 hover:text-purple-300' 
+                  : 'text-purple-600 hover:text-purple-700'
+              }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -426,7 +582,7 @@ function QuenMatKhau() {
             </motion.a>
           </p>
         </motion.div>
-    </motion.div>
+      </motion.div>
     </div>
   );
 }

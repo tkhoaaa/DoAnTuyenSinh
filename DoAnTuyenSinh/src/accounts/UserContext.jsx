@@ -19,59 +19,74 @@ export function UserContextProvider({ children }) {
     localStorage.getItem("username") || ""
   );
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Thêm loading state
 
   useEffect(() => {
     const demoMode = localStorage.getItem("demoMode");
+    const storedUserId = localStorage.getItem("userId");
+    const storedRole = localStorage.getItem("role");
+    const storedUsername = localStorage.getItem("username");
+    const storedUserData = localStorage.getItem("userData");
+    
+    console.log("UserContext useEffect - Checking stored data:", {
+      demoMode,
+      storedUserId,
+      storedRole,
+      storedUsername,
+      hasUserData: !!storedUserData
+    });
     
     if (demoMode === "true") {
+      console.log("Setting demo mode");
       setIsDemoMode(true);
       setUser(DEMO_USER);
       setRole("admin");
       setUserId(DEMO_USER.id);
       setUsername(DEMO_USER.username);
-    } else if (userId) {
-      const storedRole = localStorage.getItem("role");
-      const storedUsername = localStorage.getItem("username");
-      const storedUserData = localStorage.getItem("userData");
+    } else if (storedUserId && storedRole) {
+      console.log("Restoring user session from localStorage");
+      
+      // Xử lý userData từ localStorage
+      let processedUserData = storedUserData ? JSON.parse(storedUserData) : { 
+        id: storedUserId, 
+        username: storedUsername 
+      };
+      
+      // Đảm bảo avatar được lưu đúng format (relative path)
+      if (processedUserData.avatar && processedUserData.avatar.startsWith('http://localhost:3001')) {
+        processedUserData.avatar = processedUserData.avatar.replace('http://localhost:3001', '');
+      }
 
-      console.log("User ID found:", userId);
-      console.log("Stored username:", storedUsername);
-      console.log("Stored role:", storedRole);
-
-      // Xử lý avatar URL
-      let processedUserData = storedUserData ? JSON.parse(storedUserData) : { id: userId, username: storedUsername };
-      const avatarUrl = processedUserData.avatar 
-        ? (processedUserData.avatar.startsWith('http') 
-            ? processedUserData.avatar 
-            : `http://localhost:3001${processedUserData.avatar}`) 
-        : "";
-
+      setUserId(storedUserId);
       setRole(storedRole);
       setUsername(storedUsername || "");
-      setUser({
-        ...processedUserData,
-        avatar: avatarUrl
-      });
+      setUser(processedUserData);
+      setIsDemoMode(false);
     } else {
+      console.log("No valid session found, clearing state");
       setUser(null);
       setRole(null);
       setUsername("");
+      setUserId("");
+      setIsDemoMode(false);
     }
-  }, [userId]);
+    
+    // Đặt loading thành false sau khi đã kiểm tra xong
+    setIsLoading(false);
+  }, []); // Remove userId dependency to prevent infinite loops
 
   const login = (id, role, username, userData) => {
     // Debug logs
     console.log("Login called with:", { id, role, username, userData });
 
     // Xử lý trường hợp username undefined/null
-    const validUsername = username || "Người dùng";
+    const validUsername = username || userData?.username || userData?.name || userData?.email || "Người dùng";
 
-    // Xử lý avatar URL
-    const avatarUrl = userData?.avatar 
-      ? (userData.avatar.startsWith('http') 
-          ? userData.avatar 
-          : `http://localhost:3001${userData.avatar}`) 
-      : "";
+    // Đảm bảo avatar được lưu đúng format (relative path)
+    let avatarPath = userData?.avatar || "";
+    if (avatarPath && avatarPath.startsWith('http://localhost:3001')) {
+      avatarPath = avatarPath.replace('http://localhost:3001', '');
+    }
 
     setIsDemoMode(false);
     setUserId(id);
@@ -80,19 +95,20 @@ export function UserContextProvider({ children }) {
     setUser({
       ...userData, 
       username: validUsername, 
-      avatar: avatarUrl
+      avatar: avatarPath // Lưu relative path
     });
+    setIsLoading(false); // Đảm bảo loading state được reset
 
     // Lưu vào localStorage
     localStorage.setItem("userId", id);
     localStorage.setItem("role", role);
     localStorage.setItem("username", validUsername);
     if (userData) {
-      // Lưu userData với avatar URL đầy đủ
+      // Lưu userData với avatar path (relative)
       const userDataToStore = {
         ...userData,
         username: validUsername,
-        avatar: avatarUrl
+        avatar: avatarPath // Lưu relative path
       };
       localStorage.setItem("userData", JSON.stringify(userDataToStore));
     }
@@ -102,8 +118,37 @@ export function UserContextProvider({ children }) {
       id,
       role,
       username: validUsername,
-      avatar: avatarUrl
+      avatar: avatarPath
     });
+  };
+
+  const updateUser = (updatedUserData) => {
+    console.log("UpdateUser called with:", updatedUserData);
+    
+    // Đảm bảo avatar được lưu đúng format (relative path)
+    let avatarPath = updatedUserData?.avatar || "";
+    if (avatarPath && avatarPath.startsWith('http://localhost:3001')) {
+      avatarPath = avatarPath.replace('http://localhost:3001', '');
+    }
+
+    const newUserData = {
+      ...user,
+      ...updatedUserData,
+      avatar: avatarPath // Lưu relative path
+    };
+
+    setUser(newUserData);
+
+    // Cập nhật localStorage
+    const currentUserData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const updatedStorageData = {
+      ...currentUserData,
+      ...updatedUserData,
+      avatar: avatarPath // Lưu relative path
+    };
+    localStorage.setItem('userData', JSON.stringify(updatedStorageData));
+
+    console.log("UpdateUser completed. New user data:", newUserData);
   };
 
   const loginDemo = () => {
@@ -114,6 +159,7 @@ export function UserContextProvider({ children }) {
     setRole("admin");
     setUsername(DEMO_USER.username);
     setUser(DEMO_USER);
+    setIsLoading(false); // Đảm bảo loading state được reset
 
     // Lưu demo mode vào localStorage
     localStorage.setItem("demoMode", "true");
@@ -133,6 +179,7 @@ export function UserContextProvider({ children }) {
     setUsername("");
     setIsDemoMode(false);
     setUser(null);
+    setIsLoading(false); // Reset loading state
     
     localStorage.removeItem("userId");
     localStorage.removeItem("role");
@@ -142,7 +189,17 @@ export function UserContextProvider({ children }) {
   };
 
   return (
-    <UserContext.Provider value={{ user, role, username, login, loginDemo, logout, isDemoMode }}>
+    <UserContext.Provider value={{ 
+      user, 
+      role, 
+      username, 
+      login, 
+      updateUser, 
+      loginDemo, 
+      logout, 
+      isDemoMode, 
+      isLoading 
+    }}>
       {children}
     </UserContext.Provider>
   );
